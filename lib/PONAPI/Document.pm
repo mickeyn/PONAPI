@@ -5,6 +5,12 @@ use strict;
 use warnings;
 use Moose;
 
+has is_collection_req => (
+    is       => 'ro',
+    isa      => 'Bool',
+    required => 1,
+);
+
 has data => (
     is      => 'ro',
     isa     => 'ArrayRef[Maybe[PONAPI::Resource]]',
@@ -47,6 +53,15 @@ has included => (
 sub _build_links {}
 
 sub _build_included {}
+
+sub bundle {
+    my $self = shift;
+    my %ret;
+
+    $ret{data} = $self->is_collection_req ? $self->data : $self->data->[0];
+
+    return \%ret;
+}
 
 
 __PACKAGE__->meta->make_immutable;
