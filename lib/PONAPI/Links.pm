@@ -6,21 +6,21 @@ use warnings;
 use Moose;
 
 has self => (
-    is      => 'ro',
-    isa     => 'Maybe[Str]',
-    default => undef,
+    is        => 'ro',
+    isa       => 'Str',
+    predicate => 'has_self',
 );
 
 has related => (
-    is      => 'ro',
-    isa     => 'Maybe[Str]',
-    default => undef,
+    is        => 'ro',
+    isa       => 'Str',
+    predicate => 'has_related',
 );
 
 has pagination => (
-    is      => 'ro',
-    isa     => 'Maybe[PONAPI::Links::Pagination]',
-    default => undef,
+    is        => 'ro',
+    isa       => 'PONAPI::Links::Pagination',
+    predicate => 'has_pagination',
 );
 
 

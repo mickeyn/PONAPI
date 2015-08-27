@@ -12,27 +12,27 @@ has is_collection_req => (
 );
 
 has data => (
-    is      => 'ro',
-    isa     => 'Maybe[ArrayRef[PONAPI::Resource]]',
-    deafult => undef,
+    is        => 'ro',
+    isa       => 'ArrayRef[PONAPI::Resource]',
+    predicate => 'has_data',
 );
 
 has errors => (
-    is      => 'ro',
-    isa     => 'Maybe[PONAPI::Error]',
-    default => undef,
+    is        => 'ro',
+    isa       => 'PONAPI::Error',
+    predicate => 'has_error',
 );
 
 has links => (
-    is      => 'ro',
-    isa     => 'Maybe[PONAPI::Links]',
-    default => undef,
+    is        => 'ro',
+    isa       => 'PONAPI::Links',
+    predicate => 'has_links',
 );
 
 has included => (
-    is      => 'ro',
-    isa     => 'Maybe[ArrayRef[PONAPI::Resource]]',
-    default => undef,
+    is        => 'ro',
+    isa       => 'ArrayRef[PONAPI::Resource]',
+    predicate => 'has_included',
 );
 
 has meta => (
@@ -48,27 +48,27 @@ has jsonapi => (
 );
 
 
-sub bundle {
+sub pack {
     my $self = shift;
     my %ret;
 
     # add either errors or data
-    if ( $self->errors ) {
+    if ( $self->has_errors ) {
         $ret{errors} = $self->errors;
 
     } else {
-        $ret{data} = defined $self->data
+        $ret{data} = $self->has_data
             ? ( $self->is_collection_req ? $self->data : $self->data->[0] )
             : ( $self->is_collection_req ? [] : undef );
 
-        $self->included and $ret{included} = $self->included;
+        $self->has_included and $ret{included} = $self->included;
     }
 
     keys %{ $self->meta } and $ret{meta} = $self->meta;
 
     # TODO: check: document must have at least one of: data, errors, meta
 
-    $self->links and $ret{links} = $self->links;
+    $self->has_links and $ret{links} = $self->links;
 
     keys %{ $self->jsonapi } and $ret{jsonapi} = $self->jsonapi;
 

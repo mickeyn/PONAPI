@@ -6,27 +6,27 @@ use warnings;
 use Moose;
 
 has first => (
-    is       => 'ro',
-    isa      => 'Maybe[Str]',
-    default  => undef,
+    is        => 'ro',
+    isa       => 'Str',
+    predicate => 'has_first',
 );
 
 has last => (
     is       => 'ro',
-    isa      => 'Maybe[Str]',
-    default  => undef,
+    isa       => 'Str',
+    predicate => 'has_last',
 );
 
 has prev => (
     is       => 'ro',
-    isa      => 'Maybe[Str]',
-    default  => undef,
+    isa       => 'Str',
+    predicate => 'has_prev',
 );
 
 has next => (
     is       => 'ro',
-    isa      => 'Maybe[Str]',
-    default  => undef,
+    isa       => 'Str',
+    predicate => 'has_next',
 );
 
 

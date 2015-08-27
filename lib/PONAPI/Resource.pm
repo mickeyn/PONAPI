@@ -29,20 +29,20 @@ has relationships => (
     default  => +{},
 );
 
-has links => (
-    is       => ro,
-    isa      => 'Maybe[PONAPI::Links]',
-    default  => undef,
-);
-
 has meta => (
     is       => ro,
     isa      => 'HashRef',
     default  => +{},
 );
 
+has links => (
+    is        => ro,
+    isa       => 'PONAPI::Links',
+    predicate => 'has_links',
+);
 
-sub bundle {
+
+sub pack {
     my $self = shift;
 
     my %ret = (
@@ -54,7 +54,7 @@ sub bundle {
     keys %{ $self->relationships } and $ret{relationships} = $self->relationships;
     keys %{ $self->meta }          and $ret{meta}          = $self->meta;
 
-    $self->links and $ret{links} = $self->links;
+    $self->has_links and $ret{links} = $self->links;
 
     return \%ret;
 }
