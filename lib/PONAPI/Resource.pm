@@ -17,13 +17,16 @@ has type => (
     required => 1,
 );
 
-has attributes => (
+has _attributes => (
+    init_arg => undef,
     traits   => [ 'Hash' ],
     is       => 'ro',
     isa      => 'HashRef',
     default  => sub { +{} },
     handles => {
         has_attributes => 'count',
+        add_attribute  => 'set',
+        get_attribute  => 'get',
     }
 );
 
