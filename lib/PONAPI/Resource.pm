@@ -6,20 +6,20 @@ use warnings;
 use Moose;
 
 has id => (
-    is       => ro,
+    is       => 'ro',
     isa      => 'Str',
     required => 1,
 );
 
 has type => (
-    is       => ro,
+    is       => 'ro',
     isa      => 'Str',
     required => 1,
 );
 
 has attributes => (
     traits   => [ 'Hash' ],
-    is       => ro,
+    is       => 'ro',
     isa      => 'HashRef',
     default  => sub { +{} },
     handles => {
@@ -29,7 +29,7 @@ has attributes => (
 
 has relationships => (
     traits   => [ 'Hash' ],
-    is       => ro,
+    is       => 'ro',
     isa      => 'HashRef',
     default  => sub { +{} },
     handles => {
@@ -39,7 +39,7 @@ has relationships => (
 
 has meta => (
     traits   => [ 'Hash' ],
-    is       => ro,
+    is       => 'ro',
     isa      => 'HashRef',
     default  => sub { +{} },
     handles => {
@@ -48,7 +48,7 @@ has meta => (
 );
 
 has links => (
-    is        => ro,
+    is        => 'ro',
     isa       => 'PONAPI::Links',
     predicate => 'has_links',
 );
