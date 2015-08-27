@@ -52,21 +52,25 @@ sub bundle {
     my $self = shift;
     my %ret;
 
-    # TODO: document must have at least one of: data, errors, meta
+    # add either errors or data
+    if ( $self->errors ) {
+        $ret{errors} = $self->errors;
 
-    $ret{data} = defined $self->data
-        ? ( $self->is_collection_req ? $self->data : $self->data->[0] )
-        : ( $self->is_collection_req ? [] : undef );
+    } else {
+        $ret{data} = defined $self->data
+            ? ( $self->is_collection_req ? $self->data : $self->data->[0] )
+            : ( $self->is_collection_req ? [] : undef );
 
-    $self->errors   and $ret{errors}   = $self->errors;
-    $self->links    and $ret{links}    = $self->links;
-    $self->included and $ret{included} = $self->included;
+        $self->included and $ret{included} = $self->included;
+    }
 
-    keys %{ $self->meta }    and $ret{meta}    = $self->meta;
+    keys %{ $self->meta } and $ret{meta} = $self->meta;
+
+    # TODO: check: document must have at least one of: data, errors, meta
+
+    $self->links and $ret{links} = $self->links;
+
     keys %{ $self->jsonapi } and $ret{jsonapi} = $self->jsonapi;
-
-    # 'included' must not be present without 'data'
-    $ret{data} or delete $ret{included};
 
     return \%ret;
 }
