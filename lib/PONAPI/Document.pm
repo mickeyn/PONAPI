@@ -13,13 +13,25 @@ has is_collection_req => (
 
 has data => (
     is      => 'ro',
-    isa     => 'ArrayRef[Maybe[PONAPI::Resource]]',
-    deafult => +[],
+    isa     => 'Maybe[ArrayRef[PONAPI::Resource]]',
+    deafult => undef,
 );
 
 has errors => (
     is      => 'ro',
     isa     => 'Maybe[PONAPI::Error]',
+    default => undef,
+);
+
+has links => (
+    is      => 'ro',
+    isa     => 'Maybe[PONAPI::Links]',
+    default => undef,
+);
+
+has included => (
+    is      => 'ro',
+    isa     => 'Maybe[ArrayRef[PONAPI::Resource]]',
     default => undef,
 );
 
@@ -35,30 +47,26 @@ has jsonapi => (
     default => +{},
 );
 
-has links => (
-    is      => 'ro',
-    isa     => 'PONAPI::Links',
-    lazy    => 1,
-    builder => '_build_links',
-);
-
-has included => (
-    is      => 'ro',
-    isa     => 'ArrayRef[PONAPI::Resource]',
-    lazy    => 1,
-    builder => '_build_included',
-);
-
-
-sub _build_links {}
-
-sub _build_included {}
 
 sub bundle {
     my $self = shift;
     my %ret;
 
-    $ret{data} = $self->is_collection_req ? $self->data : $self->data->[0];
+    # TODO: document must have at least one of: data, errors, meta
+
+    $ret{data} = defined $self->data
+        ? ( $self->is_collection_req ? $self->data : $self->data->[0] )
+        : ( $self->is_collection_req ? [] : undef );
+
+    $self->errors   and $ret{errors}   = $self->errors;
+    $self->links    and $ret{links}    = $self->links;
+    $self->included and $ret{included} = $self->included;
+
+    keys %{ $self->meta }    and $ret{meta}    = $self->meta;
+    keys %{ $self->jsonapi } and $ret{jsonapi} = $self->jsonapi;
+
+    # 'included' must not be present without 'data'
+    $ret{data} or delete $ret{included};
 
     return \%ret;
 }
