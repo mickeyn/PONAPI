@@ -42,6 +42,24 @@ has meta => (
 );
 
 
+sub bundle {
+    my $self = shift;
+
+    my %ret = (
+        type => $self->type,
+        id   => $self->id,
+    );
+
+    keys %{ $self->attributes }    and $ret{attributes}    = $self->attributes;
+    keys %{ $self->relationships } and $ret{relationships} = $self->relationships;
+    keys %{ $self->meta }          and $ret{meta}          = $self->meta;
+
+    $self->links and $ret{links} = $self->links;
+
+    return \%ret;
+}
+
+
 __PACKAGE__->meta->make_immutable;
 1;
 
