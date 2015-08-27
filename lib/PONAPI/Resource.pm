@@ -18,21 +18,33 @@ has type => (
 );
 
 has attributes => (
+    traits   => [ 'Hash' ],
     is       => ro,
     isa      => 'HashRef',
     default  => sub { +{} },
+    handles => {
+        has_attributes => 'count',
+    }
 );
 
 has relationships => (
+    traits   => [ 'Hash' ],
     is       => ro,
     isa      => 'HashRef',
     default  => sub { +{} },
+    handles => {
+        has_relationships => 'count',
+    }
 );
 
 has meta => (
+    traits   => [ 'Hash' ],
     is       => ro,
     isa      => 'HashRef',
     default  => sub { +{} },
+    handles => {
+        has_meta => 'count',
+    }
 );
 
 has links => (
@@ -50,11 +62,10 @@ sub pack {
         id   => $self->id,
     );
 
-    keys %{ $self->attributes }    and $ret{attributes}    = $self->attributes;
-    keys %{ $self->relationships } and $ret{relationships} = $self->relationships;
-    keys %{ $self->meta }          and $ret{meta}          = $self->meta;
-
-    $self->has_links and $ret{links} = $self->links;
+    $self->has_attributes    and $ret{attributes}    = $self->attributes;
+    $self->has_relationships and $ret{relationships} = $self->relationships;
+    $self->has_meta          and $ret{meta}          = $self->meta;
+    $self->has_links         and $ret{links}         = $self->links;
 
     return \%ret;
 }
