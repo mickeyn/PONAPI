@@ -35,23 +35,29 @@ has included => (
     predicate => 'has_included',
 );
 
-has meta => (
+has _meta => (
+    init_arg => undef,
     traits  => [ 'Hash' ],
     is      => 'ro',
     isa     => 'HashRef',
     default => sub { +{} },
     handles => {
         has_meta => 'count',
+        add_meta => 'set',
+        get_meta => 'get',
     }
 );
 
-has jsonapi => (
+has _jsonapi => (
+    init_arg => undef,
     traits  => [ 'Hash' ],
     is      => 'ro',
     isa     => 'HashRef',
     default => sub { +{} },
     handles => {
         has_jsonapi => 'count',
+        add_jsonapi => 'set',
+        get_jsonapi => 'get',
     }
 );
 
@@ -72,7 +78,7 @@ sub pack {
         $self->has_included and $ret{included} = $self->included;
     }
 
-    $self->has_meta and $ret{meta} = $self->meta;
+    $self->has_meta and $ret{meta} = $self->_meta;
 
     # document must have at least one of: data, errors, meta
     unless ( $self->has_data or $self->has_errors or $self->has_meta ) {
@@ -80,7 +86,7 @@ sub pack {
     }
 
     $self->has_links   and $ret{links}   = $self->links;
-    $self->has_jsonapi and $ret{jsonapi} = $self->jsonapi;
+    $self->has_jsonapi and $ret{jsonapi} = $self->_jsonapi;
 
     return \%ret;
 }

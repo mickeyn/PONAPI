@@ -30,23 +30,29 @@ has _attributes => (
     }
 );
 
-has relationships => (
+has _relationships => (
+    init_arg => undef,
     traits   => [ 'Hash' ],
     is       => 'ro',
     isa      => 'HashRef',
     default  => sub { +{} },
     handles => {
         has_relationships => 'count',
+        add_relationships => 'set',
+        get_relationships => 'get',
     }
 );
 
-has meta => (
+has _meta => (
+    init_arg => undef,
     traits   => [ 'Hash' ],
     is       => 'ro',
     isa      => 'HashRef',
     default  => sub { +{} },
     handles => {
         has_meta => 'count',
+        add_meta => 'set',
+        get_meta => 'get',
     }
 );
 
@@ -65,9 +71,9 @@ sub pack {
         id   => $self->id,
     );
 
-    $self->has_attributes    and $ret{attributes}    = $self->attributes;
-    $self->has_relationships and $ret{relationships} = $self->relationships;
-    $self->has_meta          and $ret{meta}          = $self->meta;
+    $self->has_attributes    and $ret{attributes}    = $self->_attributes;
+    $self->has_relationships and $ret{relationships} = $self->_relationships;
+    $self->has_meta          and $ret{meta}          = $self->_meta;
     $self->has_links         and $ret{links}         = $self->links;
 
     return \%ret;
