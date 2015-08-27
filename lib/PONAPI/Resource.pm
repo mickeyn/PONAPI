@@ -20,19 +20,19 @@ has type => (
 has attributes => (
     is       => ro,
     isa      => 'HashRef',
-    default  => +{},
+    default  => sub { +{} },
 );
 
 has relationships => (
     is       => ro,
     isa      => 'HashRef',
-    default  => +{},
+    default  => sub { +{} },
 );
 
 has meta => (
     is       => ro,
     isa      => 'HashRef',
-    default  => +{},
+    default  => sub { +{} },
 );
 
 has links => (

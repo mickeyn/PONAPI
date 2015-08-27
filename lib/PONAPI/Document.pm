@@ -38,13 +38,13 @@ has included => (
 has meta => (
     is      => 'ro',
     isa     => 'HashRef',
-    default => +{},
+    default => sub { +{} },
 );
 
 has jsonapi => (
     is      => 'ro',
     isa     => 'HashRef',
-    default => +{},
+    default => sub { +{} },
 );
 
 
