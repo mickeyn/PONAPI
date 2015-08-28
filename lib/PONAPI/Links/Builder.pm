@@ -5,46 +5,45 @@ use warnings;
 
 use Moose;
 
-has _self => (
-    is        => 'rw',
+has self => (
+    is        => 'ro',
     isa       => 'Str | HashRef' ,
     predicate => 'has_self',
-	reader    => 'self',
+	writer    => 'set_self',
 );
 
-has _related => (
-    is        => 'rw',
+has related => (
+    is        => 'ro',
     isa       => 'Str | HashRef',
     predicate => 'has_related',
-	reader    => 'related',
+	writer    => 'set_related',
 );
 
-has _pagination => (
-    is        => 'rw',
+has pagination => (
+    is        => 'ro',
     isa       => 'HashRef',
     predicate => 'has_pagination',
-	reader    => 'pagination',
+	writer    => 'set_pagination',
 );
 
-has _page => (
-	is 		  => 'rw',
+has page => (
+	is 		  => 'ro',
 	isa       => 'Str',
-	writer    => 'with_page',
-	reader    => 'page',
+	writer    => 'set_page',
 );
 
 
 sub add_self {
 	my ($self, $value) = @_;
 
-	$self->_self($value);
+	$self->set_self($value);
 	return $self;
 };
 
 sub add_related {
 	my ($self, $related) = @_;
 
-	$self->_related($related);
+	$self->set_related($related);
 	return $self;
 };
 
@@ -65,7 +64,7 @@ sub add_pagination {
 	@invalid
 		and die 'Invalid paginations field names: ', (join ',', @invalid);
 
-	$self->_pagination($pagination);
+	$self->set_pagination($pagination);
 
 	return $self;
 };
@@ -73,7 +72,7 @@ sub add_pagination {
 sub with_page {
 	my ($self, $page) = @_;
 
-	$self->_page($page);
+	$self->set_page($page);
 	return $self;
 };
 

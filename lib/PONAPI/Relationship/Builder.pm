@@ -1,4 +1,4 @@
-package PONAPI::Relationships::Builder;
+package PONAPI::Relationship::Builder;
 # ABSTRACT: A Perl implementation of the JASON-API (http://jsonapi.org/format) spec - Relationships
 
 use strict;
@@ -7,17 +7,22 @@ use Moose;
 
 has links => (
     is        => 'ro',
-    isa       => 'PONAPI::Links',
     predicate => 'has_links',
+	writer    => 'set_links',
 );
 
 has data => (
+    init_arg  => undef,
+    traits    => [ 'Array' ],
     is        => 'ro',
-    isa       => 'ArrayRef[PONAPI::Resource]',
-    predicate => 'has_data',
+    default   => sub { +[] },
+    handles   => {
+        has_data => 'count',
+        add_data => 'push',
+    },
 );
 
-has _meta => (
+has meta => (
     init_arg => undef,
     traits  => [ 'Hash' ],
     is      => 'ro',
@@ -29,6 +34,17 @@ has _meta => (
         get_meta => 'get',
     }
 );
+
+sub add_links {
+	my $self  = shift;
+	my $links = shift;
+
+	ref $links eq 'PONAPI::Relationship::Links::Builder'
+		or die
+
+	$self->set_links($links);
+	return $self;
+};
 
 
 sub build {
@@ -49,7 +65,6 @@ sub build {
 
     return \%ret;
 }
-
 
 __PACKAGE__->meta->make_immutable;
 1;
@@ -75,10 +90,6 @@ __END__
 
 
 =head2 meta
-
-
-
-=head2 jsonapi
 
 
 
