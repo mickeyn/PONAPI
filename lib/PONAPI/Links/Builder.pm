@@ -70,6 +70,13 @@ sub add_pagination {
 	return $self;
 };
 
+sub with_page {
+	my ($self, $page) = @_;
+
+	$self->_page($page);
+	return $self;
+};
+
 sub build {
 	my $self = shift;
 	my %ret;
