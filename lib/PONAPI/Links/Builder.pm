@@ -19,7 +19,7 @@ has related => (
 
 has pagination => (
     is        => 'ro',
-    isa       => 'PONAPI::Links::Pagination',
+    isa       => 'HashRef',
     predicate => 'has_pagination',
 );
 
