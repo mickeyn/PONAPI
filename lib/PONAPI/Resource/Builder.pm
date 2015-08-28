@@ -1,4 +1,4 @@
-package PONAPI::Resource;
+package PONAPI::Resource::Builder;
 # ABSTRACT: A Perl implementation of the JASON-API (http://jsonapi.org/format) spec - Resource
 
 use strict;
@@ -56,7 +56,7 @@ has _meta => (
 );
 
 
-sub pack {
+sub build {
     my $self = shift;
 
     my %ret = (

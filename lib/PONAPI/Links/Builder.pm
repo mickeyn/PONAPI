@@ -1,4 +1,4 @@
-package PONAPI::Links;
+package PONAPI::Links::Builder;
 # ABSTRACT: A Perl implementation of the JASON-API (http://jsonapi.org/format) spec - Links
 
 use strict;
