@@ -19,9 +19,19 @@ TODO:
 subtest '... testing constructor' => sub {
 
     my $b = PONAPI::Relationship::Builder->new(
-        # ...
+        data => { type => 'articles', id => '1' }
     );
     isa_ok($b, 'PONAPI::Relationship::Builder');
+
+    is_deeply($b->data, { type => 'articles', id => '1' }, '... got the expected data');
+
+    can_ok( $_ ) foreach qw[
+        add_links
+        has_links
+
+        add_meta
+        has_meta
+    ];
 
 };
 

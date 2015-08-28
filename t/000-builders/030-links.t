@@ -18,11 +18,9 @@ TODO:
 
 subtest '... testing constructor' => sub {
 
-    my $b = PONAPI::Links::Builder->new(
-        # ...
-    );
+    my $b = PONAPI::Links::Builder->new;
     isa_ok($b, 'PONAPI::Links::Builder');
-
+    
 };
 
 subtest '... testing constructor errors' => sub {
