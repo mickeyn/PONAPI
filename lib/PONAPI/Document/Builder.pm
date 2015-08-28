@@ -5,40 +5,46 @@ use strict;
 use warnings;
 use Moose;
 
-has is_collection_req => (
+
+has action => (
+    is       => 'ro',
+    isa      => 'Str',
+    required => 1,
+);
+
+has type => (
+    is       => 'ro',
+    isa      => 'Str',
+    required => 1,
+);
+
+has is_collection => (
     is       => 'ro',
     isa      => 'Bool',
     required => 1,
 );
 
-has data => (
+
+has _data => (
+    init_arg  => undef,
+    traits    => [ 'Array' ],
     is        => 'ro',
-    isa       => 'ArrayRef[PONAPI::Resource]',
-    predicate => 'has_data',
+    default   => sub { +[] },
+    handles   => {
+        has_data => 'count',
+        add_data => 'push',
+    },
 );
 
-has errors => (
+has _errors => (
+    init_arg  => undef,
+    traits    => [ 'Array' ],
     is        => 'ro',
-    isa       => 'PONAPI::Error',
-    predicate => 'has_error',
-);
-
-has links => (
-    is        => 'ro',
-    isa       => 'PONAPI::Links',
-    predicate => 'has_links',
-);
-
-has included => (
-    is        => 'ro',
-    isa       => 'ArrayRef[PONAPI::Resource]',
-    predicate => 'has_included',
-);
-
-has jsonapi => (
-    is        => 'ro',
-    isa       => 'PONAPI::JSONAPI',
-    predicate => 'has_jsonapi',
+    default   => sub { +[] },
+    handles   => {
+        has_errors => 'count',
+        add_errors => 'push',
+    },
 );
 
 has _meta => (
@@ -54,32 +60,100 @@ has _meta => (
     }
 );
 
+has _links => (
+    init_arg  => undef,
+    is        => 'ro',
+    writer    => 'set_links',
+    predicate => 'has_links',
+);
+
+has _included => (
+    init_arg  => undef,
+    is        => 'ro',
+    writer    => 'set_included',
+    predicate => 'has_include',
+);
+
+
+sub BUILDARGS {
+    my ( $class, %args ) = @_;
+
+    my $action = delete $args{action};
+    my $type   = delete $args{type};
+
+    $action or die "[$class] new: missing action\n";
+    $type   or die "[$class] new: missing type\n";
+
+    !ref($action) and grep { $action eq $_ } qw< GET POST PATCH DELETE >
+        or die "[$class] new: invalid action\n";
+
+    !ref($type) and $type or die "[$class] new: invalid type\n";
+
+    return +{
+        action        => $action,
+        type          => $type,
+        is_collection => ( exists $args{id} ? 0 : 1 ),
+        %args
+    };
+}
+
+sub add_links {
+    my $self  = shift;
+    my $links = shift;
+
+    $links and ref($links) eq 'HASH'
+        or die "[__PACKAGE__] add_links: invalid links\n";
+
+    $self->set_links( $links );
+
+    return $self;
+}
+
+sub add_included {
+    my $self  = shift;
+    my $included = shift;
+
+    $included and ref($included) eq 'HASH'
+        or die "[__PACKAGE__] add_included: invalid included\n";
+
+    $self->set_included( $included );
+
+    return $self;
+}
+
 
 sub build {
     my $self = shift;
-    my %ret;
 
-    # add either errors or data
+    unless ( $self->has_errors or $self->has_data or $self->has_meta ) {
+        $self->add_error( +{
+            # ...
+            detail => "Missing data/meta",
+        } );
+    }
+
+    # errors -> return object with errors
     if ( $self->has_errors ) {
-        $ret{errors} = $self->errors;
+        return +{
+            errors => $self->_errors,
+        };
+    }
+
+    my %ret = ( jsonapi => { version => "1.0" } );
+
+    if ( $self->has_data ) {
+        $ret{data} = $self->is_collection_req
+            ? $self->_data
+            : $self->_data->[0];
+
+        $self->has_include and $ret{included} = $self->_include;
 
     } else {
-        $ret{data} = $self->has_data
-            ? ( $self->is_collection_req ? $self->data : $self->data->[0] )
-            : ( $self->is_collection_req ? [] : undef );
-
-        $self->has_included and $ret{included} = $self->included;
+        $ret{data} = $self->is_collection_req ? [] : undef;
     }
 
-    $self->has_meta and $ret{meta} = $self->_meta;
-
-    # document must have at least one of: data, errors, meta
-    unless ( $self->has_data or $self->has_errors or $self->has_meta ) {
-        
-    }
-
-    $self->has_links   and $ret{links}   = $self->links;
-    $self->has_jsonapi and $ret{jsonapi} = $self->jsonapi;
+    $self->has_meta  and $ret{meta}  = $self->_meta;
+    $self->has_links and $ret{links} = $self->links;
 
     return \%ret;
 }
@@ -89,36 +163,4 @@ __PACKAGE__->meta->make_immutable;
 1;
 
 __END__
-
-=head1 SYNOPSIS
-
-
-
-=head1 DESCRIPTION
-
-
-
-=head1 ATTRIBUTES
-
-=head2 data
-
-
-
-=head2 erorrs
-
-
-
-=head2 meta
-
-
-
-=head2 jsonapi
-
-
-
-=head2 links
-
-
-
-=head2 included
 
