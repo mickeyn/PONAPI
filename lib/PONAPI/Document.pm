@@ -35,6 +35,12 @@ has included => (
     predicate => 'has_included',
 );
 
+has jsonapi => (
+    is        => 'ro',
+    isa       => 'PONAPI::JSONAPI',
+    predicate => 'has_jsonapi',
+);
+
 has _meta => (
     init_arg => undef,
     traits  => [ 'Hash' ],
@@ -45,19 +51,6 @@ has _meta => (
         has_meta => 'count',
         add_meta => 'set',
         get_meta => 'get',
-    }
-);
-
-has _jsonapi => (
-    init_arg => undef,
-    traits  => [ 'Hash' ],
-    is      => 'ro',
-    isa     => 'HashRef',
-    default => sub { +{} },
-    handles => {
-        has_jsonapi => 'count',
-        add_jsonapi => 'set',
-        get_jsonapi => 'get',
     }
 );
 
@@ -86,7 +79,7 @@ sub pack {
     }
 
     $self->has_links   and $ret{links}   = $self->links;
-    $self->has_jsonapi and $ret{jsonapi} = $self->_jsonapi;
+    $self->has_jsonapi and $ret{jsonapi} = $self->jsonapi;
 
     return \%ret;
 }
