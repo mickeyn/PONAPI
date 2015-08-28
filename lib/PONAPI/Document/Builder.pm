@@ -81,13 +81,13 @@ sub BUILDARGS {
     my $action = delete $args{action};
     my $type   = delete $args{type};
 
-    $action or die "[$class] create: missing action\n";
-    $type   or die "[$class] create: missing type\n";
+    $action or die "[$class] new: missing action\n";
+    $type   or die "[$class] new: missing type\n";
 
     !ref($action) and grep { $action eq $_ } qw< GET POST PATCH DELETE >
-        or die "[$class] create: invalid action\n";
+        or die "[$class] new: invalid action\n";
 
-    !ref($type) and $type or die "[$class] create: invalid type\n";
+    !ref($type) and $type or die "[$class] new: invalid type\n";
 
     return +{
         action        => $action,
