@@ -17,6 +17,18 @@ has type => (
     required => 1,
 );
 
+has links => (
+    is        => 'ro',
+    isa       => 'PONAPI::Links',
+    predicate => 'has_links',
+);
+
+has relationships => (
+    is        => 'ro',
+    isa       => 'PONAPI::Relationships',
+    predicate => 'has_relationships',
+);
+
 has _attributes => (
     init_arg => undef,
     traits   => [ 'Hash' ],
@@ -27,19 +39,6 @@ has _attributes => (
         has_attributes => 'count',
         add_attribute  => 'set',
         get_attribute  => 'get',
-    }
-);
-
-has _relationships => (
-    init_arg => undef,
-    traits   => [ 'Hash' ],
-    is       => 'ro',
-    isa      => 'HashRef',
-    default  => sub { +{} },
-    handles => {
-        has_relationships => 'count',
-        add_relationships => 'set',
-        get_relationships => 'get',
     }
 );
 
@@ -56,12 +55,6 @@ has _meta => (
     }
 );
 
-has links => (
-    is        => 'ro',
-    isa       => 'PONAPI::Links',
-    predicate => 'has_links',
-);
-
 
 sub pack {
     my $self = shift;
@@ -72,8 +65,8 @@ sub pack {
     );
 
     $self->has_attributes    and $ret{attributes}    = $self->_attributes;
-    $self->has_relationships and $ret{relationships} = $self->_relationships;
     $self->has_meta          and $ret{meta}          = $self->_meta;
+    $self->has_relationships and $ret{relationships} = $self->relationships;
     $self->has_links         and $ret{links}         = $self->links;
 
     return \%ret;
