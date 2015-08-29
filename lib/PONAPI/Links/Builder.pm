@@ -9,84 +9,85 @@ has self => (
     is        => 'ro',
     isa       => 'Str | HashRef' ,
     predicate => 'has_self',
-	writer    => 'set_self',
+    writer    => 'set_self',
 );
 
 has related => (
     is        => 'ro',
     isa       => 'Str | HashRef',
     predicate => 'has_related',
-	writer    => 'set_related',
+    writer    => 'set_related',
 );
 
 has pagination => (
     is        => 'ro',
     isa       => 'HashRef',
     predicate => 'has_pagination',
-	writer    => 'set_pagination',
+    writer    => 'set_pagination',
 );
 
 has page => (
-	is 		  => 'ro',
-	isa       => 'Str',
-	writer    => 'set_page',
+    is        => 'ro',
+    isa       => 'Str',
+    writer    => 'set_page',
 );
 
 
 sub add_self {
-	my ($self, $value) = @_;
+    my ($self, $value) = @_;
 
-	$self->set_self($value);
-	return $self;
+    $self->set_self($value);
+    return $self;
 };
 
 sub add_related {
-	my ($self, $related) = @_;
+    my ($self, $related) = @_;
 
-	$self->set_related($related);
-	return $self;
+    $self->set_related($related);
+    return $self;
 };
 
 sub add_pagination {
-	my ($self, $pagination) = @_;
+    my ($self, $pagination) = @_;
 
-	ref $pagination eq 'HASH'
-		or die 'Pagination should be a hashref';
-	my %valid_field_names = (
-		first => 1,
-		last  => 1,
-		prev  => 1,
-		next  => 1,
-	);
+    ref $pagination eq 'HASH'
+        or die 'Pagination should be a hashref';
 
-	my @invalid = grep +(!exists $valid_field_names{$_}), keys %{ $pagination };
+    my %valid_field_names = (
+        first => 1,
+        last  => 1,
+        prev  => 1,
+        next  => 1,
+    );
 
-	@invalid
-		and die 'Invalid paginations field names: ', (join ',', @invalid);
+    my @invalid = grep +(!exists $valid_field_names{$_}), keys %{ $pagination };
 
-	$self->set_pagination($pagination);
+    @invalid
+        and die 'Invalid paginations field names: ', (join ',', @invalid);
 
-	return $self;
+    $self->set_pagination($pagination);
+
+    return $self;
 };
 
 sub with_page {
-	my ($self, $page) = @_;
+    my ($self, $page) = @_;
 
-	$self->set_page($page);
-	return $self;
+    $self->set_page($page);
+    return $self;
 };
 
 sub build {
-	my $self = shift;
-	my %ret;
+    my $self = shift;
+    my %ret;
 
-	$self->has_self    and $ret{self}    = $self->self;
-	$self->has_related and $ret{related} = $self->related;
+    $self->has_self    and $ret{self}    = $self->self;
+    $self->has_related and $ret{related} = $self->related;
 
-	$self->has_pagination and
-		@ret{ keys %{ $self->pagination } } = values %{ $self->pagination };
+    $self->has_pagination and
+        @ret{ keys %{ $self->pagination } } = values %{ $self->pagination };
 
-	return \%ret;
+    return \%ret;
 };
 
 __PACKAGE__->meta->make_immutable;
@@ -113,4 +114,3 @@ __END__
 
 
 =head2 pagination
-

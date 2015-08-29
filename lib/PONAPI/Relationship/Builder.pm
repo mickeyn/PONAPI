@@ -8,7 +8,7 @@ use Moose;
 has links => (
     is        => 'ro',
     predicate => 'has_links',
-	writer    => 'set_links',
+    writer    => 'set_links',
 );
 
 has data => (
@@ -24,11 +24,11 @@ has data => (
 
 has meta => (
     init_arg => undef,
-    traits  => [ 'Hash' ],
-    is      => 'ro',
-    isa     => 'HashRef',
-    default => sub { +{} },
-    handles => {
+    traits   => [ 'Hash' ],
+    is       => 'ro',
+    isa      => 'HashRef',
+    default  => sub { +{} },
+    handles  => {
         has_meta => 'count',
         add_meta => 'set',
         get_meta => 'get',
@@ -36,14 +36,14 @@ has meta => (
 );
 
 sub add_links {
-	my $self  = shift;
-	my $links = shift;
+    my $self  = shift;
+    my $links = shift;
 
-	ref $links eq 'PONAPI::Relationship::Links::Builder'
-		or die
+    ref $links eq 'PONAPI::Relationship::Links::Builder'
+        or die;
 
-	$self->set_links($links);
-	return $self;
+    $self->set_links($links);
+    return $self;
 };
 
 
@@ -98,4 +98,3 @@ __END__
 
 
 =head2 included
-
