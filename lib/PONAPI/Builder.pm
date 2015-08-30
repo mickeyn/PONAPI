@@ -14,7 +14,7 @@ sub create {
     !ref($action) and grep { $action eq $_ } qw< GET POST PATCH DELETE >
         or die "[$class] create: invalid action\n";
 
-    !ref($type) and $type or die "[$class] create: invalid type\n";
+    !ref($type) or die "[$class] create: invalid type\n";
 
     $args and ref($args) eq 'HASH' or die "[$class] create: invalid args\n";
 
