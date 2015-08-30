@@ -8,8 +8,8 @@ use Moose::Role;
 has _links => (
     init_arg  => undef,
     is        => 'ro',
-    writer    => 'set_links',
     predicate => 'has_links',
+    writer    => 'set_links',
 );
 
 sub add_links {
@@ -20,6 +20,7 @@ sub add_links {
         or die;
 
     $self->set_links( $links );
+
     return $self;
 };
 
