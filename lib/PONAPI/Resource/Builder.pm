@@ -26,7 +26,7 @@ has _relationships => (
     is       => 'ro',
     isa      => 'HashRef',
     default  => sub { +{} },
-    handles => {
+    handles  => {
         has_relationships => 'count',
     }
 );
@@ -37,9 +37,8 @@ has _attributes => (
     is       => 'ro',
     isa      => 'HashRef',
     default  => sub { +{} },
-    handles => {
+    handles  => {
         has_attributes => 'count',
-        add_attribute  => 'set',
     }
 );
 
@@ -68,6 +67,20 @@ sub add_relationship {
     return $self;
 }
 
+sub add_attributes {
+    my $self = shift;
+    my @args = @_;
+
+    @args > 0 and @args % 2 == 0
+        or die "[__PACKAGE__] add_attributes: arguments list must have key/value pairs";
+
+    while ( @args ) {
+        my ($k, $v) = (shift @args, shift @args);
+        $self->_attributes->{$k} = $v;
+    }
+
+    return $self;
+}
 
 sub build_identifier {
     my $self = shift;
