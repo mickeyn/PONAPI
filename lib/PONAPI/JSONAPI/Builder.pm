@@ -5,23 +5,12 @@ use strict;
 use warnings;
 use Moose;
 
+with 'PONAPI::Role::Meta';
+
 has version => (
     is        => 'ro',
     isa       => 'Str',
     predicate => 'has_version',
-);
-
-has _meta => (
-    init_arg => undef,
-    traits  => [ 'Hash' ],
-    is      => 'ro',
-    isa     => 'HashRef',
-    default => sub { +{} },
-    handles => {
-        has_meta => 'count',
-        add_meta => 'set',
-        get_meta => 'get',
-    }
 );
 
 

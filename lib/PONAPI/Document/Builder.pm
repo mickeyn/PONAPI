@@ -5,6 +5,7 @@ use strict;
 use warnings;
 use Moose;
 
+with 'PONAPI::Role::Meta';
 
 has action => (
     is       => 'ro',
@@ -45,19 +46,6 @@ has _errors => (
         has_errors => 'count',
         add_errors => 'push',
     },
-);
-
-has _meta => (
-    init_arg => undef,
-    traits  => [ 'Hash' ],
-    is      => 'ro',
-    isa     => 'HashRef',
-    default => sub { +{} },
-    handles => {
-        has_meta => 'count',
-        add_meta => 'set',
-        get_meta => 'get',
-    }
 );
 
 has _links => (
