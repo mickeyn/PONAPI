@@ -21,14 +21,16 @@ has type => (
 
 has links => (
     is        => 'ro',
-    isa       => 'PONAPI::Links',
+    isa       => 'HashRef',
     predicate => 'has_links',
+    writer    => 'set_links',
 );
 
 has relationships => (
     is        => 'ro',
-    isa       => 'PONAPI::Relationships',
+    isa       => 'HashRef',
     predicate => 'has_relationships',
+    writer    => 'set_relationships',
 );
 
 has _attributes => (
