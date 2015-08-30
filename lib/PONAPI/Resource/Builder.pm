@@ -56,7 +56,7 @@ has _meta => (
 );
 
 
-sub build {
+sub build_identifier {
     my $self = shift;
 
     my %ret = (
@@ -64,12 +64,21 @@ sub build {
         id   => $self->id,
     );
 
-    $self->has_attributes    and $ret{attributes}    = $self->_attributes;
-    $self->has_meta          and $ret{meta}          = $self->_meta;
-    $self->has_relationships and $ret{relationships} = $self->relationships;
-    $self->has_links         and $ret{links}         = $self->links;
+    $self->has_meta and $ret{meta} = $self->_meta;
 
     return \%ret;
+}
+
+sub build {
+    my $self = shift;
+
+    my $ret = $self->build_identifier;
+
+    $self->has_attributes    and $ret->{attributes}    = $self->_attributes;
+    $self->has_relationships and $ret->{relationships} = $self->relationships;
+    $self->has_links         and $ret->{links}         = $self->links;
+
+    return $ret;
 }
 
 
