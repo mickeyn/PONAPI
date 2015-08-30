@@ -6,52 +6,64 @@ use warnings;
 use Moose;
 
 has self => (
+    init_arg  => undef,
     is        => 'ro',
-    isa       => 'Str | HashRef' ,
     predicate => 'has_self',
     writer    => 'set_self',
 );
 
 has related => (
+    init_arg  => undef,
     is        => 'ro',
-    isa       => 'Str | HashRef',
     predicate => 'has_related',
     writer    => 'set_related',
 );
 
 has pagination => (
+    init_arg  => undef,
     is        => 'ro',
-    isa       => 'HashRef',
     predicate => 'has_pagination',
     writer    => 'set_pagination',
 );
 
 has page => (
+    init_arg  => undef,
     is        => 'ro',
-    isa       => 'Str',
+    predicate => 'has_page',
     writer    => 'set_page',
 );
 
 
 sub add_self {
-    my ($self, $value) = @_;
+    my $self  = shift;
+    my $value = shift;
 
-    $self->set_self($value);
+    !ref($value) or ref $value eq 'HASH'
+        or die '[__PACKAGE__] add_self: value should be a string or a hashref';
+
+    $self->set_self( $value );
+
     return $self;
 };
 
 sub add_related {
-    my ($self, $related) = @_;
+    my $self  = shift;
+    my $value = shift;
 
-    $self->set_related($related);
+    !ref($value) or ref $value eq 'HASH'
+        or die '[__PACKAGE__] add_related: value should be a string or a hashref';
+
+    $self->set_related( $value );
+
     return $self;
 };
 
 sub add_pagination {
-    my ($self, $pagination) = @_;
+    my $self       = shift;
+    my $pagination = shift;
 
     ref $pagination eq 'HASH'
-        or die 'Pagination should be a hashref';
+        or die '[__PACKAGE__] add_pagination: should be a hashref';
 
     my %valid_field_names = (
         first => 1,
@@ -61,19 +73,23 @@ sub add_pagination {
     );
 
     my @invalid = grep +(!exists $valid_field_names{$_}), keys %{ $pagination };
-
     @invalid
-        and die 'Invalid paginations field names: ', (join ',', @invalid);
+        and die '[__PACKAGE__] add_pagination: Invalid paginations field names: ', (join ',', @invalid);
 
-    $self->set_pagination($pagination);
+    $self->set_pagination( $pagination );
 
     return $self;
 };
 
-sub with_page {
-    my ($self, $page) = @_;
+sub add_page {
+    my $self  = shift;
+    my $value = shift;
 
-    $self->set_page($page);
+    !ref($value)
+        or die '[__PACKAGE__] add_page: value should be a string';
+
+    $self->set_page( $value );
+
     return $self;
 };
 
