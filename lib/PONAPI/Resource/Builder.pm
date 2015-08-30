@@ -36,7 +36,6 @@ has _attributes => (
     handles => {
         has_attributes => 'count',
         add_attribute  => 'set',
-        get_attribute  => 'get',
     }
 );
 

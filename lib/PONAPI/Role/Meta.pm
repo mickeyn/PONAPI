@@ -14,7 +14,6 @@ has _meta => (
     handles => {
         has_meta => 'count',
         add_meta => 'set',
-        get_meta => 'get',
     }
 );
 
