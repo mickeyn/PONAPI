@@ -13,15 +13,15 @@ sub build {
     my $self = shift;
     my %ret;
 
-    $self->has_links and $ret{links} = $self->links;
-    $self->has_data  and $ret{data}  = $self->data;
+    $self->has_links and $ret{links} = $self->_links;
+    $self->has_data  and $ret{data}  = $self->_data;
     $self->has_meta  and $ret{meta}  = $self->_meta;
 
     $self->has_links or $self->has_data or $self->has_meta
         or return undef;
 
     if ( $self->has_links ) {
-        $self->links->has_self or $self->links->has_related
+        $self->_links->has_self or $self->_links->has_related
             or return undef;
     }
 

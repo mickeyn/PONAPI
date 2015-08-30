@@ -60,7 +60,7 @@ sub build {
 
     $self->has_attributes    and $ret->{attributes}    = $self->_attributes;
     $self->has_relationships and $ret->{relationships} = $self->relationships;
-    $self->has_links         and $ret->{links}         = $self->links;
+    $self->has_links         and $ret->{links}         = $self->_links;
 
     return $ret;
 }

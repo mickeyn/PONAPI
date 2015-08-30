@@ -19,7 +19,7 @@ sub add_links {
     ref $links eq 'PONAPI::Relationship::Links::Builder'
         or die;
 
-    $self->set_links($links);
+    $self->set_links( $links );
     return $self;
 };
 

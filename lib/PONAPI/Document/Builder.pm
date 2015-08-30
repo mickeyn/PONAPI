@@ -125,7 +125,7 @@ sub build {
     }
 
     $self->has_meta  and $ret{meta}  = $self->_meta;
-    $self->has_links and $ret{links} = $self->links;
+    $self->has_links and $ret{links} = $self->_links;
 
     return \%ret;
 }
