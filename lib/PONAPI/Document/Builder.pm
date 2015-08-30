@@ -7,6 +7,7 @@ use Moose;
 
 with 'PONAPI::Role::Data';
 with 'PONAPI::Role::Meta';
+with 'PONAPI::Role::Links';
 
 has action => (
     is       => 'ro',
@@ -36,13 +37,6 @@ has _errors => (
         has_errors => 'count',
         add_errors => 'push',
     },
-);
-
-has _links => (
-    init_arg  => undef,
-    is        => 'ro',
-    writer    => 'set_links',
-    predicate => 'has_links',
 );
 
 has _included => (

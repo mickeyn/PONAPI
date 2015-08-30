@@ -7,25 +7,7 @@ use Moose;
 
 with 'PONAPI::Role::Data';
 with 'PONAPI::Role::Meta';
-
-has links => (
-    is        => 'ro',
-    predicate => 'has_links',
-    writer    => 'set_links',
-);
-
-
-sub add_links {
-    my $self  = shift;
-    my $links = shift;
-
-    ref $links eq 'PONAPI::Relationship::Links::Builder'
-        or die;
-
-    $self->set_links($links);
-    return $self;
-};
-
+with 'PONAPI::Role::Links';
 
 sub build {
     my $self = shift;

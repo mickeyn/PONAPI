@@ -6,6 +6,7 @@ use warnings;
 use Moose;
 
 with 'PONAPI::Role::Meta';
+with 'PONAPI::Role::Links';
 
 has id => (
     is       => 'ro',
@@ -17,13 +18,6 @@ has type => (
     is       => 'ro',
     isa      => 'Str',
     required => 1,
-);
-
-has links => (
-    is        => 'ro',
-    isa       => 'HashRef',
-    predicate => 'has_links',
-    writer    => 'set_links',
 );
 
 has relationships => (
