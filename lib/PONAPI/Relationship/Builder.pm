@@ -5,6 +5,8 @@ use strict;
 use warnings;
 use Moose;
 
+with 'PONAPI::Role::Meta';
+
 has links => (
     is        => 'ro',
     predicate => 'has_links',
@@ -22,18 +24,6 @@ has data => (
     },
 );
 
-has meta => (
-    init_arg => undef,
-    traits   => [ 'Hash' ],
-    is       => 'ro',
-    isa      => 'HashRef',
-    default  => sub { +{} },
-    handles  => {
-        has_meta => 'count',
-        add_meta => 'set',
-        get_meta => 'get',
-    }
-);
 
 sub add_links {
     my $self  = shift;
