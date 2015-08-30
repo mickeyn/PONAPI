@@ -20,11 +20,15 @@ has type => (
     required => 1,
 );
 
-has relationships => (
-    is        => 'ro',
-    isa       => 'HashRef',
-    predicate => 'has_relationships',
-    writer    => 'set_relationships',
+has _relationships => (
+    init_arg => undef,
+    traits   => [ 'Hash' ],
+    is       => 'ro',
+    isa      => 'HashRef',
+    default  => sub { +{} },
+    handles => {
+        has_relationships => 'count',
+    }
 );
 
 has _attributes => (
@@ -38,6 +42,31 @@ has _attributes => (
         add_attribute  => 'set',
     }
 );
+
+sub add_relationship {
+    my $self = shift;
+    my $args = shift;
+
+    $args and ref $args eq 'HASH'
+        or die "[__PACKAGE__] add_relationship: args must be a hashref";
+
+    my $name = $args->{name};
+    $name and !ref $name
+        or die "[__PACKAGE__] add_relationship: missing key: name";
+
+    my $builder = PONAPI::Relationship::Builder->new();
+    $args->{data}  and $builder->add_data( $args->{data} );
+    $args->{meta}  and $builder->add_meta( $args->{meta} );
+    $args->{links} and $builder->add_links( $args->{links} );
+
+    my $relationships = $builder->build;
+    $relationships
+        or die "[__PACKAGE__] add_relationship: failed to create a valid structure";
+
+    $self->_relationships->{$name} = $relationships;
+
+    return $self;
+}
 
 
 sub build_identifier {
@@ -59,7 +88,7 @@ sub build {
     my $ret = $self->build_identifier;
 
     $self->has_attributes    and $ret->{attributes}    = $self->_attributes;
-    $self->has_relationships and $ret->{relationships} = $self->relationships;
+    $self->has_relationships and $ret->{relationships} = $self->_relationships;
     $self->has_links         and $ret->{links}         = $self->_links;
 
     return $ret;
