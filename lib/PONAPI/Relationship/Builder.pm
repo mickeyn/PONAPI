@@ -5,23 +5,13 @@ use strict;
 use warnings;
 use Moose;
 
+with 'PONAPI::Role::Data';
 with 'PONAPI::Role::Meta';
 
 has links => (
     is        => 'ro',
     predicate => 'has_links',
     writer    => 'set_links',
-);
-
-has data => (
-    init_arg  => undef,
-    traits    => [ 'Array' ],
-    is        => 'ro',
-    default   => sub { +[] },
-    handles   => {
-        has_data => 'count',
-        add_data => 'push',
-    },
 );
 
 

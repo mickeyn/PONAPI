@@ -5,6 +5,7 @@ use strict;
 use warnings;
 use Moose;
 
+with 'PONAPI::Role::Data';
 with 'PONAPI::Role::Meta';
 
 has action => (
@@ -25,17 +26,6 @@ has is_collection => (
     required => 1,
 );
 
-
-has _data => (
-    init_arg  => undef,
-    traits    => [ 'Array' ],
-    is        => 'ro',
-    default   => sub { +[] },
-    handles   => {
-        has_data => 'count',
-        add_data => 'push',
-    },
-);
 
 has _errors => (
     init_arg  => undef,
