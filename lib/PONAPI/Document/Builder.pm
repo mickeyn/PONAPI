@@ -87,7 +87,7 @@ sub BUILDARGS {
     !ref($action) and grep { $action eq $_ } qw< GET POST PATCH DELETE >
         or die "[$class] new: invalid action\n";
 
-    !ref($type) and $type or die "[$class] new: invalid type\n";
+    !ref($type) or die "[$class] new: invalid type\n";
 
     return +{
         action        => $action,
