@@ -59,7 +59,7 @@ sub add_source {
     my @args = @_;
 
     @args > 0 and @args % 2 == 0
-        or die "__PACKAGE__: add_source: arguments list must have key/value pairs";
+        or die "[__PACKAGE__] add_source: arguments list must have key/value pairs";
 
     while ( @args ) {
         my ($k, $v) = (shift @args, shift @args);
