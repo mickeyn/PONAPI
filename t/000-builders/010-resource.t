@@ -30,8 +30,8 @@ subtest '... testing constructor' => sub {
     can_ok( $b, $_ ) foreach qw[
         add_attributes
         has_attributes
-        get_attributes
 
+        add_relationship
         has_relationships
 
         add_links
@@ -39,7 +39,6 @@ subtest '... testing constructor' => sub {
 
         add_meta
         has_meta
-        get_meta
     ];
 
 };
@@ -48,19 +47,19 @@ subtest '... testing constructor errors' => sub {
 
     like(
         exception { PONAPI::Resource::Builder->new },
-        qr/^Whoops/,
+        qr/^Attribute \(.+\) is required at constructor PONAPI\:\:Resource\:\:Builder\:\:new/,
         '... got the error we expected'
     );
 
     like(
         exception { PONAPI::Resource::Builder->new( id => '1' ) },
-        qr/^Whoops/,
+        qr/^Attribute \(type\) is required at constructor PONAPI\:\:Resource\:\:Builder\:\:new/,
         '... got the error we expected'
     );
 
     like(
         exception { PONAPI::Resource::Builder->new( type => 'articles' ) },
-        qr/^Whoops/,
+        qr/^Attribute \(id\) is required at constructor PONAPI\:\:Resource\:\:Builder\:\:new/,
         '... got the error we expected'
     );
 
