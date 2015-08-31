@@ -4,6 +4,7 @@ package PONAPI::Document::Builder;
 use strict;
 use warnings;
 use Moose;
+use Moose::Util::TypeConstraints qw[ enum ];
 
 with qw<
     PONAPI::Role::HasData
@@ -13,7 +14,7 @@ with qw<
 
 has action => (
     is       => 'ro',
-    isa      => 'Str',
+    isa      => enum([qw[ GET POST PATCH DELETE ]]),
     required => 1,
 );
 
