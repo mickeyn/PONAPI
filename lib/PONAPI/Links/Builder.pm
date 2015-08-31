@@ -9,28 +9,28 @@ has _self => (
     init_arg  => undef,
     is        => 'ro',
     predicate => 'has_self',
-    writer    => 'set_self',
+    writer    => '_set_self',
 );
 
 has _related => (
     init_arg  => undef,
     is        => 'ro',
     predicate => 'has_related',
-    writer    => 'set_related',
+    writer    => '_set_related',
 );
 
 has _pagination => (
     init_arg  => undef,
     is        => 'ro',
     predicate => 'has_pagination',
-    writer    => 'set_pagination',
+    writer    => '_set_pagination',
 );
 
 has _page => (
     init_arg  => undef,
     is        => 'ro',
     predicate => 'has_page',
-    writer    => 'set_page',
+    writer    => '_set_page',
 );
 
 
@@ -41,7 +41,7 @@ sub add_self {
     !ref($value) or ref $value eq 'HASH'
         or die '[__PACKAGE__] add_self: value should be a string or a hashref';
 
-    $self->set_self( $value );
+    $self->_set_self( $value );
 
     return $self;
 };
@@ -53,7 +53,7 @@ sub add_related {
     !ref($value) or ref $value eq 'HASH'
         or die '[__PACKAGE__] add_related: value should be a string or a hashref';
 
-    $self->set_related( $value );
+    $self->_set_related( $value );
 
     return $self;
 };
@@ -76,7 +76,7 @@ sub add_pagination {
     @invalid
         and die '[__PACKAGE__] add_pagination: Invalid paginations field names: ', (join ',', @invalid);
 
-    $self->set_pagination( $pagination );
+    $self->_set_pagination( $pagination );
 
     return $self;
 };
@@ -88,7 +88,7 @@ sub add_page {
     !ref($value)
         or die '[__PACKAGE__] add_page: value should be a string';
 
-    $self->set_page( $value );
+    $self->_set_page( $value );
 
     return $self;
 };

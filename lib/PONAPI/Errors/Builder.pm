@@ -14,35 +14,35 @@ has id => (
     is        => 'ro',
     isa       => 'Str',
     predicate => 'has_id',
-    writer    => 'set_id',
+    writer    => '_set_id',
 );
 
 has status => (
     is        => 'ro',
     isa       => 'Str',
     predicate => 'has_status',
-    writer    => 'set_status',
+    writer    => '_set_status',
 );
 
 has code => (
     is        => 'ro',
     isa       => 'Str',
     predicate => 'has_code',
-    writer    => 'set_code',
+    writer    => '_set_code',
 );
 
 has title => (
     is        => 'ro',
     isa       => 'Str',
     predicate => 'has_title',
-    writer    => 'set_title',
+    writer    => '_set_title',
 );
 
 has detail => (
     is        => 'ro',
     isa       => 'Str',
     predicate => 'has_detail',
-    writer    => 'set_detail',
+    writer    => '_set_detail',
 );
 
 has source => (

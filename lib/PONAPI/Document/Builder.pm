@@ -44,7 +44,7 @@ has _errors => (
 has _included => (
     init_arg  => undef,
     is        => 'ro',
-    writer    => 'set_included',
+    writer    => '_set_included',
     predicate => 'has_include',
 );
 
@@ -90,7 +90,7 @@ sub add_included {
     $included and ref($included) eq 'HASH'
         or die "[__PACKAGE__] add_included: invalid included\n";
 
-    $self->set_included( $included );
+    $self->_set_included( $included );
 
     return $self;
 }
