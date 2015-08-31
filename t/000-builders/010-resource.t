@@ -27,11 +27,11 @@ subtest '... testing constructor' => sub {
     is($b->id, '1', '... got the expected id');
     is($b->type, 'articles', '... got the expected type');
 
-    can_ok( $_ ) foreach qw[
+    can_ok( $b, $_ ) foreach qw[
         add_attributes
         has_attributes
+        get_attributes
 
-        add_relationships
         has_relationships
 
         add_links
@@ -39,6 +39,7 @@ subtest '... testing constructor' => sub {
 
         add_meta
         has_meta
+        get_meta
     ];
 
 };
