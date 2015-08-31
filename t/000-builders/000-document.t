@@ -85,6 +85,12 @@ subtest '... testing constructor errors' => sub {
     );
 
     like(
+        exception { PONAPI::Document::Builder->new( action => 'GETTAH' ) },
+        qr/^Attribute \(action\) does not pass the type constraint/,
+        '... got the error we expected'
+    );
+
+    like(
         exception { PONAPI::Document::Builder->new( type => 'articles' ) },
         qr/^Attribute \(action\) is required at constructor PONAPI\:\:Document\:\:Builder\:\:new/,
         '... got the error we expected'
