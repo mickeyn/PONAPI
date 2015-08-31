@@ -10,6 +10,7 @@ with qw<
     PONAPI::Role::HasData
     PONAPI::Role::HasMeta
     PONAPI::Role::HasLinks
+    PONAPI::Role::HasErrors
 >;
 
 # ...
@@ -33,17 +34,6 @@ has type => (
 );
 
 # ...
-
-has _errors => (
-    init_arg  => undef,
-    traits    => [ 'Array' ],
-    is        => 'ro',
-    default   => sub { +[] },
-    handles   => {
-        has_errors => 'count',
-        add_errors => 'push',
-    },
-);
 
 has _included => (
     init_arg  => undef,
@@ -83,7 +73,7 @@ sub build {
 
     # no errors -> must have data or meta
     unless ( $self->has_errors or $self->has_data or $self->has_meta ) {
-        $self->add_errors( +{
+        $self->_add_error( +{
             # ...
             detail => "Missing data/meta",
         } );
