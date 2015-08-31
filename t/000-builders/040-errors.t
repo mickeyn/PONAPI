@@ -1,4 +1,4 @@
-#!perl 
+#!perl
 
 use strict;
 use warnings;
@@ -20,7 +20,7 @@ subtest '... testing constructor' => sub {
 
     my $b = PONAPI::Errors::Builder->new;
     isa_ok($b, 'PONAPI::Errors::Builder');
-    
+
     can_ok( $b, $_ ) foreach qw[
         id     has_id
         status has_status

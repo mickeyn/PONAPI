@@ -1,4 +1,4 @@
-#!perl 
+#!perl
 
 use strict;
 use warnings;
@@ -19,18 +19,18 @@ TODO:
 subtest '... w/data test' => sub {
 
     my $b = PONAPI::Document::Builder->new(
-        action => 'GET', 
+        action => 'GET',
         type   => 'articles',
     );
     isa_ok($b, 'PONAPI::Document::Builder');
 
     $b->add_data({ type => 'articles', id => '10' });
 
-    my $doc; 
+    my $doc;
     is(exception { $doc = $b->build }, undef, '.... building did not die');
     is_deeply(
         $b->build,
-        { 
+        {
             jsonapi => { version => "1.0" },
             data    => [{ type => 'articles', id => '10' }],
         },
@@ -43,25 +43,25 @@ subtest '... w/data test' => sub {
 subtest '... w/data that is null test' => sub {
 
     # XXX:
-    # I am not sure that this test is okay, 
+    # I am not sure that this test is okay,
     # we need to look into the spec and see
-    # if we actually want to have a collection 
+    # if we actually want to have a collection
     # with nulls in it.
     # - SL
 
     my $b = PONAPI::Document::Builder->new(
-        action => 'GET', 
+        action => 'GET',
         type   => 'articles',
     );
     isa_ok($b, 'PONAPI::Document::Builder');
 
     $b->add_data(undef);
 
-    my $doc; 
+    my $doc;
     is(exception { $doc = $b->build }, undef, '.... building did not die');
     is_deeply(
         $b->build,
-        { 
+        {
             jsonapi => { version => "1.0" },
             data    => [undef],
         },
@@ -73,23 +73,23 @@ subtest '... w/data that is null test' => sub {
 subtest '... w/meta test' => sub {
 
     # XXX:
-    # Should `data` be an empty array 
+    # Should `data` be an empty array
     # ref in this case?
     # - SL
 
     my $b = PONAPI::Document::Builder->new(
-        action => 'GET', 
+        action => 'GET',
         type   => 'articles',
     );
     isa_ok($b, 'PONAPI::Document::Builder');
 
     $b->add_meta( turtles => "all the way down" );
 
-    my $doc; 
+    my $doc;
     is(exception { $doc = $b->build }, undef, '.... building did not die');
     is_deeply(
         $b->build,
-        { 
+        {
             jsonapi => { version => "1.0" },
             meta    => { turtles => "all the way down" },
         },
@@ -101,7 +101,7 @@ subtest '... w/meta test' => sub {
 subtest '... w/data and w/meta test' => sub {
 
     my $b = PONAPI::Document::Builder->new(
-        action => 'GET', 
+        action => 'GET',
         type   => 'articles',
     );
     isa_ok($b, 'PONAPI::Document::Builder');
@@ -109,14 +109,14 @@ subtest '... w/data and w/meta test' => sub {
     $b->add_data({ type => 'articles', id => '10' });
     $b->add_meta( turtles => "all the way down" );
 
-    my $doc; 
+    my $doc;
     is(exception { $doc = $b->build }, undef, '.... building did not die');
     is_deeply(
         $b->build,
-        { 
+        {
             jsonapi => { version => "1.0" },
             meta    => { turtles => "all the way down" },
-            data    => [{ type => 'articles', id => '10' }], 
+            data    => [{ type => 'articles', id => '10' }],
         },
         '.... got the build we expected'
     );
@@ -126,12 +126,12 @@ subtest '... w/data and w/meta test' => sub {
 subtest '... w/data that is null and w/meta test' => sub {
 
     # XXX:
-    # Same as above, should we be storing 
+    # Same as above, should we be storing
     # the undef into the array ref.
     # - SL
 
     my $b = PONAPI::Document::Builder->new(
-        action => 'GET', 
+        action => 'GET',
         type   => 'articles',
     );
     isa_ok($b, 'PONAPI::Document::Builder');
@@ -139,11 +139,11 @@ subtest '... w/data that is null and w/meta test' => sub {
     $b->add_data(undef);
     $b->add_meta( turtles => "all the way down" );
 
-    my $doc; 
+    my $doc;
     is(exception { $doc = $b->build }, undef, '.... building did not die');
     is_deeply(
         $b->build,
-        { 
+        {
             jsonapi => { version => "1.0" },
             meta    => { turtles => "all the way down" },
             data    => [undef],
@@ -156,12 +156,12 @@ subtest '... w/data that is null and w/meta test' => sub {
 subtest '... error test' => sub {
 
     my $b = PONAPI::Document::Builder->new(
-        action => 'GET', 
+        action => 'GET',
         type   => 'articles',
     );
     isa_ok($b, 'PONAPI::Document::Builder');
 
-    my $doc; 
+    my $doc;
     is(exception { $doc = $b->build }, undef, '.... building did not die');
     is_deeply(
         $b->build,

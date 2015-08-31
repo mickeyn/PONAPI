@@ -1,4 +1,4 @@
-#!perl 
+#!perl
 
 use strict;
 use warnings;
@@ -20,7 +20,7 @@ subtest '... testing constructor' => sub {
 
     my $b = PONAPI::Links::Builder->new;
     isa_ok($b, 'PONAPI::Links::Builder');
-    
+
     can_ok( $b, $_ ) foreach qw[
         add_self
         has_self
@@ -47,7 +47,7 @@ subtest '... test set, get back and build self' => sub {
 
     isa_ok(
         $x,
-        'PONAPI::Links::Builder', 
+        'PONAPI::Links::Builder',
         '... our builder always returns an instance of a builder'
     );
     is($x, $links, '... and the instance is ourself');
@@ -85,7 +85,7 @@ subtest '... test set, get back and build multiple fields' => sub {
     is($links->_self, '/resource/1', 'we are getting self back');
     is($links->_related, '/resource/1/related/2', 'we are getting related back');
     is_deeply(
-        $links->_pagination, 
+        $links->_pagination,
         {
             first   => '/resources/1',
             last    => '/resources/5',
@@ -93,14 +93,14 @@ subtest '... test set, get back and build multiple fields' => sub {
             prev    => '/resources/2',
         },
         '.... got the pagination'
-    );    
+    );
 
     my ($result, $error) = $links->build;
 
     ok((not defined $error), '... no error found');
 
     is_deeply(
-        $result, 
+        $result,
         {
             self    => '/resource/1',
             related => '/resource/1/related/2',

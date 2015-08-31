@@ -1,4 +1,4 @@
-#!perl 
+#!perl
 
 use strict;
 use warnings;
@@ -19,7 +19,7 @@ TODO:
 subtest '... testing constructor' => sub {
 
     my $b = PONAPI::Resource::Builder->new(
-        id   => '1',        
+        id   => '1',
         type => 'articles',
     );
     isa_ok($b, 'PONAPI::Resource::Builder');

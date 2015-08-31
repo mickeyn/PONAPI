@@ -1,4 +1,4 @@
-#!perl 
+#!perl
 
 use strict;
 use warnings;
@@ -19,7 +19,7 @@ TODO:
 subtest '... testing constructor' => sub {
 
     my $b = PONAPI::Document::Builder->new(
-        action => 'GET', 
+        action => 'GET',
         type   => 'articles',
     );
     isa_ok($b, 'PONAPI::Document::Builder');
@@ -32,12 +32,12 @@ subtest '... testing constructor' => sub {
         id
         has_id
 
-        action 
+        action
         type
 
         add_errors
-        has_errors 
-        
+        has_errors
+
         add_data
         has_data
 
@@ -59,7 +59,7 @@ subtest '... testing constructor w/id' => sub {
 
     my $b = PONAPI::Document::Builder->new(
         id     => '10',
-        action => 'GET', 
+        action => 'GET',
         type   => 'articles',
     );
     isa_ok($b, 'PONAPI::Document::Builder');

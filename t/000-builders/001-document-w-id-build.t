@@ -1,4 +1,4 @@
-#!perl 
+#!perl
 
 use strict;
 use warnings;
@@ -20,18 +20,18 @@ subtest '... w/data test' => sub {
 
     my $b = PONAPI::Document::Builder->new(
         id     => '10',
-        action => 'GET', 
+        action => 'GET',
         type   => 'articles',
     );
     isa_ok($b, 'PONAPI::Document::Builder');
 
     $b->add_data({ type => 'articles', id => '10' });
 
-    my $doc; 
+    my $doc;
     is(exception { $doc = $b->build }, undef, '.... building did not die');
     is_deeply(
         $b->build,
-        { 
+        {
             jsonapi => { version => "1.0" },
             data    => { type => 'articles', id => '10' },
         },
@@ -44,18 +44,18 @@ subtest '... w/data that is null test' => sub {
 
     my $b = PONAPI::Document::Builder->new(
         id     => '10',
-        action => 'GET', 
+        action => 'GET',
         type   => 'articles',
     );
     isa_ok($b, 'PONAPI::Document::Builder');
 
     $b->add_data(undef);
 
-    my $doc; 
+    my $doc;
     is(exception { $doc = $b->build }, undef, '.... building did not die');
     is_deeply(
         $b->build,
-        { 
+        {
             jsonapi => { version => "1.0" },
             data    => undef,
         },
@@ -68,18 +68,18 @@ subtest '... w/meta test' => sub {
 
     my $b = PONAPI::Document::Builder->new(
         id     => '10',
-        action => 'GET', 
+        action => 'GET',
         type   => 'articles',
     );
     isa_ok($b, 'PONAPI::Document::Builder');
 
     $b->add_meta( turtles => "all the way down" );
 
-    my $doc; 
+    my $doc;
     is(exception { $doc = $b->build }, undef, '.... building did not die');
     is_deeply(
         $b->build,
-        { 
+        {
             jsonapi => { version => "1.0" },
             meta    => { turtles => "all the way down" },
         },
@@ -92,7 +92,7 @@ subtest '... w/data and w/meta test' => sub {
 
     my $b = PONAPI::Document::Builder->new(
         id     => '10',
-        action => 'GET', 
+        action => 'GET',
         type   => 'articles',
     );
     isa_ok($b, 'PONAPI::Document::Builder');
@@ -100,14 +100,14 @@ subtest '... w/data and w/meta test' => sub {
     $b->add_data({ type => 'articles', id => '10' });
     $b->add_meta( turtles => "all the way down" );
 
-    my $doc; 
+    my $doc;
     is(exception { $doc = $b->build }, undef, '.... building did not die');
     is_deeply(
         $b->build,
-        { 
+        {
             jsonapi => { version => "1.0" },
             meta    => { turtles => "all the way down" },
-            data    => { type => 'articles', id => '10' }, 
+            data    => { type => 'articles', id => '10' },
         },
         '.... got the build we expected'
     );
@@ -118,7 +118,7 @@ subtest '... w/data that is null and w/meta test' => sub {
 
     my $b = PONAPI::Document::Builder->new(
         id     => '10',
-        action => 'GET', 
+        action => 'GET',
         type   => 'articles',
     );
     isa_ok($b, 'PONAPI::Document::Builder');
@@ -126,11 +126,11 @@ subtest '... w/data that is null and w/meta test' => sub {
     $b->add_data(undef);
     $b->add_meta( turtles => "all the way down" );
 
-    my $doc; 
+    my $doc;
     is(exception { $doc = $b->build }, undef, '.... building did not die');
     is_deeply(
         $b->build,
-        { 
+        {
             jsonapi => { version => "1.0" },
             meta    => { turtles => "all the way down" },
             data    => undef,
@@ -144,12 +144,12 @@ subtest '... error test' => sub {
 
     my $b = PONAPI::Document::Builder->new(
         id     => '10',
-        action => 'GET', 
+        action => 'GET',
         type   => 'articles',
     );
     isa_ok($b, 'PONAPI::Document::Builder');
 
-    my $doc; 
+    my $doc;
     is(exception { $doc = $b->build }, undef, '.... building did not die');
     is_deeply(
         $b->build,
