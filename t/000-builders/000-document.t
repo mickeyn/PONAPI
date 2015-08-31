@@ -24,10 +24,17 @@ subtest '... testing constructor' => sub {
     );
     isa_ok($b, 'PONAPI::Document::Builder');
 
+    ok(!$b->has_id, '... no id specified');
     is($b->action, 'GET', '... got the expected action');
     is($b->type, 'articles', '... got the expected type');
 
     can_ok( $b, $_ ) foreach qw[
+        id
+        has_id
+
+        action 
+        type
+
         add_errors
         has_errors 
         
@@ -42,6 +49,8 @@ subtest '... testing constructor' => sub {
 
         add_included
         has_include
+
+        build
     ];
 
 };
@@ -50,13 +59,19 @@ subtest '... testing constructor errors' => sub {
 
     like(
         exception { PONAPI::Document::Builder->new },
-        qr/^\[PONAPI\:\:Document\:\:Builder\] new\: missing action/,
+        qr/^Attribute \(.+\) is required at constructor PONAPI\:\:Document\:\:Builder\:\:new/,
         '... got the error we expected'
     );
 
     like(
         exception { PONAPI::Document::Builder->new( action => 'GET' ) },
-        qr/^\[PONAPI\:\:Document\:\:Builder\] new\: missing type/,
+        qr/^Attribute \(type\) is required at constructor PONAPI\:\:Document\:\:Builder\:\:new/,
+        '... got the error we expected'
+    );
+
+    like(
+        exception { PONAPI::Document::Builder->new( type => 'articles' ) },
+        qr/^Attribute \(action\) is required at constructor PONAPI\:\:Document\:\:Builder\:\:new/,
         '... got the error we expected'
     );
 

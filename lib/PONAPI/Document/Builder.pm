@@ -12,6 +12,14 @@ with qw<
     PONAPI::Role::HasLinks
 >;
 
+# ...
+
+has id => (
+    is        => 'ro',
+    isa       => 'Str',
+    predicate => 'has_id',
+);
+
 has action => (
     is       => 'ro',
     isa      => enum([qw[ GET POST PATCH DELETE ]]),
@@ -24,12 +32,7 @@ has type => (
     required => 1,
 );
 
-has is_collection => (
-    is       => 'ro',
-    isa      => 'Bool',
-    required => 1,
-);
-
+# ...
 
 has _errors => (
     init_arg  => undef,
@@ -49,28 +52,6 @@ has _included => (
     predicate => 'has_include',
 );
 
-
-sub BUILDARGS {
-    my ( $class, %args ) = @_;
-
-    my $action = delete $args{action};
-    my $type   = delete $args{type};
-
-    $action or die "[$class] new: missing action\n";
-    $type   or die "[$class] new: missing type\n";
-
-    !ref($action) and grep { $action eq $_ } qw< GET POST PATCH DELETE >
-        or die "[$class] new: invalid action\n";
-
-    !ref($type) or die "[$class] new: invalid type\n";
-
-    return +{
-        action        => $action,
-        type          => $type,
-        is_collection => ( exists $args{id} ? 0 : 1 ),
-        %args
-    };
-}
 
 sub add_links {
     my $self  = shift;
@@ -118,14 +99,11 @@ sub build {
     my %ret = ( jsonapi => { version => "1.0" } );
 
     if ( $self->has_data ) {
-        $ret{data} = $self->is_collection
-            ? $self->_data
-            : $self->_data->[0];
+        $ret{data} = $self->has_id
+            ? $self->_data->[0]
+            : $self->_data;
 
         $self->has_include and $ret{included} = $self->_include;
-
-    } else {
-        $ret{data} = $self->is_collection ? [] : undef;
     }
 
     $self->has_meta  and $ret{meta}  = $self->_meta;
