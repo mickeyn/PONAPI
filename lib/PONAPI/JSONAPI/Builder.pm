@@ -5,7 +5,9 @@ use strict;
 use warnings;
 use Moose;
 
-with 'PONAPI::Role::Meta';
+with qw<
+    PONAPI::Role::Meta
+>;
 
 has version => (
     is        => 'ro',

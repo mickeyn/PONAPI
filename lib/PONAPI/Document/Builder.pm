@@ -5,9 +5,11 @@ use strict;
 use warnings;
 use Moose;
 
-with 'PONAPI::Role::Data';
-with 'PONAPI::Role::Meta';
-with 'PONAPI::Role::Links';
+with qw<
+    PONAPI::Role::Data
+    PONAPI::Role::Meta
+    PONAPI::Role::Links
+>;
 
 has action => (
     is       => 'ro',
@@ -97,6 +99,7 @@ sub add_included {
 sub build {
     my $self = shift;
 
+    # no errors -> must have data or meta
     unless ( $self->has_errors or $self->has_data or $self->has_meta ) {
         $self->add_error( +{
             # ...

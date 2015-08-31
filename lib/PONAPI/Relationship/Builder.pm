@@ -5,9 +5,11 @@ use strict;
 use warnings;
 use Moose;
 
-with 'PONAPI::Role::Data';
-with 'PONAPI::Role::Meta';
-with 'PONAPI::Role::Links';
+with qw<
+    PONAPI::Role::Data
+    PONAPI::Role::Meta
+    PONAPI::Role::Links
+>;
 
 sub build {
     my $self = shift;

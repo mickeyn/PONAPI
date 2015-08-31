@@ -5,8 +5,10 @@ use strict;
 use warnings;
 use Moose;
 
-with 'PONAPI::Role::Meta';
-with 'PONAPI::Role::Links';
+with qw<
+    PONAPI::Role::Meta
+    PONAPI::Role::Links
+>;
 
 has id => (
     is       => 'ro',
