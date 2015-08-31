@@ -1,4 +1,4 @@
-package PONAPI::Role::Data;
+package PONAPI::Role::HasData;
 
 use strict;
 use warnings;

@@ -6,8 +6,8 @@ use warnings;
 use Moose;
 
 with qw<
-    PONAPI::Role::Meta
-    PONAPI::Role::Links
+    PONAPI::Role::HasMeta
+    PONAPI::Role::HasLinks
 >;
 
 has id => (

@@ -1,4 +1,4 @@
-package PONAPI::Role::Meta;
+package PONAPI::Role::HasMeta;
 
 use strict;
 use warnings;

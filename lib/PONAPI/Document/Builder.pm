@@ -6,9 +6,9 @@ use warnings;
 use Moose;
 
 with qw<
-    PONAPI::Role::Data
-    PONAPI::Role::Meta
-    PONAPI::Role::Links
+    PONAPI::Role::HasData
+    PONAPI::Role::HasMeta
+    PONAPI::Role::HasLinks
 >;
 
 has action => (

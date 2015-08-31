@@ -1,4 +1,4 @@
-package PONAPI::Role::Links;
+package PONAPI::Role::HasLinks;
 
 use strict;
 use warnings;
@@ -9,7 +9,7 @@ has _links => (
     init_arg  => undef,
     is        => 'ro',
     predicate => 'has_links',
-    writer    => 'set_links',
+    writer    => '_set_links',
 );
 
 sub add_links {
@@ -19,7 +19,7 @@ sub add_links {
     ref $links eq 'PONAPI::Relationship::Links::Builder'
         or die;
 
-    $self->set_links( $links );
+    $self->_set_links( $links );
 
     return $self;
 };

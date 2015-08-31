@@ -6,7 +6,7 @@ use warnings;
 use Moose;
 
 with qw<
-    PONAPI::Role::Meta
+    PONAPI::Role::HasMeta
 >;
 
 has version => (
