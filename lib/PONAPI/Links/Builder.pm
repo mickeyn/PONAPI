@@ -5,28 +5,28 @@ use warnings;
 
 use Moose;
 
-has self => (
+has _self => (
     init_arg  => undef,
     is        => 'ro',
     predicate => 'has_self',
     writer    => 'set_self',
 );
 
-has related => (
+has _related => (
     init_arg  => undef,
     is        => 'ro',
     predicate => 'has_related',
     writer    => 'set_related',
 );
 
-has pagination => (
+has _pagination => (
     init_arg  => undef,
     is        => 'ro',
     predicate => 'has_pagination',
     writer    => 'set_pagination',
 );
 
-has page => (
+has _page => (
     init_arg  => undef,
     is        => 'ro',
     predicate => 'has_page',
@@ -97,11 +97,11 @@ sub build {
     my $self = shift;
     my %ret;
 
-    $self->has_self    and $ret{self}    = $self->self;
-    $self->has_related and $ret{related} = $self->related;
+    $self->has_self    and $ret{self}    = $self->_self;
+    $self->has_related and $ret{related} = $self->_related;
 
     $self->has_pagination and
-        @ret{ keys %{ $self->pagination } } = values %{ $self->pagination };
+        @ret{ keys %{ $self->_pagination } } = values %{ $self->_pagination };
 
     return \%ret;
 };
