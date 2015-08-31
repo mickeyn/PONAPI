@@ -21,7 +21,7 @@ subtest '... testing constructor' => sub {
     my $b = PONAPI::Links::Builder->new;
     isa_ok($b, 'PONAPI::Links::Builder');
     
-    can_ok( $_ ) foreach qw[
+    can_ok( $b, $_ ) foreach qw[
         add_self
         has_self
 
@@ -31,16 +31,15 @@ subtest '... testing constructor' => sub {
         add_pagination
         has_pagination
 
-        with_page
-
-        build
+        has_page
+        add_page
     ];
 
 };
 
 subtest '... test set, get back and build self' => sub {
     my $links = PONAPI::Links::Builder->new;
-    isa_ok($b, 'PONAPI::Links::Builder');
+    isa_ok($links, 'PONAPI::Links::Builder');
 
     my $x = $links->add_self('/resource/1');
 
@@ -51,11 +50,11 @@ subtest '... test set, get back and build self' => sub {
     );
     is($x, $links, '... and the instance is ourself');
 
-    is($links->self, '/resource/1', '... we are getting self URL back');
+    is($links->_self, '/resource/1', '... we are getting self URL back');
 
     my ($result, $error) = $links->build;
 
-    ok(not defined $error, '... no error found');
+    ok((not defined $error), '... no error found');
     is_deeply(
         $result,
         { self => '/resource/1' },
@@ -65,7 +64,7 @@ subtest '... test set, get back and build self' => sub {
 
 subtest '... test set, get back and build multiple fields' => sub {
     my $links = PONAPI::Links::Builder->new;
-    isa_ok($b, 'PONAPI::Links::Builder');
+    isa_ok($links, 'PONAPI::Links::Builder');
 
     is(
         exception {
@@ -81,10 +80,10 @@ subtest '... test set, get back and build multiple fields' => sub {
         '... added self, related and pagination successfully'
     );
 
-    is($links->self, '/resource/1', 'we are getting self back');
-    is($links->related, '/resource/1/related/2', 'we are getting related back');
+    is($links->_self, '/resource/1', 'we are getting self back');
+    is($links->_related, '/resource/1/related/2', 'we are getting related back');
     is_deeply(
-        $links->pagination, 
+        $links->_pagination, 
         {
             first   => '/resources/1',
             last    => '/resources/5',
@@ -96,7 +95,7 @@ subtest '... test set, get back and build multiple fields' => sub {
 
     my ($result, $error) = $links->build;
 
-    ok(not defined $error, '... no error found');
+    ok((not defined $error), '... no error found');
 
     is_deeply(
         $result, 

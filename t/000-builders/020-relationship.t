@@ -18,29 +18,28 @@ TODO:
 
 subtest '... testing constructor' => sub {
 
-    my $b = PONAPI::Relationship::Builder->new(
-        data => { type => 'articles', id => '1' }
-    );
+    my $b = PONAPI::Relationship::Builder->new;
     isa_ok($b, 'PONAPI::Relationship::Builder');
 
-    is_deeply($b->data, { type => 'articles', id => '1' }, '... got the expected data');
-
-    can_ok( $_ ) foreach qw[
+    can_ok( $b, $_ ) foreach qw[
         add_links
         has_links
 
         add_meta
         has_meta
+
+        add_data
+        has_data
     ];
 
 };
 
 subtest '... testing constructor errors' => sub {
 
-    like(
+    is(
         exception { PONAPI::Relationship::Builder->new },
-        qr/^Whoops/,
-        '... got the error we expected'
+        undef,
+        '... got the (lack of) error we expected'
     );
 
 };
