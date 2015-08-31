@@ -55,6 +55,21 @@ subtest '... testing constructor' => sub {
 
 };
 
+subtest '... testing constructor w/id' => sub {
+
+    my $b = PONAPI::Document::Builder->new(
+        id     => '10',
+        action => 'GET', 
+        type   => 'articles',
+    );
+    isa_ok($b, 'PONAPI::Document::Builder');
+
+    ok($b->has_id, '... we have an id specified');
+    is($b->id, '10', '... and the ID is what we expected');
+    is($b->action, 'GET', '... got the expected action');
+    is($b->type, 'articles', '... got the expected type');
+};
+
 subtest '... testing constructor errors' => sub {
 
     like(
