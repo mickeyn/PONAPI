@@ -82,7 +82,7 @@ sub add_links {
 }
 
 sub add_included {
-    my $self  = shift;
+    my $self     = shift;
     my $included = shift;
 
     $included and ref($included) eq 'HASH'
@@ -114,14 +114,14 @@ sub build {
     my %ret = ( jsonapi => { version => "1.0" } );
 
     if ( $self->has_data ) {
-        $ret{data} = $self->is_collection_req
+        $ret{data} = $self->is_collection
             ? $self->_data
             : $self->_data->[0];
 
         $self->has_include and $ret{included} = $self->_include;
 
     } else {
-        $ret{data} = $self->is_collection_req ? [] : undef;
+        $ret{data} = $self->is_collection ? [] : undef;
     }
 
     $self->has_meta  and $ret{meta}  = $self->_meta;
