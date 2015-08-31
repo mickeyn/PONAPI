@@ -30,6 +30,8 @@ subtest '... testing constructor' => sub {
 
         add_data
         has_data
+
+        build
     ];
 
 };

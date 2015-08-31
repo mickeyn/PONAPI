@@ -33,6 +33,8 @@ subtest '... testing constructor' => sub {
 
         has_page
         add_page
+
+        build
     ];
 
 };
