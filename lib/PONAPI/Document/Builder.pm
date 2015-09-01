@@ -61,7 +61,7 @@ sub build {
 
     # no errors -> must have data or meta
     unless ( $self->has_errors or $self->has_data or $self->has_meta ) {
-        $self->_add_error( +{
+        $self->add_errors( +{
             # ...
             detail => "Missing data/meta",
         } );

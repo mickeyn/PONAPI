@@ -17,25 +17,28 @@ has _errors => (
     },
 );
 
-sub add_error {
+sub add_errors {
     my $self = shift;
-    my $args = shift;
+    my @args = @_;
 
-    $args and ref $args eq 'HASH'
-        or die "[__PACKAGE__] add_error: args must be a hashref";
+	for my $arg ( @args ) {
+	    $arg and ref $arg eq 'HASH'
+	        or die "[__PACKAGE__] add_error: arg must be a hashref";
 
-    my %valid_args = map { $_ => 1 } qw< id status code title detail >;
+	    my %valid_args = map { $_ => 1 } qw< id status code title detail >;
 
-    my %validated_args;
+        my %validated_args;
 
-    for ( keys %{ $args } ) {
-        exists $valid_args{$_} and $validated_args{$_} = $args->{$_};
-    }
+	    for ( keys %{ $arg } ) {
+            exists $valid_args{$_} and $validated_args{$_} = $arg->{$_};
+	    }
 
-    my $err_builder = PONAPI::Errors::Builder->new( %validated_args );
-    $args->{source} and $err_builder->add_source( $args->{source} );
+	    my $err_builder = PONAPI::Errors::Builder->new( %validated_args );
+	    $arg->{source} and $err_builder->add_source( $arg->{source} );
+	    $arg->{links}  and $err_builder->add_links( $arg->{links} );
 
-    push @{ $self->_errors } => $err_builder->build;
+	    push @{ $self->_errors } => $err_builder->build;
+	}
 
     return $self;
 }
