@@ -5,6 +5,15 @@ use warnings;
 
 use Moose;
 
+# used by Error
+has _about => (
+	init_arg  => undef,
+	is        => 'ro',
+	predicate => 'has_about',
+	writer    => '_set_about',
+);
+
+# use by Relationship, Document
 has _self => (
     init_arg  => undef,
     is        => 'ro',
@@ -12,6 +21,7 @@ has _self => (
     writer    => '_set_self',
 );
 
+# used by Relationship
 has _related => (
     init_arg  => undef,
     is        => 'ro',
@@ -19,6 +29,7 @@ has _related => (
     writer    => '_set_related',
 );
 
+# used by Document
 has _pagination => (
     init_arg  => undef,
     is        => 'ro',
@@ -26,6 +37,7 @@ has _pagination => (
     writer    => '_set_pagination',
 );
 
+# used by Document
 has _page => (
     init_arg  => undef,
     is        => 'ro',
@@ -33,6 +45,17 @@ has _page => (
     writer    => '_set_page',
 );
 
+sub add_about {
+	my $self  = shift;
+	my $value = shift;
+
+	!ref($value) or ref $value eq 'HASH'
+        or die '[__PACKAGE__] add_about: value should be a string or a hashref';
+
+	$self->_set_about( $value );
+
+	return $self;
+};
 
 sub add_self {
     my $self  = shift;
