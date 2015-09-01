@@ -43,18 +43,6 @@ has _included => (
 );
 
 
-sub add_links {
-    my $self  = shift;
-    my $links = shift;
-
-    $links and ref($links) eq 'HASH'
-        or die "[__PACKAGE__] add_links: invalid links\n";
-
-    $self->set_links( $links );
-
-    return $self;
-}
-
 sub add_included {
     my $self     = shift;
     my $included = shift;
