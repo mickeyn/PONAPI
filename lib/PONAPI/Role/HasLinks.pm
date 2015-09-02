@@ -16,7 +16,7 @@ sub add_links {
     my $self  = shift;
     my $links = shift;
 
-    ref $links eq 'PONAPI::Relationship::Links::Builder'
+    ref $links eq 'PONAPI::Links::Builder'
         or die;
 
     $self->_set_links( $links );

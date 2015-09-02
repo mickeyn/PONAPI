@@ -9,6 +9,7 @@ with qw<
     PONAPI::Role::HasData
     PONAPI::Role::HasMeta
     PONAPI::Role::HasLinks
+    PONAPI::Role::HasErrors
 >;
 
 sub build {
@@ -20,11 +21,21 @@ sub build {
     $self->has_meta  and $ret{meta}  = $self->_meta;
 
     $self->has_links or $self->has_data or $self->has_meta
-        or return undef;
+        or $self->add_errors( +{
+            detail => 'Relationship should contain at least one of "links", "data" or "meta"',
+        });
 
     if ( $self->has_links ) {
         $self->_links->has_self or $self->_links->has_related
-            or return undef;
+            or $self->add_errors( +{
+                detail => 'Relationship links should contain at least one of "self" or "related"',
+            });
+    }
+
+    if ( $self->has_errors ) {
+        return +{
+            errors => $self->_errors,
+        };
     }
 
     return \%ret;
