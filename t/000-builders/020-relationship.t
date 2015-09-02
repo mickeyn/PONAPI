@@ -47,6 +47,26 @@ subtest '... testing constructor errors' => sub {
 
 };
 
+subtest '... testing links sub-building' => sub {
+    my $b = PONAPI::Relationship::Builder->new;
+
+    $b->add_links({
+        related => "/related/2",
+        self    => "/self/1",
+    });
+
+    is_deeply(
+        $b->build,
+        {
+            links => {
+                self    => "/self/1",
+                related => "/related/2",
+            }
+        },
+        '... Relationship with links',
+    );
+};
+
 subtest '... testing build errors' => sub {
 
     subtest '... for empty Relationship' => sub {
@@ -64,10 +84,10 @@ subtest '... testing build errors' => sub {
 
     subtest '... links' => sub {
         my $b = PONAPI::Relationship::Builder->new;
-        my $l = PONAPI::Links::Builder->new;
 
-        $l->add_about("/about/something");
-        $b->add_links($l);
+        $b->add_links({
+            about => "/about/something",
+        });
 
         is_deeply(
             $b->build,

@@ -116,6 +116,7 @@ sub build {
     my $self = shift;
     my %ret;
 
+    $self->has_about   and $ret{about}   = $self->_about;
     $self->has_self    and $ret{self}    = $self->_self;
     $self->has_related and $ret{related} = $self->_related;
 

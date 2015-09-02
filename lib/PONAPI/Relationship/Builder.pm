@@ -16,7 +16,6 @@ sub build {
     my $self = shift;
     my %ret;
 
-    $self->has_links and $ret{links} = $self->_links;
     $self->has_data  and $ret{data}  = $self->_data;
     $self->has_meta  and $ret{meta}  = $self->_meta;
 
@@ -30,6 +29,7 @@ sub build {
             or $self->add_errors( +{
                 detail => 'Relationship links should contain at least one of "self" or "related"',
             });
+        $ret{links} = $self->_links->build;
     }
 
     if ( $self->has_errors ) {
