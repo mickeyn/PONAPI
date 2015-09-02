@@ -88,16 +88,12 @@ sub add_pagination {
     ref $pagination eq 'HASH'
         or die '[__PACKAGE__] add_pagination: should be a hashref';
 
-    my %valid_field_names = (
-        first => 1,
-        last  => 1,
-        prev  => 1,
-        next  => 1,
-    );
+    my %valid_field_names = map { $_ => 1 } qw< first last prev next >;
 
-    my @invalid = grep +(!exists $valid_field_names{$_}), keys %{ $pagination };
-    @invalid
-        and die '[__PACKAGE__] add_pagination: Invalid paginations field names: ', (join ',', @invalid);
+    for ( keys %{ $pagination } ) {
+        exists $valid_field_names{$_}
+            or die "[__PACKAGE__] add_pagination: invalid paginations field name: $_";
+    }
 
     $self->_set_pagination( $pagination );
 
