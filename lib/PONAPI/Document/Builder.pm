@@ -11,6 +11,7 @@ with qw<
     PONAPI::Role::HasMeta
     PONAPI::Role::HasLinks
     PONAPI::Role::HasErrors
+    PONAPI::Role::HasIncluded
 >;
 
 # ...
@@ -34,27 +35,6 @@ has type => (
 );
 
 # ...
-
-has _included => (
-    init_arg  => undef,
-    is        => 'ro',
-    writer    => '_set_included',
-    predicate => 'has_include',
-);
-
-
-sub add_included {
-    my $self     = shift;
-    my $included = shift;
-
-    $included and ref($included) eq 'HASH'
-        or die "[__PACKAGE__] add_included: invalid included\n";
-
-    $self->_set_included( $included );
-
-    return $self;
-}
-
 
 sub build {
     my $self = shift;

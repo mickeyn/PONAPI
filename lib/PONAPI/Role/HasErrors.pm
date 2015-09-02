@@ -23,7 +23,7 @@ sub add_errors {
 
     for my $arg ( @args ) {
         $arg and ref $arg eq 'HASH'
-            or die "[__PACKAGE__] add_error: arg must be a hashref";
+            or die "[__PACKAGE__] add_errors: arg must be a hashref";
 
         my %valid_args = map { $_ => 1 } qw< id status code title detail >;
 
