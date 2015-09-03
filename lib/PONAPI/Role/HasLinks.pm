@@ -7,9 +7,13 @@ use Moose::Role;
 
 has _links => (
     init_arg  => undef,
+    traits    => [ 'Hash' ],
     is        => 'ro',
-    predicate => 'has_links',
-    writer    => '_set_links',
+    isa       => 'HashRef',
+    default   => sub { +{} },
+    handles   => {
+        has_links => 'count',
+    }
 );
 
 sub add_links {
@@ -26,13 +30,15 @@ sub add_links {
             or die "[__PACKAGE__] add_links: invalid key: $_";
     }
 
-    my $links_builder = $self->_links // PONAPI::Links::Builder->new;
+    my $links_builder = PONAPI::Links::Builder->new;
     $links->{about}      and $links_builder->add_about( $links->{about} );
     $links->{self}       and $links_builder->add_self( $links->{self} );
     $links->{related}    and $links_builder->add_related( $links->{related} );
     $links->{pagination} and $links_builder->add_pagination( $links->{pagination} );
 
-    $self->_set_links( $links_builder );
+    my $build_result = $links_builder->build;
+
+    @{ $self->_links }{ keys %{ $build_result } } = values %{ $build_result };
 
     return $self;
 };

@@ -25,11 +25,11 @@ sub build {
         });
 
     if ( $self->has_links ) {
-        $self->_links->has_self or $self->_links->has_related
+        exists $self->_links->{self} or exists $self->_links->{related}
             or $self->add_errors( +{
                 detail => 'Relationship links should contain at least one of "self" or "related"',
             });
-        $ret{links} = $self->_links->build;
+        $ret{links} = $self->_links;
     }
 
     if ( $self->has_errors ) {
