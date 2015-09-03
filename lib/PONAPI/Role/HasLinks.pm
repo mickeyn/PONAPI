@@ -25,10 +25,8 @@ sub add_links {
 
     my %valid_args = map { $_ => 1 } qw< about self related pagination page >;
 
-    for ( keys %{ $links } ) {
-        exists $valid_args{$_}
-            or die "[__PACKAGE__] add_links: invalid key: $_";
-    }
+    $valid_args{$_} or die "[__PACKAGE__] add_links: invalid key: $_"
+        for keys %{ $links };
 
     my $links_builder = PONAPI::Links::Builder->new;
     $links->{about}      and $links_builder->add_about( $links->{about} );
