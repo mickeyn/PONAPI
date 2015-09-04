@@ -39,37 +39,76 @@ has type => (
 sub build {
     my $self = shift;
 
-    # no errors -> must have data or meta
-    unless ( $self->has_errors or $self->has_data or $self->has_meta ) {
-        $self->add_errors( +{
+    # TODO: collect and add errors from all componenets
+
+    $self->has_errors or $self->has_data or $self->has_meta
+        or $self->add_errors( +{
             # ...
             detail => "Missing data/meta",
         } );
-    }
-
-    # errors -> return object with errors
-    if ( $self->has_errors ) {
-        return +{
-            errors => $self->_errors,
-        };
-    }
 
     my %ret = ( jsonapi => { version => "1.0" } );
 
-    if ( $self->has_data ) {
-        $ret{data} = $self->has_id
-            ? $self->_data->[0]
-            : $self->_data;
+    $self->has_data    and $self->_build_data    ( \%ret );
+    $self->has_include and $self->_build_include ( \%ret );
+    $self->has_links   and $self->_build_links   ( \%ret );
 
-        $self->has_include and $ret{included} = $self->_include;
-    }
+    $self->has_meta and $ret{meta} = $self->_meta;
 
-    $self->has_meta  and $ret{meta}  = $self->_meta;
-    $self->has_links and $ret{links} = $self->_links;
+
+    # errors -> return object with errors
+    $self->has_errors
+        and return +{ errors => $self->_errors };
 
     return \%ret;
 }
 
+
+sub _build_data {
+    my $self = shift;
+    my $ret  = shift;
+
+    $ret->{data} = $self->has_id
+        ? $self->_data->[0]
+        : $self->_data;
+
+    return;
+}
+
+sub _build_include {
+    my $self = shift;
+    my $ret  = shift;
+
+    $self->has_data and $self->has_include
+        or return;
+
+    $ret->{included} = $self->_include;
+
+    return;
+}
+
+sub _build_links {
+    my $self = shift;
+    my $ret  = shift;
+
+  LINK: for ( keys %{ $self->_links } ) {
+        my $link = $self->_links->{$_};
+
+        if ( !ref $link ) {
+            $ret->{links}{$_} = $link;
+            next LINK;
+        }
+
+        exists $link->{href} or exists $link->{meta}
+            or $self->add_errors( +{
+                detail => 'Document object links should contain at least one of "href" or "meta" keys',
+            });
+
+        $ret->{links}{$_} = $link;
+    }
+
+    return;
+}
 
 __PACKAGE__->meta->make_immutable;
 1;
