@@ -79,6 +79,7 @@ sub add_attributes {
 
     while ( @args ) {
         my ($k, $v) = (shift @args, shift @args);
+        ref $v eq 'HASH' and delete @{$v}{qw< relationships links >};
         $self->_attributes->{$k} = $v;
     }
 
