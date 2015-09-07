@@ -8,6 +8,7 @@ use Moose;
 with qw<
     PONAPI::Role::HasMeta
     PONAPI::Role::HasLinks
+    PONAPI::Role::HasErrors
 >;
 
 has id => (
@@ -44,27 +45,27 @@ has _attributes => (
     }
 );
 
-sub add_relationship {
+sub add_relationships {
     my $self = shift;
     my $args = shift;
 
     $args and ref $args eq 'HASH'
         or die "[__PACKAGE__] add_relationship: args must be a hashref\n";
 
-    my $name = $args->{name};
-    $name and !ref $name
-        or die "[__PACKAGE__] add_relationship: missing key: name\n";
+    for my $name ( keys %$args ) {
+        my $builder = PONAPI::Relationship::Builder->new();
+        $args->{data}  and $builder->add_data( $args->{data} );
+        $args->{meta}  and $builder->add_meta( $args->{meta} );
+        $args->{links} and $builder->add_links( $args->{links} );
 
-    my $builder = PONAPI::Relationship::Builder->new();
-    $args->{data}  and $builder->add_data( $args->{data} );
-    $args->{meta}  and $builder->add_meta( $args->{meta} );
-    $args->{links} and $builder->add_links( $args->{links} );
+        my $relation = $builder->build;
 
-    my $relationships = $builder->build;
-    $relationships
-        or die "[__PACKAGE__] add_relationship: failed to create a valid structure\n";
-
-    $self->_relationships->{$name} = $relationships;
+        if ( $relation->has_errors ) {
+            $self->add_errors( $relation->get_errors} );
+        } else {
+            $self->_relationships->{$name} = $relation;
+        }
+    }
 
     return $self;
 }

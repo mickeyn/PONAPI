@@ -13,7 +13,8 @@ has _errors => (
     is        => 'ro',
     default   => sub { +[] },
     handles   => {
-        has_errors  => 'count',
+        has_errors => 'count',
+        get_errors => 'elements',
     },
 );
 
