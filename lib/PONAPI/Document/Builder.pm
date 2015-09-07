@@ -55,7 +55,6 @@ sub build {
 
     $self->has_meta and $ret{meta} = $self->_meta;
 
-
     # errors -> return object with errors
     $self->has_errors
         and return +{ errors => $self->_errors };
@@ -91,20 +90,13 @@ sub _build_links {
     my $self = shift;
     my $ret  = shift;
 
-  LINK: for ( keys %{ $self->_links } ) {
-        my $link = $self->_links->{$_};
+    my %valid_args = map { $_ => 1 } qw< self related first next last prev >;
 
-        if ( !ref $link ) {
-            $ret->{links}{$_} = $link;
-            next LINK;
-        }
-
-        exists $link->{href} or exists $link->{meta}
-            or $self->add_errors( +{
-                detail => 'Document object links should contain at least one of "href" or "meta" keys',
+    for ( keys %{ $self->_links } ) {
+        exists $valid_args{$_} or
+            $self->add_errors( +{
+                detail => "Invalid link for document: [$_]",
             });
-
-        $ret->{links}{$_} = $link;
     }
 
     return;

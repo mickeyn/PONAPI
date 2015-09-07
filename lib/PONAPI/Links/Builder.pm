@@ -45,11 +45,26 @@ has _page => (
     writer    => '_set_page',
 );
 
+sub _valid_link {
+    my $value = shift;
+
+    !ref $value
+        and return 1;
+
+    ref $value ne 'HASH'
+        and return 0;
+
+    exists $value->{href} && exists $value->{meta}
+        or return 0;
+
+    return 1;
+}
+
 sub add_about {
     my $self  = shift;
     my $value = shift;
 
-    !ref($value) or ref $value eq 'HASH'
+    _valid_link( $value )
         or die "[__PACKAGE__] add_about: value should be a string or a hashref\n";
 
     $self->_set_about( $value );
@@ -61,7 +76,7 @@ sub add_self {
     my $self  = shift;
     my $value = shift;
 
-    !ref($value) or ref $value eq 'HASH'
+    _valid_link( $value )
         or die "[__PACKAGE__] add_self: value should be a string or a hashref\n";
 
     $self->_set_self( $value );
@@ -73,7 +88,7 @@ sub add_related {
     my $self  = shift;
     my $value = shift;
 
-    !ref($value) or ref $value eq 'HASH'
+    _valid_link( $value )
         or die "[__PACKAGE__] add_related: value should be a string or a hashref\n";
 
     $self->_set_related( $value );
@@ -93,6 +108,8 @@ sub add_pagination {
     for ( keys %{ $pagination } ) {
         exists $valid_field_names{$_}
             or die "[__PACKAGE__] add_pagination: invalid paginations field name: $_\n";
+        _valid_link( $pagination->{$_} )
+            or die "[__PACKAGE__] add_pagination: value should be a string or a hashref\n";
     }
 
     $self->_set_pagination( $pagination );
