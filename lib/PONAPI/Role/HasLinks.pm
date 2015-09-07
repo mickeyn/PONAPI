@@ -5,6 +5,9 @@ use warnings;
 
 use Moose::Role;
 
+# we expect errors to be consumed by any class consuming this one
+with 'PONAPI::Role::HasErrors';
+
 has _links => (
     init_arg  => undef,
     traits    => [ 'Hash' ],
@@ -28,15 +31,19 @@ sub add_links {
     $valid_args{$_} or die "[__PACKAGE__] add_links: invalid key: $_\n"
         for keys %{ $links };
 
-    my $links_builder = PONAPI::Links::Builder->new;
-    $links->{about}      and $links_builder->add_about( $links->{about} );
-    $links->{self}       and $links_builder->add_self( $links->{self} );
-    $links->{related}    and $links_builder->add_related( $links->{related} );
-    $links->{pagination} and $links_builder->add_pagination( $links->{pagination} );
+    my $builder = PONAPI::Links::Builder->new;
+    $links->{about}      and $builder->add_about( $links->{about} );
+    $links->{self}       and $builder->add_self( $links->{self} );
+    $links->{related}    and $builder->add_related( $links->{related} );
+    $links->{pagination} and $builder->add_pagination( $links->{pagination} );
 
-    my $build_result = $links_builder->build;
+    my $result = $builder->build;
 
-    @{ $self->_links }{ keys %{ $build_result } } = values %{ $build_result };
+    if ( $result->has_errors ) {
+        $self->add_errors( $result->get_errors );
+    } else {
+        @{ $self->_links }{ keys %{ $result } } = values %{ $result };
+    }
 
     return $self;
 };
