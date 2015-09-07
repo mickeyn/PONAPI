@@ -49,11 +49,11 @@ sub add_relationship {
     my $args = shift;
 
     $args and ref $args eq 'HASH'
-        or die "[__PACKAGE__] add_relationship: args must be a hashref";
+        or die "[__PACKAGE__] add_relationship: args must be a hashref\n";
 
     my $name = $args->{name};
     $name and !ref $name
-        or die "[__PACKAGE__] add_relationship: missing key: name";
+        or die "[__PACKAGE__] add_relationship: missing key: name\n";
 
     my $builder = PONAPI::Relationship::Builder->new();
     $args->{data}  and $builder->add_data( $args->{data} );
@@ -62,7 +62,7 @@ sub add_relationship {
 
     my $relationships = $builder->build;
     $relationships
-        or die "[__PACKAGE__] add_relationship: failed to create a valid structure";
+        or die "[__PACKAGE__] add_relationship: failed to create a valid structure\n";
 
     $self->_relationships->{$name} = $relationships;
 
@@ -74,7 +74,7 @@ sub add_attributes {
     my @args = @_;
 
     @args > 0 and @args % 2 == 0
-        or die "[__PACKAGE__] add_attributes: arguments list must have key/value pairs";
+        or die "[__PACKAGE__] add_attributes: arguments list must have key/value pairs\n";
 
     while ( @args ) {
         my ($k, $v) = (shift @args, shift @args);

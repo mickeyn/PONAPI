@@ -12,9 +12,9 @@ sub create {
     $type   or die "[$class] create: missing type\n";
 
     !ref($action) and grep { $action eq $_ } qw< GET POST PATCH DELETE >
-        or die "[$class] create: invalid action\n";
+        or die "[$class] create: invalid action: $action\n";
 
-    !ref($type) or die "[$class] create: invalid type\n";
+    !ref($type) or die "[$class] create: invalid type: $type\n";
 
     $args and ref($args) eq 'HASH' or die "[$class] create: invalid args\n";
 

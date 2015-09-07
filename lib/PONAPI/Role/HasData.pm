@@ -19,9 +19,8 @@ sub add_data {
     my $self  = shift;
     my $value = shift;
 
-    if ( defined $value and ref $value ne 'HASH' ) {
-        die "[__PACKAGE__] add_data: value must be a hashref or undef";
-    }
+    !$value or ref $value eq 'HASH'
+        or die "[__PACKAGE__] add_data: value must be a hashref or undef\n";
 
     push @{ $self->_data } => $value;
 

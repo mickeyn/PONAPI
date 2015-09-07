@@ -21,7 +21,7 @@ sub add_meta {
     my @args = @_;
 
     @args > 0 and @args % 2 == 0
-        or die "[__PACKAGE__] add_meta: arguments list must be key/value pairs";
+        or die "[__PACKAGE__] add_meta: arguments list must be key/value pairs\n";
 
     while ( @args ) {
         my ($k, $v) = (shift @args, shift @args);

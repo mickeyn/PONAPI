@@ -63,17 +63,16 @@ sub add_source {
     # args is arrayref --> hashref
     if ( @args == 1 and ref $args[0] eq 'ARRAY' ) {
         @{ $args[0] } % 2 == 0
-            or die "[__PACKAGE__] add_source: args as arrayref must contain a list of key/value pairs";
+            or die "[__PACKAGE__] add_source: args as arrayref must contain a list of key/value pairs\n";
 
         $args[0] = +{ @{ $args[0] } };
     }
 
     # add all args' keys/values to source hashref
-    if ( @args == 1 and ref $args[0] eq 'HASH' ) {
-        @{ $self->source }{ keys %{ $args[0] } } = values %{ $args[0] };
-    } else {
-        die "[__PACKAGE__] add_source: arguments list must be key/value pairs or a hashref";
-    }
+    @args == 1 and ref $args[0] eq 'HASH'
+        or die "[__PACKAGE__] add_source: arguments list must be key/value pairs or a hashref\n";
+
+    @{ $self->source }{ keys %{ $args[0] } } = values %{ $args[0] };
 
     return $self;
 }

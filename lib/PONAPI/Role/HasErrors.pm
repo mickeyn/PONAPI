@@ -23,13 +23,13 @@ sub add_errors {
 
     for my $arg ( @args ) {
         $arg and ref $arg eq 'HASH'
-            or die "[__PACKAGE__] add_errors: arg must be a hashref";
+            or die "[__PACKAGE__] add_errors: arg must be a hashref\n";
 
         my %valid_args = map { $_ => 1 } qw< id status code title detail source >;
 
         for ( keys %{ $arg } ) {
             exists $valid_args{$_}
-                or die "[__PACKAGE__] add_errors: invalid key: $_";
+                or die "[__PACKAGE__] add_errors: invalid key: $_\n";
         }
 
         my $err_builder = PONAPI::Errors::Builder->new( @args );

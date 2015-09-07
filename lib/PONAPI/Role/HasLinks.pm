@@ -21,11 +21,11 @@ sub add_links {
     my $links = shift;
 
     $links and ref $links eq 'HASH'
-        or die "[__PACKAGE__] add_links: arg must be a hashref";
+        or die "[__PACKAGE__] add_links: arg must be a hashref\n";
 
     my %valid_args = map { $_ => 1 } qw< about self related pagination page >;
 
-    $valid_args{$_} or die "[__PACKAGE__] add_links: invalid key: $_"
+    $valid_args{$_} or die "[__PACKAGE__] add_links: invalid key: $_\n"
         for keys %{ $links };
 
     my $links_builder = PONAPI::Links::Builder->new;
