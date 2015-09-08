@@ -38,6 +38,12 @@ sub add_data {
     $type and $id
         or die "[__PACKAGE__] add_data: resource must have type and id\n";
 
+    # can't have the same (type,id) pair more than once
+    for ( @{ $self->_data } ) {
+        $type eq $_->{type} and $id eq $_->{id}
+            and die "[__PACKAGE__] add_data: type/id pair was already included\n";
+    }
+
     my $builder = PONAPI::Resource::Builder->new( type => $type, id => $id );
     $relationships and $builder->add_relationships ( $relationships );
     $attributes    and $builder->add_attributes    ( $attributes    );
