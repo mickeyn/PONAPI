@@ -17,7 +17,7 @@ sub add_included {
     my $included = shift;
 
     $included and ref $included eq 'HASH'
-        or die "[__PACKAGE__] add_included: invalid included\n";
+        or die "[__PACKAGE__] add_included: argument must be a hashref\n";
 
     $self->_set_included( $included );
 
