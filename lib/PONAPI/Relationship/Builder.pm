@@ -45,31 +45,3 @@ __PACKAGE__->meta->make_immutable;
 1;
 
 __END__
-
-=head1 SYNOPSIS
-
-
-
-=head1 DESCRIPTION
-
-
-
-=head1 ATTRIBUTES
-
-=head2 data
-
-
-
-=head2 erorrs
-
-
-
-=head2 meta
-
-
-
-=head2 links
-
-
-
-=head2 included

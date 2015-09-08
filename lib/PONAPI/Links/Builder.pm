@@ -127,23 +127,3 @@ __PACKAGE__->meta->make_immutable;
 1;
 
 __END__
-
-=head1 SYNOPSIS
-
-
-
-=head1 DESCRIPTION
-
-
-
-=head1 ATTRIBUTES
-
-=head2 self
-
-
-
-=head2 related
-
-
-
-=head2 pagination

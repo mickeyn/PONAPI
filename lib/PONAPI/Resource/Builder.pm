@@ -137,36 +137,3 @@ __PACKAGE__->meta->make_immutable;
 1;
 
 __END__
-
-=head1 SYNOPSIS
-
-
-
-=head1 DESCRIPTION
-
-
-
-=head1 ATTRIBUTES
-
-=head2 id
-
-
-
-=head2 type
-
-
-
-=head2 attributes
-
-
-
-=head2 relationships
-
-
-
-=head2 links
-
-
-
-=head2 meta
-
