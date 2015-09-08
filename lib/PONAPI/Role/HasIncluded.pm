@@ -5,21 +5,43 @@ use warnings;
 
 use Moose::Role;
 
+use PONAPI::Resource::Builder;
+
+# we expect errors to be consumed by any class consuming this one
+with 'PONAPI::Role::HasErrors';
+
 has _included => (
     init_arg  => undef,
+    traits    => [ 'Array' ],
     is        => 'ro',
-    writer    => '_set_included',
-    predicate => 'has_included',
+    default   => sub { +[] },
+    handles   => {
+        has_included => 'count',
+    },
 );
 
 sub add_included {
-    my $self     = shift;
-    my $included = shift;
+    my $self = shift;
 
-    $included and ref $included eq 'HASH'
-        or die "[__PACKAGE__] add_included: argument must be a hashref\n";
+    @_ % 2 == 0 or die "[__PACKAGE__] add_included: args must be a key/value pairs list";
 
-    $self->_set_included( $included );
+    my %args = @_;
+
+    my ( $type, $id, $relationships, $attributes ) =
+        @args{qw< type id relationships attributes >};
+
+    $type and $id
+        or die "[__PACKAGE__] add_included: resource must have type and id\n";
+
+    my $builder = PONAPI::Resource::Builder->new( type => $type, id => $id );
+    $relationships and $builder->add_relationships ( $relationships );
+    $attributes    and $builder->add_attributes    ( $attributes    );
+
+    if ( $builder->has_errors ) {
+        $self->add_errors( $builder->get_errors );
+    } else {
+        push @{ $self->_included } => $builder->build;
+    }
 
     return $self;
 }
