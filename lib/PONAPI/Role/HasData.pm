@@ -20,15 +20,6 @@ has _data => (
     },
 );
 
-before add_data => sub {
-    my $self = shift;
-
-    @_ == 1 and !$_[0] and return undef;
-    @_ == 1 and ref $_[0] eq 'HASH' and return %{ $_[0] };
-
-    return @_;
-};
-
 sub add_data {
     my $self = shift;
 
@@ -36,6 +27,8 @@ sub add_data {
         push @{ $self->_data } => undef;
         return $self;
     }
+
+    @_ % 2 == 0 or die "[__PACKAGE__] add_data: args must be a key/value pairs list";
 
     my %args = @_;
 

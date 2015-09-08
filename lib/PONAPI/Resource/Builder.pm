@@ -47,40 +47,32 @@ has _attributes => (
     }
 );
 
-before add_relationships => sub {
+sub add_relationships {
     my $self = shift;
-
     my %args = ( @_ == 1 and ref $_[0] eq 'HASH' ) ? %{ $_[0] } : @_;
 
     keys %args or die "[__PACKAGE__] add_relationship: missing args\n";
 
-    exists $args{type}
-        and die "[__PACKAGE__] add_relationship: type key is not allowed in relationships\n";
-    exists $args{id}
-        and die "[__PACKAGE__] add_relationship: id key is not allowed in relationships\n";
-
-    for ( keys %args ) {
-        exists $self->_attributes->{$_}
+    for my $k ( keys %args ) {
+        my $v = $args{$k};
+        ref $v eq 'HASH'
+            or die "[__PACKAGE__] add_relationship: key $k: value must be a hashref\n";
+        exists $v->{type}
+            and die "[__PACKAGE__] add_relationship: type key is not allowed in relationships\n";
+        exists $v->{id}
+            and die "[__PACKAGE__] add_relationship: id key is not allowed in relationships\n";
+        exists $self->_attributes->{$k}
             and die "[__PACKAGE__] add_relationship: relationship name $_ already exists in attributes\n";
-    }
 
-    return %args;
-};
-
-sub add_relationships {
-    my $self = shift;
-    my %args = @_;
-
-    for my $name ( keys %args ) {
         my $builder = PONAPI::Relationship::Builder->new();
-        $args{data}  and $builder->add_data( $args{data} );
-        $args{meta}  and $builder->add_meta( $args{meta} );
-        $args{links} and $builder->add_links( $args{links} );
+        $v->{data}  and $builder->add_data( $v->{data} );
+        $v->{meta}  and $builder->add_meta( $v->{meta} );
+        $v->{links} and $builder->add_links( $v->{links} );
 
         if ( $builder->has_errors ) {
             $self->add_errors( $builder->get_errors );
         } else {
-            $self->_relationships->{$name} = $builder->build;
+            $self->_relationships->{$k} = $builder->build;
         }
     }
 
@@ -89,19 +81,19 @@ sub add_relationships {
 
 sub add_attributes {
     my $self = shift;
-    my @args = @_;
+    my %args = ( @_ == 1 and ref $_[0] eq 'HASH' ) ? %{ $_[0] } : @_;
 
-    @args > 0 and @args % 2 == 0
-        or die "[__PACKAGE__] add_attributes: arguments list must have key/value pairs\n";
+    keys %args or die "[__PACKAGE__] add_attributes: missing args\n";
 
-    while ( @args ) {
-        my ($k, $v) = (shift @args, shift @args);
+    for my $k ( keys %args ) {
+        my $v = $args{$k};
 
         $k eq 'type' and die "[__PACKAGE__] add_attributes: type key is not allowed in attributes\n";
         $k eq 'id'   and die "[__PACKAGE__] add_attributes: id key is not allowed in attributes\n";
 
         exists $self->_relationships->{$k}
             and die "[__PACKAGE__] add_attributes: attribute name $k already exists in relationships\n";
+
         ref $v eq 'HASH'
             or die "[__PACKAGE__] add_attributes: attribute value must be a hashref\n";
         exists $v->{relationships}
