@@ -48,7 +48,7 @@ subtest '... testing constructor' => sub {
         has_links
 
         add_included
-        has_include
+        has_included
 
         build
     ];

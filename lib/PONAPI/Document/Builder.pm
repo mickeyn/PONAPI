@@ -49,9 +49,9 @@ sub build {
 
     my %ret = ( jsonapi => { version => "1.0" } );
 
-    $self->has_data    and $self->_build_data    ( \%ret );
-    $self->has_include and $self->_build_include ( \%ret );
-    $self->has_links   and $self->_build_links   ( \%ret );
+    $self->has_data     and $self->_build_data     ( \%ret );
+    $self->has_included and $self->_build_included ( \%ret );
+    $self->has_links    and $self->_build_links    ( \%ret );
 
     $self->has_meta and $ret{meta} = $self->_meta;
 
@@ -74,14 +74,14 @@ sub _build_data {
     return;
 }
 
-sub _build_include {
+sub _build_included {
     my $self = shift;
     my $ret  = shift;
 
-    $self->has_data and $self->has_include
+    $self->has_data and $self->has_included
         or return;
 
-    $ret->{included} = $self->_include;
+    $ret->{included} = $self->_included;
 
     return;
 }

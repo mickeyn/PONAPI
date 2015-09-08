@@ -9,7 +9,7 @@ has _included => (
     init_arg  => undef,
     is        => 'ro',
     writer    => '_set_included',
-    predicate => 'has_include',
+    predicate => 'has_included',
 );
 
 sub add_included {
