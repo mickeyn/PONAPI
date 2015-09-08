@@ -5,6 +5,8 @@ use warnings;
 
 use Moose::Role;
 
+use PONAPI::Links::Builder;
+
 # we expect errors to be consumed by any class consuming this one
 with 'PONAPI::Role::HasErrors';
 
@@ -39,8 +41,8 @@ sub add_links {
 
     my $result = $builder->build;
 
-    if ( $result->has_errors ) {
-        $self->add_errors( $result->get_errors );
+    if ( $builder->has_errors ) {
+        $self->add_errors( $builder->get_errors );
     } else {
         @{ $self->_links }{ keys %{ $result } } = values %{ $result };
     }

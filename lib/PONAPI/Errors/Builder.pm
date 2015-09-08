@@ -7,42 +7,42 @@ use Moose;
 
 with qw<
     PONAPI::Role::HasMeta
-    PONAPI::Role::HasLinks
 >;
 
 has id => (
     is        => 'ro',
     isa       => 'Str',
     predicate => 'has_id',
-    writer    => '_set_id',
 );
 
 has status => (
     is        => 'ro',
     isa       => 'Str',
     predicate => 'has_status',
-    writer    => '_set_status',
 );
 
 has code => (
     is        => 'ro',
     isa       => 'Str',
     predicate => 'has_code',
-    writer    => '_set_code',
 );
 
 has title => (
     is        => 'ro',
     isa       => 'Str',
     predicate => 'has_title',
-    writer    => '_set_title',
 );
 
 has detail => (
     is        => 'ro',
     isa       => 'Str',
     predicate => 'has_detail',
-    writer    => '_set_detail',
+);
+
+has links => (
+    is       => 'ro',
+    isa      => 'Str',
+    predicate => 'has_links',
 );
 
 has source => (
@@ -87,8 +87,10 @@ sub build {
     $self->has_title  and $ret{title}  = $self->title;
     $self->has_detail and $ret{detail} = $self->detail;
     $self->has_source and $ret{source} = $self->source;
-    $self->has_links  and $ret{links}  = $self->_links;
     $self->has_meta   and $ret{meta}   = $self->_meta;
+
+    $self->has_links
+        and $ret{links} = +{ about => $self->links };
 
     return \%ret;
 }
@@ -98,36 +100,3 @@ __PACKAGE__->meta->make_immutable;
 1;
 
 __END__
-
-=head1 SYNOPSIS
-
-
-
-=head1 DESCRIPTION
-
-
-
-=head1 ATTRIBUTES
-
-=head2 id
-
-
-
-=head2 type
-
-
-
-=head2 attributes
-
-
-
-=head2 relationships
-
-
-
-=head2 links
-
-
-
-=head2 meta
-

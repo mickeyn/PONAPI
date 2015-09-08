@@ -60,8 +60,8 @@ sub add_relationships {
 
         my $relation = $builder->build;
 
-        if ( $relation->has_errors ) {
-            $self->add_errors( $relation->get_errors );
+        if ( $builder->has_errors ) {
+            $self->add_errors( $builder->get_errors );
         } else {
             $self->_relationships->{$name} = $relation;
         }

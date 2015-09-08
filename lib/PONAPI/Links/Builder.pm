@@ -5,6 +5,8 @@ use warnings;
 
 use Moose;
 
+with 'PONAPI::Role::HasErrors';
+
 # used by Error
 has _about => (
     init_arg  => undef,
@@ -54,7 +56,7 @@ sub _valid_link {
     ref $value ne 'HASH'
         and return 0;
 
-    exists $value->{href} && exists $value->{meta}
+    exists $value->{href} and exists $value->{meta}
         or return 0;
 
     return 1;

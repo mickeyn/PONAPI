@@ -78,6 +78,7 @@ sub _build_included {
     my $self = shift;
     my $ret  = shift;
 
+    # included can only be added if we have data
     $self->has_data and $self->has_included
         or return;
 
