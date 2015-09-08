@@ -38,11 +38,10 @@ sub add_links {
     $links->{related}    and $builder->add_related( $links->{related} );
     $links->{pagination} and $builder->add_pagination( $links->{pagination} );
 
-    my $result = $builder->build;
-
     if ( $builder->has_errors ) {
         $self->add_errors( $builder->get_errors );
     } else {
+        my $result = $builder->build;
         @{ $self->_links }{ keys %{ $result } } = values %{ $result };
     }
 

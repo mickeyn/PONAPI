@@ -5,6 +5,8 @@ use strict;
 use warnings;
 use Moose;
 
+use PONAPI::Relationship::Builder;
+
 with qw<
     PONAPI::Role::HasMeta
     PONAPI::Role::HasLinks
@@ -45,33 +47,40 @@ has _attributes => (
     }
 );
 
+before add_relationships => sub {
+    my $self = shift;
+
+    my %args = ( @_ == 1 and ref $_[0] eq 'HASH' ) ? %{ $_[0] } : @_;
+
+    keys %args or die "[__PACKAGE__] add_relationship: missing args\n";
+
+    exists $args{type}
+        and die "[__PACKAGE__] add_relationship: type key is not allowed in relationships\n";
+    exists $args{id}
+        and die "[__PACKAGE__] add_relationship: id key is not allowed in relationships\n";
+
+    for ( keys %args ) {
+        exists $self->_attributes->{$_}
+            and die "[__PACKAGE__] add_relationship: relationship name $_ already exists in attributes\n";
+    }
+
+    return %args;
+};
+
 sub add_relationships {
     my $self = shift;
-    my $args = shift;
+    my %args = @_;
 
-    $args and ref $args eq 'HASH'
-        or die "[__PACKAGE__] add_relationship: args must be a hashref\n";
-    exists $args->{type}
-        and die "[__PACKAGE__] add_relationship: type key is not allowed in relationships";
-    exists $args->{id}
-        and die "[__PACKAGE__] add_relationship: id key is not allowed in relationships";
-
-    # add the relationship
-    for my $name ( keys %$args ) {
-        exists $self->_attributes->{$name}
-            and die "[__PACKAGE__] add_relationship: relationship name $name already exists in attributes";
-
+    for my $name ( keys %args ) {
         my $builder = PONAPI::Relationship::Builder->new();
-        $args->{data}  and $builder->add_data( $args->{data} );
-        $args->{meta}  and $builder->add_meta( $args->{meta} );
-        $args->{links} and $builder->add_links( $args->{links} );
-
-        my $relation = $builder->build;
+        $args{data}  and $builder->add_data( $args{data} );
+        $args{meta}  and $builder->add_meta( $args{meta} );
+        $args{links} and $builder->add_links( $args{links} );
 
         if ( $builder->has_errors ) {
             $self->add_errors( $builder->get_errors );
         } else {
-            $self->_relationships->{$name} = $relation;
+            $self->_relationships->{$name} = $builder->build;
         }
     }
 
@@ -88,12 +97,17 @@ sub add_attributes {
     while ( @args ) {
         my ($k, $v) = (shift @args, shift @args);
 
-        $k eq 'type' and die "[__PACKAGE__] add_attributes: type key is not allowed in attributes";
-        $k eq 'id'   and die "[__PACKAGE__] add_attributes: id key is not allowed in attributes";
-        exists $self->_relationships->{$k}
-            and die "[__PACKAGE__] add_attributes: attribute name $k already exists in relationships";
+        $k eq 'type' and die "[__PACKAGE__] add_attributes: type key is not allowed in attributes\n";
+        $k eq 'id'   and die "[__PACKAGE__] add_attributes: id key is not allowed in attributes\n";
 
-        ref $v eq 'HASH' and delete @{$v}{qw< relationships links >};
+        exists $self->_relationships->{$k}
+            and die "[__PACKAGE__] add_attributes: attribute name $k already exists in relationships\n";
+        ref $v eq 'HASH'
+            or die "[__PACKAGE__] add_attributes: attribute value must be a hashref\n";
+        exists $v->{relationships}
+            and die "[__PACKAGE__] add_attributes: attribute value cannot contain relationships key\n";
+        exists $v->{links}
+            and die "[__PACKAGE__] add_attributes: attribute value cannot contain links key\n";
 
         $self->_attributes->{$k} = $v;
     }

@@ -16,9 +16,22 @@ has _meta => (
     isa      => 'HashRef',
     default  => sub { +{} },
     handles  => {
-        has_meta => 'count',
+        has_meta  => 'count',
+        _set_meta => 'set',
     }
 );
+
+before _set_meta => sub {
+    my $self = shift;
+    my %args = @_;
+
+    for ( keys %args ) {
+        /$re_member_first_char/ and !/$re_member_illegal_chars/
+            or die "[__PACKAGE__] add_meta: invalid member name: $_\n";
+    }
+
+    return %args;
+};
 
 sub add_meta {
     my $self  = shift;
@@ -27,14 +40,7 @@ sub add_meta {
     @args > 0 and @args % 2 == 0
         or die "[__PACKAGE__] add_meta: arguments list must be key/value pairs\n";
 
-    while ( @args ) {
-        my ($k, $v) = (shift @args, shift @args);
-
-        $k and !ref($k) and $k =~ /$re_member_first_char/ and $k !~ /$re_member_illegal_chars/
-            or die "[__PACKAGE__] add_meta: invalid member name: $k\n";
-
-        $self->_meta->{$k} = $v;
-    }
+    $self->_set_meta( @args );
 
     return $self;
 }
