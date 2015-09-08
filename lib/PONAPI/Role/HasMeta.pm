@@ -20,12 +20,21 @@ has _meta => (
 sub add_meta {
     my $self  = shift;
 
-    my @args = ( @_ and ref $_[0] eq 'HASH' ) ? %{ $_[0] } : @_;
+    @_ > 0 or die "[__PACKAGE__] add_meta: no arguments\n";
 
-    @args > 0 and @args % 2 == 0
-        or die "[__PACKAGE__] add_meta: arguments list must be key/value pairs\n";
+    my %args =
+        ( ref $_[0] eq 'HASH' ) ? %{ $_[0] } :
+        ( @_ % 2 == 0 )         ? @_         :
+        ();
 
-    $self->_set_meta( @args );
+    for my $k ( keys %args ) {
+        my $v = $args{$k};
+
+        ref $v eq 'HASH'
+            or die "[__PACKAGE__] add_meta: value must be hashref\n";
+
+        $self->_meta->{$k} = $v;
+    }
 
     return $self;
 }
