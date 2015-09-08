@@ -51,8 +51,16 @@ sub add_relationships {
 
     $args and ref $args eq 'HASH'
         or die "[__PACKAGE__] add_relationship: args must be a hashref\n";
+    exists $args->{type}
+        and die "[__PACKAGE__] add_relationship: type key is not allowed in relationships";
+    exists $args->{id}
+        and die "[__PACKAGE__] add_relationship: id key is not allowed in relationships";
 
+    # add the relationship
     for my $name ( keys %$args ) {
+        exists $self->_attributes->{$name}
+            and die "[__PACKAGE__] add_relationship: relationship name $name already exists in attributes";
+
         my $builder = PONAPI::Relationship::Builder->new();
         $args->{data}  and $builder->add_data( $args->{data} );
         $args->{meta}  and $builder->add_meta( $args->{meta} );
@@ -79,7 +87,14 @@ sub add_attributes {
 
     while ( @args ) {
         my ($k, $v) = (shift @args, shift @args);
+
+        $k eq 'type' and die "[__PACKAGE__] add_attributes: type key is not allowed in attributes";
+        $k eq 'id'   and die "[__PACKAGE__] add_attributes: id key is not allowed in attributes";
+        exists $self->_relationships->{$k}
+            and die "[__PACKAGE__] add_attributes: attribute name $k already exists in relationships";
+
         ref $v eq 'HASH' and delete @{$v}{qw< relationships links >};
+
         $self->_attributes->{$k} = $v;
     }
 
