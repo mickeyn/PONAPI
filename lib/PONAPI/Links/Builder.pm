@@ -7,14 +7,6 @@ use Moose;
 
 with 'PONAPI::Role::HasErrors';
 
-# used by Error
-has _about => (
-    init_arg  => undef,
-    is        => 'ro',
-    predicate => 'has_about',
-    writer    => '_set_about',
-);
-
 # use by Relationship, Document
 has _self => (
     init_arg  => undef,
@@ -62,18 +54,6 @@ sub _valid_link {
     return 1;
 }
 
-sub add_about {
-    my $self  = shift;
-    my $value = shift;
-
-    _valid_link( $value )
-        or die "[__PACKAGE__] add_about: value should be a string or a hashref\n";
-
-    $self->_set_about( $value );
-
-    return $self;
-};
-
 sub add_self {
     my $self  = shift;
     my $value = shift;
@@ -84,7 +64,7 @@ sub add_self {
     $self->_set_self( $value );
 
     return $self;
-};
+}
 
 sub add_related {
     my $self  = shift;
@@ -96,7 +76,7 @@ sub add_related {
     $self->_set_related( $value );
 
     return $self;
-};
+}
 
 sub add_pagination {
     my $self       = shift;
@@ -117,7 +97,7 @@ sub add_pagination {
     $self->_set_pagination( $pagination );
 
     return $self;
-};
+}
 
 sub add_page {
     my $self  = shift;
@@ -128,13 +108,12 @@ sub add_page {
     $self->_set_page( $value );
 
     return $self;
-};
+}
 
 sub build {
     my $self = shift;
     my %ret;
 
-    $self->has_about   and $ret{about}   = $self->_about;
     $self->has_self    and $ret{self}    = $self->_self;
     $self->has_related and $ret{related} = $self->_related;
 
@@ -142,7 +121,7 @@ sub build {
         @ret{ keys %{ $self->_pagination } } = values %{ $self->_pagination };
 
     return \%ret;
-};
+}
 
 __PACKAGE__->meta->make_immutable;
 1;

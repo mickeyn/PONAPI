@@ -49,11 +49,14 @@ sub build {
 
     my %ret = ( jsonapi => { version => "1.0" } );
 
-    $self->has_data     and $self->_build_data     ( \%ret );
-    $self->has_included and $self->_build_included ( \%ret );
-    $self->has_links    and $self->_build_links    ( \%ret );
+    if ( $self->has_data ) {
+        $ret{data} = $self->has_id ? $self->_data->[0] : $self->_data;
 
-    $self->has_meta and $ret{meta} = $self->_meta;
+        $self->has_included and $ret{included} = $self->_included;
+    }
+
+    $self->has_links and $ret{links} = $self->_links;
+    $self->has_meta  and $ret{meta}  = $self->_meta;
 
     # errors -> return object with errors
     $self->has_errors
@@ -62,46 +65,6 @@ sub build {
     return \%ret;
 }
 
-
-sub _build_data {
-    my $self = shift;
-    my $ret  = shift;
-
-    $ret->{data} = $self->has_id
-        ? $self->_data->[0]
-        : $self->_data;
-
-    return;
-}
-
-sub _build_included {
-    my $self = shift;
-    my $ret  = shift;
-
-    # included can only be added if we have data
-    $self->has_data and $self->has_included
-        or return;
-
-    $ret->{included} = $self->_included;
-
-    return;
-}
-
-sub _build_links {
-    my $self = shift;
-    my $ret  = shift;
-
-    my %valid_args = map { $_ => 1 } qw< self related first next last prev >;
-
-    for ( keys %{ $self->_links } ) {
-        exists $valid_args{$_} or
-            $self->add_errors( +{
-                detail => "Invalid link for document: [$_]",
-            });
-    }
-
-    return;
-}
 
 __PACKAGE__->meta->make_immutable;
 1;
