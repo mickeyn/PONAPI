@@ -26,7 +26,7 @@ sub add_errors {
         $arg and ref $arg eq 'HASH'
             or die "[__PACKAGE__] add_errors: arg must be a hashref\n";
 
-        my %valid_args = map { $_ => 1 } qw< id status code title detail source >;
+        my %valid_args = map { $_ => 1 } qw< id status code title detail source links >;
 
         for ( keys %{ $arg } ) {
             exists $valid_args{$_}
@@ -35,7 +35,6 @@ sub add_errors {
 
         my $err_builder = PONAPI::Errors::Builder->new( @args );
         $arg->{source} and $err_builder->add_source( $arg->{source} );
-        $arg->{links}  and $err_builder->add_links( $arg->{links} );
 
         push @{ $self->_errors } => $err_builder->build;
     }
