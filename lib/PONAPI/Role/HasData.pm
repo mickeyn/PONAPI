@@ -28,9 +28,15 @@ sub add_data {
         return $self;
     }
 
-    @_ % 2 == 0 or die "[__PACKAGE__] add_data: args must be a key/value pairs list";
-
-    my %args = @_;
+    my %args;
+    if ( @_ == 1 ) {
+        ref $_[0] eq 'HASH' or die "[__PACKAGE__] add_data: single argument args can only be a HASH ref";
+        %args = %{ $_[0] };
+    }
+    else {
+        @_ % 2 == 0 or die "[__PACKAGE__] add_data: args must be a key/value pairs list";
+        %args = @_;
+    }
 
     my ( $type, $id, $relationships, $attributes ) =
         @args{qw< type id relationships attributes >};
