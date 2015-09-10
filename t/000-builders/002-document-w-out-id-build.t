@@ -83,7 +83,7 @@ subtest '... w/meta test' => sub {
     );
     isa_ok($b, 'PONAPI::Document::Builder');
 
-    $b->add_meta( turtles => "all the way down" );
+    $b->add_meta( foo => { turtles => "all the way down" } );
 
     my $doc;
     is(exception { $doc = $b->build }, undef, '.... building did not die');
@@ -91,7 +91,7 @@ subtest '... w/meta test' => sub {
         $b->build,
         {
             jsonapi => { version => "1.0" },
-            meta    => { turtles => "all the way down" },
+            meta    => { foo => { turtles => "all the way down" } },
         },
         '.... got the build we expected'
     );
@@ -107,7 +107,7 @@ subtest '... w/data and w/meta test' => sub {
     isa_ok($b, 'PONAPI::Document::Builder');
 
     $b->add_data({ type => 'articles', id => '10' });
-    $b->add_meta( turtles => "all the way down" );
+    $b->add_meta( foo => { turtles => "all the way down" } );
 
     my $doc;
     is(exception { $doc = $b->build }, undef, '.... building did not die');
@@ -115,7 +115,7 @@ subtest '... w/data and w/meta test' => sub {
         $b->build,
         {
             jsonapi => { version => "1.0" },
-            meta    => { turtles => "all the way down" },
+            meta    => { foo => { turtles => "all the way down" } },
             data    => [{ type => 'articles', id => '10' }],
         },
         '.... got the build we expected'
@@ -137,7 +137,7 @@ subtest '... w/data that is null and w/meta test' => sub {
     isa_ok($b, 'PONAPI::Document::Builder');
 
     $b->add_data(undef);
-    $b->add_meta( turtles => "all the way down" );
+    $b->add_meta( foo => { turtles => "all the way down" } );
 
     my $doc;
     is(exception { $doc = $b->build }, undef, '.... building did not die');
@@ -145,7 +145,7 @@ subtest '... w/data that is null and w/meta test' => sub {
         $b->build,
         {
             jsonapi => { version => "1.0" },
-            meta    => { turtles => "all the way down" },
+            meta    => { foo => { turtles => "all the way down" } },
             data    => [undef],
         },
         '.... got the build we expected'
