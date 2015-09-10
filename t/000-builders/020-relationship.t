@@ -84,19 +84,13 @@ subtest '... testing build errors' => sub {
 
     subtest '... links' => sub {
         my $b = PONAPI::Relationship::Builder->new;
-
-        $b->add_links({
-            about => "/about/something",
-        });
-
-        is_deeply(
-            $b->build,
-            {
-                errors => [{
-                    detail => 'Relationship links should contain at least one of "self" or "related"',
-                }],
-            },
-            '... Relationship with links error',
+        
+        like(
+            exception { $b->add_links({
+                about => "/about/something",
+            })},
+            qr/invalid key: about/,
+            '...about is an invalid key for the links object'
         );
     };
 };
