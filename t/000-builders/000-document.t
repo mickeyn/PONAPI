@@ -74,13 +74,13 @@ subtest '... testing constructor errors' => sub {
 
     like(
         exception { PONAPI::Document::Builder->new },
-        qr/^Attribute \(.+\) is required at constructor PONAPI\:\:Document\:\:Builder\:\:new/,
+        qr/^Attribute \(.+\) is required at /,
         '... got the error we expected'
     );
 
     like(
         exception { PONAPI::Document::Builder->new( action => 'GET' ) },
-        qr/^Attribute \(type\) is required at constructor PONAPI\:\:Document\:\:Builder\:\:new/,
+        qr/^Attribute \(type\) is required at /,
         '... got the error we expected'
     );
 
@@ -92,7 +92,7 @@ subtest '... testing constructor errors' => sub {
 
     like(
         exception { PONAPI::Document::Builder->new( type => 'articles' ) },
-        qr/^Attribute \(action\) is required at constructor PONAPI\:\:Document\:\:Builder\:\:new/,
+        qr/^Attribute \(action\) is required at /,
         '... got the error we expected'
     );
 
