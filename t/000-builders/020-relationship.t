@@ -67,6 +67,60 @@ subtest '... testing links sub-building' => sub {
     );
 };
 
+
+subtest '... testing relationship with multiple data' => sub {
+    my $b = PONAPI::Relationship::Builder->new;
+    
+    $b->add_data({
+        id => "1",
+        type => "articles",
+    });
+    
+    $b->add_data({
+        id => "1",
+        type => "nouns"
+    });
+
+    is_deeply(
+        $b->build,
+        {
+            data =>
+            [
+                {
+                    id => "1",
+                    type => "articles",
+                },
+                {
+                    id => "1",
+                    type => "nouns"
+                }
+            ]
+        },
+        '... Relationship with data',
+    );
+};
+
+
+subtest '... testing relationship with one data object' => sub {
+    my $b = PONAPI::Relationship::Builder->new;
+    
+    $b->add_data({
+        id => "1",
+        type => "articles",
+    });
+
+    is_deeply(
+        $b->build,
+        {
+            data => {
+                id => "1",
+                type => "articles",
+            }
+        },
+        '... Relationship with data',
+    );
+};
+
 subtest '... testing build errors' => sub {
 
     subtest '... for empty Relationship' => sub {
