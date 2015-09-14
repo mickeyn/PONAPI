@@ -114,4 +114,43 @@ subtest '... test set, get back and build multiple fields' => sub {
 
 };
 
+subtest '... test set and get of link objects' => sub {
+	my $links = PONAPI::Links::Builder->new;
+    isa_ok($links, 'PONAPI::Links::Builder');	
+    
+    is(
+        exception {
+            $links->add_self({
+						href => 'resource/1',
+						meta => { ext_id => 234 },
+            		})
+                  ->add_related({
+						href => 'resource/152',
+						meta => { ext_id => -123 },
+            		});
+        }, undef,
+        '... added self and related successfully'
+    );
+    
+    my ($result, $error) = $links->build;
+
+    ok((not defined $error), '... no error found');
+    
+    is_deeply(
+        $result,
+        {
+            self    => {
+						href => 'resource/1',
+						meta => { ext_id => 234 },
+            		},
+            related => {
+						href => 'resource/152',
+						meta => { ext_id => -123 },
+            		},
+         },
+        '.... built the result we expected'
+    );
+
+};
+
 done_testing;
