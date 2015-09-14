@@ -50,10 +50,14 @@ subtest '... testing constructor errors' => sub {
 subtest '... testing links sub-building' => sub {
     my $b = PONAPI::Relationship::Builder->new;
 
+	ok(!$b->has_links, "new relationship should not have links");
+
     $b->add_links({
         related => "/related/2",
         self    => "/self/1",
     });
+    
+    ok($b->has_links(), "relationship should now have links");
 
     is_deeply(
         $b->build,
@@ -73,18 +77,19 @@ TODO: {
 	subtest '... testing relationship with meta' => sub {
 	    my $b = PONAPI::Relationship::Builder->new;
 	    
+	    ok(!$b->has_meta, "new relationship shouldn't have meta");
+	    
 	    my %meta={
 	        info => "a meta info",
 	    };
-	    
-	    use Data::Dumper;
-	    print Data::Dumper->Dump([%meta]);
 	    
 	    is(
 	        exception { $b->add_meta(%meta) },
 	        undef,
 	        '... got the (lack of) error we expected'
     	);
+    	
+    	ok($b->has_meta, "relationship should have meta");
 
 	    is_deeply(
 	        $b->build,
