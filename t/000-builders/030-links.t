@@ -154,8 +154,9 @@ subtest '... test set and get of link objects' => sub {
 };
 
 TODO:{
+	local $TODO = "Need to validate input, not yet implemented";
+
 	subtest '... test errors' => sub {
-		local $TODO = "Need to validate input, not yet implemented";
 		
 		my $links = PONAPI::Links::Builder->new;
 	    isa_ok($links, 'PONAPI::Links::Builder');	

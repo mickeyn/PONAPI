@@ -12,8 +12,9 @@ BEGIN {
 }
 
 TODO:{
+	local $TODO = "Need to check what is wrong here.";
+
 	subtest '... adding relationship to resource' => sub {
-		local $TODO = "Need to check what is wrong here.";
 		
 		my $builder = PONAPI::Resource::Builder->new(
 	        id   => '1',
@@ -28,7 +29,7 @@ TODO:{
 	    });
 	    
 	    $relationship_builder->add_data({
-	        id => "1",
+	        id => "5",
 	        type => "articles",
 	    });
 	    
@@ -47,11 +48,13 @@ TODO:{
 	    is_deeply(
 	    	$builder->build(),
 	    	{
+	    		id   => '1',
+        		type => 'articles',
 	    		relationships => {
 	            	data =>
 		            	[
 			                {
-			                    id => "1",
+			                    id => "5",
 			                    type => "articles",
 			                },
 			                {
