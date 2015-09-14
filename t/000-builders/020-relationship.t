@@ -67,6 +67,34 @@ subtest '... testing links sub-building' => sub {
     );
 };
 
+TODO: {
+	local $TODO = "Need to check if meta should accept this input";
+	
+	subtest '... testing relationship with meta' => sub {
+	    my $b = PONAPI::Relationship::Builder->new;
+	    
+	    my %meta={
+	        info => "a meta info",
+	    };
+	    
+	    use Data::Dumper;
+	    print Data::Dumper->Dump([%meta]);
+	    
+	    is(
+	        exception { $b->add_meta(%meta) },
+	        undef,
+	        '... got the (lack of) error we expected'
+    	);
+
+	    is_deeply(
+	        $b->build,
+	        {
+	            meta => { info => "a meta info", }
+	        },
+	        '... Relationship with multiple data',
+	    );
+	};
+}
 
 subtest '... testing relationship with multiple data' => sub {
     my $b = PONAPI::Relationship::Builder->new;
@@ -96,30 +124,33 @@ subtest '... testing relationship with multiple data' => sub {
                 }
             ]
         },
-        '... Relationship with data',
+        '... Relationship with multiple data',
     );
 };
 
-
-subtest '... testing relationship with one data object' => sub {
-    my $b = PONAPI::Relationship::Builder->new;
-    
-    $b->add_data({
-        id => "1",
-        type => "articles",
-    });
-
-    is_deeply(
-        $b->build,
-        {
-            data => {
-                id => "1",
-                type => "articles",
-            }
-        },
-        '... Relationship with data',
-    );
-};
+TODO:{
+	local $TODO = "Resource linkage not completely implemented";
+	
+	subtest '... testing relationship with one data object' => sub {
+	    my $b = PONAPI::Relationship::Builder->new;
+	    
+	    $b->add_data({
+	          id => "1",
+	        type => "articles",
+	    });
+	
+	    is_deeply(
+	        $b->build,
+	        {
+	            data => {
+	                id => "1",
+	                type => "articles",
+	            }
+	        },
+	        '... Relationship with one data',
+	    );
+	};
+}
 
 subtest '... testing build errors' => sub {
 
