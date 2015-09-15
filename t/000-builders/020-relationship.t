@@ -187,29 +187,27 @@ subtest '... testing relationship with multiple data' => sub {
     );
 };
 
-TODO:{
-	local $TODO = "Resource linkage not completely implemented";
-	
-	subtest '... testing relationship with one data object' => sub {
-	    my $b = PONAPI::Relationship::Builder->new;
-	    
-	    $b->add_data({
-	          id => "1",
-	        type => "articles",
-	    });
-	
-	    is_deeply(
-	        $b->build,
-	        {
-	            data => {
-	                id => "1",
-	                type => "articles",
-	            }
-	        },
-	        '... Relationship with one data',
-	    );
-	};
-}
+local $TODO = "Resource linkage not completely implemented";
+
+subtest '... testing relationship with one data object' => sub {
+    my $b = PONAPI::Relationship::Builder->new;
+    
+    $b->add_data({
+          id => "1",
+        type => "articles",
+    });
+
+    is_deeply(
+        $b->build,
+        {
+            data => {
+                id => "1",
+                type => "articles",
+            }
+        },
+        '... Relationship with one data',
+    );
+};
 
 subtest '... testing build errors' => sub {
 
