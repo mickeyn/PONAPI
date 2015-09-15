@@ -187,8 +187,6 @@ subtest '... testing relationship with multiple data' => sub {
     );
 };
 
-local $TODO = "Resource linkage not completely implemented";
-
 subtest '... testing relationship with one data object' => sub {
     my $b = PONAPI::Relationship::Builder->new;
     
