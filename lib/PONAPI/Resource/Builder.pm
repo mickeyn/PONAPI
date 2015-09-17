@@ -94,12 +94,12 @@ sub add_attributes {
         exists $self->_relationships->{$k}
             and die "[__PACKAGE__] add_attributes: attribute name $k already exists in relationships\n";
 
-        ref $v eq 'HASH'
-            or die "[__PACKAGE__] add_attributes: attribute value must be a hashref\n";
-        exists $v->{relationships}
-            and die "[__PACKAGE__] add_attributes: attribute value cannot contain relationships key\n";
-        exists $v->{links}
-            and die "[__PACKAGE__] add_attributes: attribute value cannot contain links key\n";
+        #ref $v eq 'HASH'
+        #    or die "[__PACKAGE__] add_attributes: attribute value must be a hashref\n";
+        #exists $v->{relationships}
+        #    and die "[__PACKAGE__] add_attributes: attribute value cannot contain relationships key\n";
+        #exists $v->{links}
+        #    and die "[__PACKAGE__] add_attributes: attribute value cannot contain links key\n";
 
         $self->_attributes->{$k} = $v;
     }
@@ -134,6 +134,6 @@ sub build {
 
 
 __PACKAGE__->meta->make_immutable;
-1;
+no Moose; 1;
 
 __END__

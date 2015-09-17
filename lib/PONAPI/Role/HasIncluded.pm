@@ -5,8 +5,6 @@ use warnings;
 
 use Moose::Role;
 
-use PONAPI::Resource::Builder;
-
 # we expect errors to be consumed by any class consuming this one
 with 'PONAPI::Role::HasErrors';
 
@@ -23,9 +21,15 @@ has _included => (
 sub add_included {
     my $self = shift;
 
-    @_ % 2 == 0 or die "[__PACKAGE__] add_included: args must be a key/value pairs list";
-
-    my %args = @_;
+    my %args;
+    if ( @_ == 1 ) {
+        ref $_[0] eq 'HASH' or die "[__PACKAGE__] add_included: single argument args can only be a HASH ref";
+        %args = %{ $_[0] };
+    }
+    else {
+        @_ % 2 == 0 or die "[__PACKAGE__] add_included: args must be a key/value pairs list";
+        %args = @_;
+    }
 
     my ( $type, $id, $relationships, $attributes ) =
         @args{qw< type id relationships attributes >};
@@ -39,6 +43,7 @@ sub add_included {
             and die "[__PACKAGE__] add_included: type/id pair was already included\n";
     }
 
+    require PONAPI::Resource::Builder; # lazy load this ....
     my $builder = PONAPI::Resource::Builder->new( type => $type, id => $id );
     $relationships and $builder->add_relationships ( $relationships );
     $attributes    and $builder->add_attributes    ( $attributes    );

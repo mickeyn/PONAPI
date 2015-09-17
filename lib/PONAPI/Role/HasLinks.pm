@@ -5,8 +5,6 @@ use warnings;
 
 use Moose::Role;
 
-use PONAPI::Links::Builder;
-
 # we expect errors to be consumed by any class consuming this one
 with 'PONAPI::Role::HasErrors';
 
@@ -33,6 +31,7 @@ sub add_links {
     $valid_args{$_} or die "[__PACKAGE__] add_links: invalid key: $_\n"
         for keys %{ $links };
 
+    require PONAPI::Links::Builder; # lazy load this ...
     my $builder = PONAPI::Links::Builder->new;
     $links->{self}       and $builder->add_self( $links->{self} );
     $links->{related}    and $builder->add_related( $links->{related} );

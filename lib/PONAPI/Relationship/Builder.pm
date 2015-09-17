@@ -16,7 +16,16 @@ sub build {
     my $self = shift;
     my %ret;
 
-    $self->has_data and $ret{data} = $self->_data;
+    if ( $self->has_data ) {
+       if ( scalar @{$self->_data} == 1 ) {
+           $ret{data} = $self->_data->[0];
+       } 
+       else {
+           $ret{data} = $self->_data;
+       }
+    }
+
+
     $self->has_meta and $ret{meta} = $self->_meta;
 
     $self->has_links or $self->has_data or $self->has_meta
@@ -42,6 +51,6 @@ sub build {
 }
 
 __PACKAGE__->meta->make_immutable;
-1;
+no Moose; 1;
 
 __END__

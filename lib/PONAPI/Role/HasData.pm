@@ -5,8 +5,6 @@ use warnings;
 
 use Moose::Role;
 
-use PONAPI::Resource::Builder;
-
 # we expect errors to be consumed by any class consuming this one
 with 'PONAPI::Role::HasErrors';
 
@@ -50,6 +48,7 @@ sub add_data {
             and die "[__PACKAGE__] add_data: type/id pair was already included\n";
     }
 
+    require PONAPI::Resource::Builder; # lazy load this ....
     my $builder = PONAPI::Resource::Builder->new( type => $type, id => $id );
     $relationships and $builder->add_relationships ( $relationships );
     $attributes    and $builder->add_attributes    ( $attributes    );

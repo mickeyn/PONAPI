@@ -124,6 +124,6 @@ sub build {
 }
 
 __PACKAGE__->meta->make_immutable;
-1;
+no Moose; 1;
 
 __END__
