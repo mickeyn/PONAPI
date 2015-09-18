@@ -25,7 +25,6 @@ sub build {
        }
     }
 
-
     $self->has_meta and $ret{meta} = $self->_meta;
 
     $self->has_links or $self->has_data or $self->has_meta

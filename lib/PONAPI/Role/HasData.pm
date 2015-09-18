@@ -28,11 +28,11 @@ sub add_data {
 
     my %args;
     if ( @_ == 1 ) {
-        ref $_[0] eq 'HASH' or die "[__PACKAGE__] add_data: single argument args can only be a HASH ref";
+        ref $_[0] eq 'HASH' or die "[__PACKAGE__] add_data: single argument args can only be a HASH ref\n";
         %args = %{ $_[0] };
     }
     else {
-        @_ % 2 == 0 or die "[__PACKAGE__] add_data: args must be a key/value pairs list";
+        @_ % 2 == 0 or die "[__PACKAGE__] add_data: args must be a key/value pairs list\n";
         %args = @_;
     }
 

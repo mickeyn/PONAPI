@@ -114,4 +114,97 @@ subtest '... test set, get back and build multiple fields' => sub {
 
 };
 
+subtest '... test set and get of link objects' => sub {
+		my $links = PONAPI::Links::Builder->new;
+	    isa_ok($links, 'PONAPI::Links::Builder');	
+    
+    is(
+        exception {
+            $links->add_self({
+						href => 'resource/1',
+						meta => { ext_id => 234 },
+            		})
+                  ->add_related({
+						href => 'resource/152',
+						meta => { ext_id => -123 },
+            		});
+        }, undef,
+        '... added self and related successfully'
+    );
+    
+    my ($result, $error) = $links->build;
+
+    ok((not defined $error), '... no error found');
+    
+    is_deeply(
+        $result,
+        {
+            self    => {
+						href => 'resource/1',
+						meta => { ext_id => 234 },
+            		},
+            related => {
+						href => 'resource/152',
+						meta => { ext_id => -123 },
+            		},
+         },
+        '.... built the result we expected'
+    );
+
+};
+
+TODO:{
+	local $TODO = "Need to validate input, not yet implemented";
+
+	subtest '... test errors' => sub {
+		
+		my $links = PONAPI::Links::Builder->new;
+	    isa_ok($links, 'PONAPI::Links::Builder');	
+	    
+	    like(
+	    	exception { 
+	    		$links->add_self({
+	        		href => 'resource/1',
+	        		address => 'resource/1',
+					meta => { ext_id => 234 },
+	        	}
+	        )},
+	        qr/invalid key: address/,
+	        '...address is an invalid attribute for the links object (self)'
+		);	
+	        
+	    like(
+	    	exception { 
+	    		$links->add_self({
+					meta => { ext_id => 234 },
+	        	}
+	        )},
+	        qr/missing key: href/,
+	        '...href is a mandatory attribute for the links object (self)'
+		);
+		
+		like(
+	    	exception { 
+	    		$links->add_related({
+	        		href => 'resource/1',
+	        		address => 'resource/1',
+					meta => { ext_id => 234 },
+	        	}
+	        )},
+	        qr/invalid key: address/,
+	        '...address is an invalid attribute for the links object (related)'
+		);	
+	        
+	    like(
+	    	exception { 
+	    		$links->add_related({
+					meta => { ext_id => 234 },
+	        	}
+	        )},
+	        qr/missing key: href/,
+	        '...href is a mandatory attribute for the links object (related)'
+		);		
+	};
+}
+
 done_testing;
