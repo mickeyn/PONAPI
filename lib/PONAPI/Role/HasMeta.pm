@@ -30,9 +30,6 @@ sub add_meta {
     for my $k ( keys %args ) {
         my $v = $args{$k};
 
-        ref $v eq 'HASH'
-            or die "[__PACKAGE__] add_meta: value must be hashref\n";
-
         $self->_meta->{$k} = $v;
     }
 

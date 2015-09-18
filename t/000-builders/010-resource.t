@@ -31,7 +31,7 @@ subtest '... testing constructor' => sub {
         add_attributes
         has_attributes
 
-        add_relationship
+        add_relationships
         has_relationships
 
         add_links
@@ -49,19 +49,19 @@ subtest '... testing constructor errors' => sub {
 
     like(
         exception { PONAPI::Resource::Builder->new },
-        qr/^Attribute \(.+\) is required at constructor PONAPI\:\:Resource\:\:Builder\:\:new/,
+        qr/^Attribute \(.+\) is required at /,
         '... got the error we expected'
     );
 
     like(
         exception { PONAPI::Resource::Builder->new( id => '1' ) },
-        qr/^Attribute \(type\) is required at constructor PONAPI\:\:Resource\:\:Builder\:\:new/,
+        qr/^Attribute \(type\) is required at /,
         '... got the error we expected'
     );
 
     like(
         exception { PONAPI::Resource::Builder->new( type => 'articles' ) },
-        qr/^Attribute \(id\) is required at constructor PONAPI\:\:Resource\:\:Builder\:\:new/,
+        qr/^Attribute \(id\) is required at /,
         '... got the error we expected'
     );
 
