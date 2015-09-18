@@ -197,8 +197,8 @@ foreach my $article ( @articles ) {
 
 my $GOT = $b->build;
 
-use Data::Dumper;
-warn Dumper $GOT;
+#use Data::Dumper;
+#warn Dumper $GOT;
 
 is_deeply($EXPECTED, $GOT, '... does our result match?');
 
