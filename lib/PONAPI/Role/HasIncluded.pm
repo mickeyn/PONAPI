@@ -23,7 +23,7 @@ has _included => (
 sub add_included {
     my $self = shift;
 
-    @_ % 2 == 0 or die "[__PACKAGE__] add_included: args must be a key/value pairs list";
+    @_ % 2 == 0 or die "[__PACKAGE__] add_included: args must be a key/value pairs list\n";
 
     my %args = @_;
 
