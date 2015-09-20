@@ -24,7 +24,7 @@ subtest '... testing constructor' => sub {
     does_ok($b, 'PONAPI::Builder');
     does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
 
-    isa_ok($b->resource_id_builder, 'PONAPI::Builder::Resource::ID');
+    isa_ok($b->resource_id_builder, 'PONAPI::Builder::Resource::Identifier');
     does_ok($b->resource_id_builder, 'PONAPI::Builder');
 
     is($b->resource_id_builder->id, 10, '... got the ID we expected');

@@ -28,4 +28,4 @@ sub add_links {
     return $self;
 }
 
-1;
+no Moose::Role; 1;

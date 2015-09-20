@@ -37,4 +37,4 @@ sub raise_error {
     return;
 }
 
-1;
+no Moose::Role; 1;

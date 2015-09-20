@@ -1,14 +1,14 @@
 package PONAPI::Builder::Relationship;
 use Moose;
 
-use PONAPI::Builder::Resource::ID;
+use PONAPI::Builder::Resource::Identifier;
 
 with 'PONAPI::Builder', 
      'PONAPI::Builder::Role::HasLinksBuilder';
 
 has 'resource_id_builder' => ( 
     is        => 'ro', 
-    isa       => 'PONAPI::Builder::Resource::ID', 
+    isa       => 'PONAPI::Builder::Resource::Identifier', 
     predicate => 'has_resource_id_builder',
     writer    => '_set_resource_id_builder',
 );
@@ -16,7 +16,7 @@ has 'resource_id_builder' => (
 sub BUILD { 
     my ($self, $param) = @_;
     $self->_set_resource_id_builder(
-        PONAPI::Builder::Resource::ID->new( 
+        PONAPI::Builder::Resource::Identifier->new( 
             parent => $self,
             id     => $param->{id},
             type   => $param->{type}

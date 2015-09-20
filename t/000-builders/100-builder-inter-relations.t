@@ -66,7 +66,7 @@ subtest '... single document builder' => sub {
 
         subtest '... relationship builder' => sub {
             my $resource_id = $relationship->resource_id_builder;
-            isa_ok($resource_id, 'PONAPI::Builder::Resource::ID');
+            isa_ok($resource_id, 'PONAPI::Builder::Resource::Identifier');
 
             my $links = $relationship->links_builder;
             isa_ok($links, 'PONAPI::Builder::Links');        
