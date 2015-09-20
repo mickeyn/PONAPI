@@ -134,7 +134,7 @@ my @articles = fetch_all_articles;
 foreach my $article ( @articles ) {
     my ($id, $title, $body, $created, $updated, $author_id) = @$article;
 
-    $b->set_resource(
+    $b->add_resource(
         # this is from the request ... hmm, feels odd
         type => $TYPE, 
         # data from DB

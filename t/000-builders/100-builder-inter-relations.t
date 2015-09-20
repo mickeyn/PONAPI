@@ -16,15 +16,16 @@ subtest '... single document builder' => sub {
 
     ok($root->is_root, '... this is the root');
 
-    ok(!$root->has_resource_builder, '... we do not have a resource builder yet');
+    ok(!$root->has_resource, '... we do not have a resource builder yet');
 
+    my $resource;
     is(
-        exception { $root->set_resource( type => 'foo', id => 100 ) },
+        exception { 
+            $resource = $root->add_resource( type => 'foo', id => 100 ) 
+        },
         undef,
         '... set the resource sucessfully'
     );
-
-    my $resource = $root->resource_builder;
     isa_ok($resource, 'PONAPI::Builder::Resource');
 
     my $links = $root->links_builder;

@@ -27,9 +27,9 @@ subtest '... testing constructor' => sub {
         add_included
         has_included
 
-        resource_builder
-        set_resource
-
+        add_resource
+        has_resource
+        
         errors_builder
 
         links_builder
