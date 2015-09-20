@@ -1,4 +1,4 @@
-package PONAPI::Links::Builder;
+package PONAPI::Builder::Links;
 use Moose;
 
 with 'PONAPI::Builder';

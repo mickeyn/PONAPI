@@ -1,11 +1,11 @@
-package PONAPI::Role::HasLinksBuilder;
+package PONAPI::Builder::Role::HasLinksBuilder;
 use Moose::Role;
 
-use PONAPI::Links::Builder;
+use PONAPI::Builder::Links;
 
 has 'links_builder' => ( 
     is        => 'ro', 
-    isa       => 'PONAPI::Links::Builder', 
+    isa       => 'PONAPI::Builder::Links', 
     lazy      => 1,
     predicate => 'has_links_builder',
     builder   => '_build_links_builder',
@@ -14,7 +14,7 @@ has 'links_builder' => (
     ]]
 );    
 
-sub _build_links_builder { PONAPI::Links::Builder->new( parent => $_[0] ) }
+sub _build_links_builder { PONAPI::Builder::Links->new( parent => $_[0] ) }
 
 sub add_link {
     my ($self, @args) = @_;

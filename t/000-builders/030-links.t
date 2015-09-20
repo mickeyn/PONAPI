@@ -8,7 +8,7 @@ use Test::Fatal;
 use Test::Moose;
 
 BEGIN {
-    use_ok('PONAPI::Links::Builder');
+    use_ok('PONAPI::Builder::Links');
 }
 
 =pod
@@ -19,8 +19,8 @@ TODO:
 
 subtest '... testing constructor' => sub {
 
-    my $b = PONAPI::Links::Builder->new;
-    isa_ok($b, 'PONAPI::Links::Builder');
+    my $b = PONAPI::Builder::Links->new;
+    isa_ok($b, 'PONAPI::Builder::Links');
     does_ok($b, 'PONAPI::Builder');
 
     can_ok( $b, $_ ) foreach qw[

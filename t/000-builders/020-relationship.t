@@ -8,7 +8,7 @@ use Test::Fatal;
 use Test::Moose;
 
 BEGIN {
-    use_ok('PONAPI::Relationship::Builder');
+    use_ok('PONAPI::Builder::Relationship');
 }
 
 =pod
@@ -19,12 +19,12 @@ TODO:
 
 subtest '... testing constructor' => sub {
 
-    my $b = PONAPI::Relationship::Builder->new( id => 10, type => 'foo' );
-    isa_ok($b, 'PONAPI::Relationship::Builder');
+    my $b = PONAPI::Builder::Relationship->new( id => 10, type => 'foo' );
+    isa_ok($b, 'PONAPI::Builder::Relationship');
     does_ok($b, 'PONAPI::Builder');
-    does_ok($b, 'PONAPI::Role::HasLinksBuilder');
+    does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
 
-    isa_ok($b->resource_id_builder, 'PONAPI::ResourceID::Builder');
+    isa_ok($b->resource_id_builder, 'PONAPI::Builder::Resource::ID');
     does_ok($b->resource_id_builder, 'PONAPI::Builder');
 
     is($b->resource_id_builder->id, 10, '... got the ID we expected');
@@ -45,19 +45,19 @@ subtest '... testing constructor' => sub {
 subtest '... testing constructor errors' => sub {
 
     like(
-        exception { PONAPI::Relationship::Builder->new },
+        exception { PONAPI::Builder::Relationship->new },
         qr/^Attribute \(.+\) does not pass the type constraint /,
         '... got the error we expected'
     );
 
     like(
-        exception { PONAPI::Relationship::Builder->new( id => '1' ) },
+        exception { PONAPI::Builder::Relationship->new( id => '1' ) },
         qr/^Attribute \(type\) does not pass the type constraint /,
         '... got the error we expected'
     );
 
     like(
-        exception { PONAPI::Relationship::Builder->new( type => 'articles' ) },
+        exception { PONAPI::Builder::Relationship->new( type => 'articles' ) },
         qr/^Attribute \(id\) does not pass the type constraint /,
         '... got the error we expected'
     );
@@ -65,10 +65,10 @@ subtest '... testing constructor errors' => sub {
 };
 
 subtest '... testing links sub-building' => sub {
-    my $b = PONAPI::Relationship::Builder->new( id => 10, type => 'foo' );
-    isa_ok($b, 'PONAPI::Relationship::Builder');
+    my $b = PONAPI::Builder::Relationship->new( id => 10, type => 'foo' );
+    isa_ok($b, 'PONAPI::Builder::Relationship');
     does_ok($b, 'PONAPI::Builder');
-    does_ok($b, 'PONAPI::Role::HasLinksBuilder');    
+    does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');    
 
     ok(!$b->has_links, "new relationship should not have links");
 
@@ -99,7 +99,7 @@ TODO:{
 
     	
     subtest '... testing relationship with meta' => sub {
-        my $b = PONAPI::Relationship::Builder->new( id => 10, type => 'foo' );
+        my $b = PONAPI::Builder::Relationship->new( id => 10, type => 'foo' );
         
         ok(!$b->has_meta, "new relationship shouldn't have meta");
         
@@ -121,7 +121,7 @@ TODO:{
     };
 
     subtest '... testing relationship with multiple meta' => sub {
-        my $b = PONAPI::Relationship::Builder->new( id => 10, type => 'foo' );
+        my $b = PONAPI::Builder::Relationship->new( id => 10, type => 'foo' );
         
         ok(!$b->has_meta, "new relationship shouldn't have meta");
         
@@ -152,7 +152,7 @@ TODO:{
     };
 
     subtest '... testing relationship with meta object' => sub {
-        my $b = PONAPI::Relationship::Builder->new( id => 10, type => 'foo' );
+        my $b = PONAPI::Builder::Relationship->new( id => 10, type => 'foo' );
         
         ok(!$b->has_meta, "new relationship shouldn't have meta");
         
@@ -182,7 +182,7 @@ TODO:{
     };
 
     subtest '... testing relationship with multiple data' => sub {
-        my $b = PONAPI::Relationship::Builder->new( id => 10, type => 'foo' );
+        my $b = PONAPI::Builder::Relationship->new( id => 10, type => 'foo' );
         
         $b->add_data({
             id => "1",
@@ -216,7 +216,7 @@ TODO:{
     subtest '... testing build errors' => sub {
 
         subtest '... for empty Relationship' => sub {
-            my $b = PONAPI::Relationship::Builder->new( id => 10, type => 'foo' );
+            my $b = PONAPI::Builder::Relationship->new( id => 10, type => 'foo' );
             is_deeply(
                 $b->build,
                 {
@@ -229,7 +229,7 @@ TODO:{
         };
 
         subtest '... links' => sub {
-            my $b = PONAPI::Relationship::Builder->new( id => 10, type => 'foo' );
+            my $b = PONAPI::Builder::Relationship->new( id => 10, type => 'foo' );
             
             like(
                 exception { $b->add_links({

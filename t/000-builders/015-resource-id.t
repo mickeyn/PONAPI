@@ -8,7 +8,7 @@ use Test::Fatal;
 use Test::Moose;
 
 BEGIN {
-    use_ok('PONAPI::ResourceID::Builder');
+    use_ok('PONAPI::Builder::Resource::ID');
 }
 
 =pod
@@ -19,11 +19,11 @@ TODO:
 
 subtest '... testing constructor' => sub {
 
-    my $b = PONAPI::ResourceID::Builder->new(
+    my $b = PONAPI::Builder::Resource::ID->new(
         id   => '1',
         type => 'articles',
     );
-    isa_ok($b, 'PONAPI::ResourceID::Builder');
+    isa_ok($b, 'PONAPI::Builder::Resource::ID');
     does_ok($b, 'PONAPI::Builder');
 
     is($b->id, '1', '... got the expected id');
@@ -38,19 +38,19 @@ subtest '... testing constructor' => sub {
 subtest '... testing constructor errors' => sub {
 
     like(
-        exception { PONAPI::ResourceID::Builder->new },
+        exception { PONAPI::Builder::Resource::ID->new },
         qr/^Attribute \(.+\) is required at /,
         '... got the error we expected'
     );
 
     like(
-        exception { PONAPI::ResourceID::Builder->new( id => '1' ) },
+        exception { PONAPI::Builder::Resource::ID->new( id => '1' ) },
         qr/^Attribute \(type\) is required at /,
         '... got the error we expected'
     );
 
     like(
-        exception { PONAPI::ResourceID::Builder->new( type => 'articles' ) },
+        exception { PONAPI::Builder::Resource::ID->new( type => 'articles' ) },
         qr/^Attribute \(id\) is required at /,
         '... got the error we expected'
     );

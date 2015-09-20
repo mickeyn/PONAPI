@@ -8,18 +8,18 @@ use Test::Fatal;
 use Test::Moose;
 
 BEGIN {
-    use_ok('PONAPI::Resource::Builder');
+    use_ok('PONAPI::Builder::Resource');
 }
 
 subtest '... adding attributes to resource' => sub {
 	
-	my $builder = PONAPI::Resource::Builder->new(
+	my $builder = PONAPI::Builder::Resource->new(
         id   => '1',
         type => 'articles',
     );
-    isa_ok($builder, 'PONAPI::Resource::Builder');
+    isa_ok($builder, 'PONAPI::Builder::Resource');
     does_ok($builder, 'PONAPI::Builder');
-    does_ok($builder, 'PONAPI::Role::HasLinksBuilder');    
+    does_ok($builder, 'PONAPI::Builder::Role::HasLinksBuilder');    
     
     is(
 	    exception { 
@@ -49,13 +49,13 @@ subtest '... adding attributes to resource' => sub {
 };
 
 subtest '... adding complex attributes to resource' => sub {
-	my $builder = PONAPI::Resource::Builder->new(
+	my $builder = PONAPI::Builder::Resource->new(
         id   => '1',
         type => 'articles',
     );
-    isa_ok($builder, 'PONAPI::Resource::Builder');
+    isa_ok($builder, 'PONAPI::Builder::Resource');
     does_ok($builder, 'PONAPI::Builder');
-    does_ok($builder, 'PONAPI::Role::HasLinksBuilder');  
+    does_ok($builder, 'PONAPI::Builder::Role::HasLinksBuilder');  
     
     is(
 	    exception { 

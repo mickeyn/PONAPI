@@ -1,10 +1,10 @@
-package PONAPI::Resource::Builder;
+package PONAPI::Builder::Resource;
 use Moose;
 
-use PONAPI::Relationship::Builder;
+use PONAPI::Builder::Relationship;
 
 with 'PONAPI::Builder',
-     'PONAPI::Role::HasLinksBuilder';
+     'PONAPI::Builder::Role::HasLinksBuilder';
 
 has 'id'   => ( is => 'ro', isa => 'Str', required => 1 );
 has 'type' => ( is => 'ro', isa => 'Str', required => 1 );
@@ -47,7 +47,7 @@ sub add_attributes {
 has '_relationships' => (
     traits  => [ 'Hash' ],
     is      => 'ro',
-    isa     => 'HashRef[ PONAPI::Relationship::Builder ]',
+    isa     => 'HashRef[ PONAPI::Builder::Relationship ]',
     lazy    => 1,
     default => sub { +{} },
     handles => {
@@ -66,7 +66,7 @@ sub add_relationship {
         title => 'Relationship key conflict, an attribute already exists for key: ' . $key 
     ) if $self->has_attribute_for( $key );
 
-    my $builder = PONAPI::Relationship::Builder->new( parent => $self, %args );
+    my $builder = PONAPI::Builder::Relationship->new( parent => $self, %args );
     $self->_add_relationship( $key => $builder );
     return $builder
 }

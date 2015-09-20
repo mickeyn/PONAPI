@@ -7,12 +7,12 @@ use Test::More;
 use Test::Fatal;
 
 BEGIN {
-    use_ok('PONAPI::Document::Builder')
+    use_ok('PONAPI::Builder::Document')
 }
 
 subtest '... single document builder' => sub {
-    my $root = PONAPI::Document::Builder->new;
-    isa_ok($root, 'PONAPI::Document::Builder');
+    my $root = PONAPI::Builder::Document->new;
+    isa_ok($root, 'PONAPI::Builder::Document');
 
     ok($root->is_root, '... this is the root');
 
@@ -25,13 +25,13 @@ subtest '... single document builder' => sub {
     );
 
     my $resource = $root->resource_builder;
-    isa_ok($resource, 'PONAPI::Resource::Builder');
+    isa_ok($resource, 'PONAPI::Builder::Resource');
 
     my $links = $root->links_builder;
-    isa_ok($links, 'PONAPI::Links::Builder');
+    isa_ok($links, 'PONAPI::Builder::Links');
 
     my $errors = $root->errors_builder;
-    isa_ok($errors, 'PONAPI::Errors::Builder');
+    isa_ok($errors, 'PONAPI::Builder::Errors');
 
     ok(!$resource->is_root, '... this is not the root');
     ok(!$links->is_root, '... this is not the root');
@@ -48,10 +48,10 @@ subtest '... single document builder' => sub {
     subtest '... resource builder' => sub {     
 
         my $relationship = $resource->add_relationship('foo' => ( type => 'foo', id => 200 ));
-        isa_ok($relationship, 'PONAPI::Relationship::Builder');
+        isa_ok($relationship, 'PONAPI::Builder::Relationship');
 
         my $links = $resource->links_builder;
-        isa_ok($links, 'PONAPI::Links::Builder');  
+        isa_ok($links, 'PONAPI::Builder::Links');  
 
         is($relationship->parent, $resource, '... the parent of relationship is the resource builder');
         is($relationship->parent->parent, $root, '... the grand-parent of relationship is the root builder');
@@ -65,10 +65,10 @@ subtest '... single document builder' => sub {
 
         subtest '... relationship builder' => sub {
             my $resource_id = $relationship->resource_id_builder;
-            isa_ok($resource_id, 'PONAPI::ResourceID::Builder');
+            isa_ok($resource_id, 'PONAPI::Builder::Resource::ID');
 
             my $links = $relationship->links_builder;
-            isa_ok($links, 'PONAPI::Links::Builder');        
+            isa_ok($links, 'PONAPI::Builder::Links');        
 
             is($resource_id->parent, $relationship, '... the parent of resource_id is the relationship builder');
             is($resource_id->parent->parent, $resource, '... the grand-parent of resource_id is the resource builder');
@@ -86,7 +86,7 @@ subtest '... single document builder' => sub {
 
     subtest '... included' => sub {
         my $resource = $root->add_included( type => 'foo', id => 200 );
-        isa_ok($resource, 'PONAPI::Resource::Builder');
+        isa_ok($resource, 'PONAPI::Builder::Resource');
 
         is($resource->parent, $root, '... the parent of resource is the document builder');
         is($resource->find_root, $root, '... the parent of resource is the document builder (find_root)');

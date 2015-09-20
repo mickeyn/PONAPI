@@ -8,7 +8,7 @@ use Test::Fatal;
 use Test::Moose;
 
 BEGIN {
-    use_ok('PONAPI::Resource::Builder');
+    use_ok('PONAPI::Builder::Resource');
 }
 
 =pod
@@ -19,13 +19,13 @@ TODO:
 
 subtest '... testing constructor' => sub {
 
-    my $b = PONAPI::Resource::Builder->new(
+    my $b = PONAPI::Builder::Resource->new(
         id   => '1',
         type => 'articles',
     );
-    isa_ok($b, 'PONAPI::Resource::Builder');
+    isa_ok($b, 'PONAPI::Builder::Resource');
     does_ok($b, 'PONAPI::Builder');
-    does_ok($b, 'PONAPI::Role::HasLinksBuilder');
+    does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
 
     is($b->id, '1', '... got the expected id');
     is($b->type, 'articles', '... got the expected type');
@@ -52,19 +52,19 @@ subtest '... testing constructor' => sub {
 subtest '... testing constructor errors' => sub {
 
     like(
-        exception { PONAPI::Resource::Builder->new },
+        exception { PONAPI::Builder::Resource->new },
         qr/^Attribute \(.+\) is required at /,
         '... got the error we expected'
     );
 
     like(
-        exception { PONAPI::Resource::Builder->new( id => '1' ) },
+        exception { PONAPI::Builder::Resource->new( id => '1' ) },
         qr/^Attribute \(type\) is required at /,
         '... got the error we expected'
     );
 
     like(
-        exception { PONAPI::Resource::Builder->new( type => 'articles' ) },
+        exception { PONAPI::Builder::Resource->new( type => 'articles' ) },
         qr/^Attribute \(id\) is required at /,
         '... got the error we expected'
     );

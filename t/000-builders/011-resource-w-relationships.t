@@ -8,26 +8,26 @@ use Test::Fatal;
 use Test::Moose;
 
 BEGIN {
-    use_ok('PONAPI::Resource::Builder');
+    use_ok('PONAPI::Builder::Resource');
 }
 
 
 subtest '... adding relationship to resource' => sub {
 	
-	my $builder = PONAPI::Resource::Builder->new(
+	my $builder = PONAPI::Builder::Resource->new(
         id   => '1',
         type => 'articles',
     );
-    isa_ok($builder, 'PONAPI::Resource::Builder');
+    isa_ok($builder, 'PONAPI::Builder::Resource');
     does_ok($builder, 'PONAPI::Builder');
-    does_ok($builder, 'PONAPI::Role::HasLinksBuilder');
+    does_ok($builder, 'PONAPI::Builder::Role::HasLinksBuilder');
 
     my $relationship_builder = $builder->add_relationship(
         'author' => ( id => 5, type => 'person' )
     );
-    isa_ok($relationship_builder, 'PONAPI::Relationship::Builder');
+    isa_ok($relationship_builder, 'PONAPI::Builder::Relationship');
     does_ok($relationship_builder, 'PONAPI::Builder');
-    does_ok($relationship_builder, 'PONAPI::Role::HasLinksBuilder');
+    does_ok($relationship_builder, 'PONAPI::Builder::Role::HasLinksBuilder');
     
     $relationship_builder->add_links(
         related => "/articles/1/related/person",

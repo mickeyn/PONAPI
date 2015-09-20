@@ -7,7 +7,7 @@ use Test::More;
 use Test::Fatal;
 
 BEGIN {
-    use_ok('PONAPI::Document::Builder')
+    use_ok('PONAPI::Builder::Document')
 }
 
 use Data::Dumper;
@@ -52,7 +52,7 @@ my $EXPECTED = $JSON->decode(q[
 }
 ]);
 
-my $GOT = PONAPI::Document::Builder
+my $GOT = PONAPI::Builder::Document
     ->new
         ->set_resource( id => 1, type => 'articles' )
             ->add_attributes(

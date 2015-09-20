@@ -7,7 +7,7 @@ use Test::More;
 use Test::Fatal;
 
 BEGIN {
-    use_ok('PONAPI::Errors::Builder');
+    use_ok('PONAPI::Builder::Errors');
 }
 
 =pod
@@ -18,8 +18,8 @@ TODO:
 
 subtest '... testing constructor' => sub {
 
-    my $b = PONAPI::Errors::Builder->new;
-    isa_ok($b, 'PONAPI::Errors::Builder');
+    my $b = PONAPI::Builder::Errors->new;
+    isa_ok($b, 'PONAPI::Builder::Errors');
 
     can_ok( $b, $_ ) foreach qw[
         add_error

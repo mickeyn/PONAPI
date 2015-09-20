@@ -1,16 +1,16 @@
-package PONAPI::Document::Builder;
+package PONAPI::Builder::Document;
 use Moose;
 
-use PONAPI::Resource::Builder;
-use PONAPI::Errors::Builder;
+use PONAPI::Builder::Resource;
+use PONAPI::Builder::Errors;
 
 with 'PONAPI::Builder', 
-     'PONAPI::Role::HasLinksBuilder';
+     'PONAPI::Builder::Role::HasLinksBuilder';
 
 has '_included' => (
     traits  => [ 'Array' ],
     is      => 'ro',
-    isa     => 'ArrayRef[ PONAPI::Resource::Builder ]',
+    isa     => 'ArrayRef[ PONAPI::Builder::Resource ]',
     lazy    => 1,
     default => sub { +[] },
     handles => {
@@ -22,34 +22,34 @@ has '_included' => (
 
 sub add_included {
     my ($self, %args) = @_;
-    my $builder = PONAPI::Resource::Builder->new( parent => $self, %args );
+    my $builder = PONAPI::Builder::Resource->new( parent => $self, %args );
     $self->_add_included( $builder );
     return $builder;
 }
 
 has 'resource_builder' => ( 
     is        => 'ro', 
-    isa       => 'PONAPI::Resource::Builder', 
+    isa       => 'PONAPI::Builder::Resource', 
     predicate => 'has_resource_builder',
     writer    => '_set_resource_builder',
 );
 
 sub set_resource { 
     my ($self, %args) = @_;
-    my $builder = PONAPI::Resource::Builder->new( %args, parent => $_[0] );
+    my $builder = PONAPI::Builder::Resource->new( %args, parent => $_[0] );
     $self->_set_resource_builder( $builder );
     return $builder;
 }
 
 has 'errors_builder' => ( 
     is        => 'ro', 
-    isa       => 'PONAPI::Errors::Builder', 
+    isa       => 'PONAPI::Builder::Errors', 
     lazy      => 1,
     predicate => 'has_errors_builder',
     builder   => '_build_errors_builder',
 );
 
-sub _build_errors_builder   {   PONAPI::Errors::Builder->new( parent => $_[0] ) }
+sub _build_errors_builder   {   PONAPI::Builder::Errors->new( parent => $_[0] ) }
 
 sub build {
     my $self   = $_[0];

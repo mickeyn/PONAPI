@@ -1,4 +1,4 @@
-package PONAPI::Errors::Builder;
+package PONAPI::Builder::Errors;
 use Moose;
 
 with 'PONAPI::Builder';

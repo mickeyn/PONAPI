@@ -11,7 +11,7 @@ use Plack::Request;
 use JSON::XS;
 
 BEGIN {
-    use_ok('PONAPI::Document::Builder');
+    use_ok('PONAPI::Builder::Document');
 }
 
 =pod
@@ -122,10 +122,10 @@ is($ACTION, 'GET', '... got the action we expected from the request');
 
 # the Builder
 
-my $b = PONAPI::Document::Builder->new;
-isa_ok($b, 'PONAPI::Document::Builder');
+my $b = PONAPI::Builder::Document->new;
+isa_ok($b, 'PONAPI::Builder::Document');
 does_ok( $b, 'PONAPI::Builder' );
-does_ok($b, 'PONAPI::Role::HasLinksBuilder');
+does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
 
 # building the document
 

@@ -1,4 +1,4 @@
-package PONAPI::ResourceID::Builder;
+package PONAPI::Builder::Resource::ID;
 use Moose;
 
 with 'PONAPI::Builder';
