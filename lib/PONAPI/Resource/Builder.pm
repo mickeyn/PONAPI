@@ -1,139 +1,95 @@
 package PONAPI::Resource::Builder;
-# ABSTRACT: A Perl implementation of the JASON-API (http://jsonapi.org/format) spec - Resource
-
-use strict;
-use warnings;
 use Moose;
 
 use PONAPI::Relationship::Builder;
 
-with qw<
-    PONAPI::Role::HasMeta
-    PONAPI::Role::HasLinks
-    PONAPI::Role::HasErrors
->;
+with 'PONAPI::Builder',
+     'PONAPI::Role::HasLinksBuilder';
 
-has id => (
-    is       => 'ro',
-    isa      => 'Str',
-    required => 1,
-);
+has 'id'   => ( is => 'ro', isa => 'Str', required => 1 );
+has 'type' => ( is => 'ro', isa => 'Str', required => 1 );
 
-has type => (
-    is       => 'ro',
-    isa      => 'Str',
-    required => 1,
-);
-
-has _relationships => (
-    init_arg => undef,
-    traits   => [ 'Hash' ],
-    is       => 'ro',
-    isa      => 'HashRef',
-    default  => sub { +{} },
-    handles  => {
-        has_relationships => 'count',
+has '_attributes' => (
+    traits  => [ 'Hash' ],
+    is      => 'ro',
+    isa     => 'HashRef',
+    lazy    => 1,
+    default => sub { +{} },
+    handles => {
+        'has_attributes'    => 'count',
+        'has_attribute_for' => 'exists',
+        # private ...
+        '_add_attribute' => 'set',
+        '_get_attribute' => 'get',
     }
 );
 
-has _attributes => (
-    init_arg => undef,
-    traits   => [ 'Hash' ],
-    is       => 'ro',
-    isa      => 'HashRef',
-    default  => sub { +{} },
-    handles  => {
-        has_attributes => 'count',
-    }
-);
+sub add_attribute {
+    my $self  = $_[0];
+    my $key   = $_[1];
+    my $value = $_[2];
 
-sub add_relationships {
-    my $self = shift;
-    my %args = ( @_ == 1 and ref $_[0] eq 'HASH' ) ? %{ $_[0] } : @_;
+    $self->raise_error( 
+        title => 'Attribute key conflict, a relation already exists for key: ' . $key 
+    ) if $self->has_relationship_for( $key );
 
-    keys %args or die "[__PACKAGE__] add_relationship: missing args\n";
-
-    for my $k ( keys %args ) {
-        my $v = $args{$k};
-        ref $v eq 'HASH'
-            or die "[__PACKAGE__] add_relationship: key $k: value must be a hashref\n";
-        exists $v->{type}
-            and die "[__PACKAGE__] add_relationship: type key is not allowed in relationships\n";
-        exists $v->{id}
-            and die "[__PACKAGE__] add_relationship: id key is not allowed in relationships\n";
-        exists $self->_attributes->{$k}
-            and die "[__PACKAGE__] add_relationship: relationship name $_ already exists in attributes\n";
-
-        my $builder = PONAPI::Relationship::Builder->new();
-        $v->{data}  and $builder->add_data( $v->{data} );
-        $v->{meta}  and $builder->add_meta( $v->{meta} );
-        $v->{links} and $builder->add_links( $v->{links} );
-
-        if ( $builder->has_errors ) {
-            $self->add_errors( $builder->get_errors );
-        } else {
-            $self->_relationships->{$k} = $builder->build;
-        }
-    }
+    $self->_add_attribute( $key, $value );
 
     return $self;
 }
 
 sub add_attributes {
-    my $self = shift;
-    my %args = ( @_ == 1 and ref $_[0] eq 'HASH' ) ? %{ $_[0] } : @_;
-
-    keys %args or die "[__PACKAGE__] add_attributes: missing args\n";
-
-    for my $k ( keys %args ) {
-        my $v = $args{$k};
-
-        $k eq 'type' and die "[__PACKAGE__] add_attributes: type key is not allowed in attributes\n";
-        $k eq 'id'   and die "[__PACKAGE__] add_attributes: id key is not allowed in attributes\n";
-
-        exists $self->_relationships->{$k}
-            and die "[__PACKAGE__] add_attributes: attribute name $k already exists in relationships\n";
-
-        #ref $v eq 'HASH'
-        #    or die "[__PACKAGE__] add_attributes: attribute value must be a hashref\n";
-        #exists $v->{relationships}
-        #    and die "[__PACKAGE__] add_attributes: attribute value cannot contain relationships key\n";
-        #exists $v->{links}
-        #    and die "[__PACKAGE__] add_attributes: attribute value cannot contain links key\n";
-
-        $self->_attributes->{$k} = $v;
-    }
-
+    my ($self, %args) = @_;
+    $self->add_attribute( $_, $args{ $_ } ) foreach keys %args;
     return $self;
 }
 
-sub build_identifier {
-    my $self = shift;
+has '_relationships' => (
+    traits  => [ 'Hash' ],
+    is      => 'ro',
+    isa     => 'HashRef[ PONAPI::Relationship::Builder ]',
+    lazy    => 1,
+    default => sub { +{} },
+    handles => {
+        'has_relationships'    => 'count',
+        'has_relationship_for' => 'exists',
+        # private ...
+        '_add_relationship' => 'set',
+        '_get_relationship' => 'get',
+    }
+);
 
-    my %ret = (
-        type => $self->type,
-        id   => $self->id,
-    );
+sub add_relationship {
+    my ($self, $key, %args) = @_;
 
-    $self->has_meta and $ret{meta} = $self->_meta;
+    $self->raise_error( 
+        title => 'Relationship key conflict, an attribute already exists for key: ' . $key 
+    ) if $self->has_attribute_for( $key );
 
-    return \%ret;
+    my $builder = PONAPI::Relationship::Builder->new( parent => $self, %args );
+    $self->_add_relationship( $key => $builder );
+    return $builder
 }
 
 sub build {
-    my $self = shift;
+    my $self   = $_[0];
+    my $result = {};
 
-    my $ret = $self->build_identifier;
+    $result->{id}            = $self->id;
+    $result->{type}          = $self->type;
+    $result->{attributes}    = $self->_attributes;
+    $result->{links}         = $self->links_builder->build
+        if $self->has_links_builder;
+    $result->{relationships} = { 
+        map { 
+            $_ => $self->_get_relationship( $_ )->build 
+        } keys %{ $self->_relationships } 
+    } if $self->has_relationships;
 
-    $self->has_attributes    and $ret->{attributes}    = $self->_attributes;
-    $self->has_relationships and $ret->{relationships} = $self->_relationships;
-    $self->has_links         and $ret->{links}         = $self->_links;
-
-    return $ret;
+    return $result;
 }
 
-
 __PACKAGE__->meta->make_immutable;
+
 no Moose; 1;
 
-__END__

@@ -1,55 +1,44 @@
 package PONAPI::Relationship::Builder;
-# ABSTRACT: A Perl implementation of the JASON-API (http://jsonapi.org/format) spec - Relationships
-
-use strict;
-use warnings;
 use Moose;
 
-with qw<
-    PONAPI::Role::HasData
-    PONAPI::Role::HasMeta
-    PONAPI::Role::HasLinks
-    PONAPI::Role::HasErrors
->;
+use PONAPI::ResourceID::Builder;
+
+with 'PONAPI::Builder', 
+     'PONAPI::Role::HasLinksBuilder';
+
+has 'resource_id_builder' => ( 
+    is        => 'ro', 
+    isa       => 'PONAPI::ResourceID::Builder', 
+    predicate => 'has_resource_id_builder',
+    writer    => '_set_resource_id_builder',
+);
+
+sub BUILD { 
+    my ($self, $param) = @_;
+    $self->_set_resource_id_builder(
+        PONAPI::ResourceID::Builder->new( 
+            parent => $self,
+            id     => $param->{id},
+            type   => $param->{type}
+        ) 
+    );
+}
 
 sub build {
-    my $self = shift;
-    my %ret;
+    my $self   = $_[0];
+    my $result = {};
 
-    if ( $self->has_data ) {
-       if ( scalar @{$self->_data} == 1 ) {
-           $ret{data} = $self->_data->[0];
-       } 
-       else {
-           $ret{data} = $self->_data;
-       }
-    }
+    $self->raise_error( 
+        title => 'You must specify a resource identifier to relate with'   
+    ) unless $self->has_resource_id_builder;
 
-    $self->has_meta and $ret{meta} = $self->_meta;
+    $result->{data}  = $self->resource_id_builder->build;
+    $result->{links} = $self->links_builder->build    
+        if $self->has_links_builder;
 
-    $self->has_links or $self->has_data or $self->has_meta
-        or $self->add_errors( +{
-            detail => 'Relationship should contain at least one of "links", "data" or "meta"',
-        });
-
-    if ( $self->has_links ) {
-        exists $self->_links->{self} or exists $self->_links->{related}
-            or $self->add_errors( +{
-                detail => 'Relationship links should contain at least one of "self" or "related"',
-            });
-        $ret{links} = $self->_links;
-    }
-
-    if ( $self->has_errors ) {
-        return +{
-            errors => $self->_errors,
-        };
-    }
-
-    return \%ret;
+    return $result;
 }
 
 __PACKAGE__->meta->make_immutable;
-no Moose; 1;
 
-__END__
+no Moose; 1;

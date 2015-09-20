@@ -1,24 +1,40 @@
 package PONAPI::Builder;
+use Moose::Role;
 
-use strict;
-use warnings;
+requires 'build';
 
-use PONAPI::Document::Builder;
+has 'parent' => (
+    is        => 'rw',
+    does      => 'PONAPI::Builder',
+    predicate => 'has_parent',
+    weak_ref  => 1,
+);
 
-sub create {
-    my ( $class, $action, $type, $args ) = @_;
+sub is_root { ! $_[0]->has_parent }
 
-    $action or die "[$class] create: missing action\n";
-    $type   or die "[$class] create: missing type\n";
+sub find_root {
+    my $current = $_[0];
+    $current = $current->parent until $current->is_root;
+    return $current;
+}
 
-    !ref($action) and grep { $action eq $_ } qw< GET POST PATCH DELETE >
-        or die "[$class] create: invalid action: $action\n";
+sub raise_error {
+    my $self = shift;
 
-    !ref($type) or die "[$class] create: invalid type: $type\n";
+    # XXX:
+    # we could check the args here and look for 
+    # a `level` key which would tell us if we 
+    # should throw an exception (immediate, fatal error)
+    # or we should just stash the error and continue.
+    # It might get funky, but it would be nice to 
+    # unify some error handling, maybe, perhaps
+    # I am not sure.
+    # - SL
 
-    $args and ref($args) eq 'HASH' or die "[$class] create: invalid args\n";
+    $self->find_root->errors_builder->add_error( @_ );
 
-    return PONAPI::Document::Builder->new( action => $action, type => $type, %$args );
+    # What should this return?
+    return;
 }
 
 1;

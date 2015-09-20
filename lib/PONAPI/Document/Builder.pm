@@ -1,72 +1,77 @@
 package PONAPI::Document::Builder;
-# ABSTRACT: A Perl implementation of the JASON-API (http://jsonapi.org/format) spec - Document
-
-use strict;
-use warnings;
 use Moose;
-use Moose::Util::TypeConstraints qw[ enum ];
 
-with qw<
-    PONAPI::Role::HasData
-    PONAPI::Role::HasMeta
-    PONAPI::Role::HasLinks
-    PONAPI::Role::HasErrors
-    PONAPI::Role::HasIncluded
->;
+use PONAPI::Resource::Builder;
+use PONAPI::Errors::Builder;
 
-# ...
+with 'PONAPI::Builder', 
+     'PONAPI::Role::HasLinksBuilder';
 
-has id => (
-    is        => 'ro',
-    isa       => 'Str',
-    predicate => 'has_id',
-);
-
-has action => (
-    is       => 'ro',
-    isa      => enum([qw[ GET POST PATCH DELETE ]]),
-    required => 1,
-);
-
-has type => (
-    is       => 'ro',
-    isa      => 'Str',
-    required => 1,
-);
-
-# ...
-
-sub build {
-    my $self = shift;
-
-    # TODO: collect and add errors from all componenets
-
-    $self->has_errors or $self->has_data or $self->has_meta
-        or $self->add_errors( +{
-            # ...
-            detail => "Missing data/meta",
-        } );
-
-    my %ret = ( jsonapi => { version => "1.0" } );
-
-    if ( $self->has_data ) {
-        $ret{data} = $self->has_id ? $self->_data->[0] : $self->_data;
-
-        $self->has_included and $ret{included} = $self->_included;
+has '_included' => (
+    traits  => [ 'Array' ],
+    is      => 'ro',
+    isa     => 'ArrayRef[ PONAPI::Resource::Builder ]',
+    lazy    => 1,
+    default => sub { +[] },
+    handles => {
+        'has_included'  => 'count',
+        # private ...
+        '_add_included' => 'push',
     }
+);
 
-    $self->has_links and $ret{links} = $self->_links;
-    $self->has_meta  and $ret{meta}  = $self->_meta;
-
-    # errors -> return object with errors
-    $self->has_errors
-        and return +{ errors => $self->_errors };
-
-    return \%ret;
+sub add_included {
+    my ($self, %args) = @_;
+    my $builder = PONAPI::Resource::Builder->new( parent => $self, %args );
+    $self->_add_included( $builder );
+    return $builder;
 }
 
+has 'resource_builder' => ( 
+    is        => 'ro', 
+    isa       => 'PONAPI::Resource::Builder', 
+    predicate => 'has_resource_builder',
+    writer    => '_set_resource_builder',
+);
+
+sub set_resource { 
+    my ($self, %args) = @_;
+    my $builder = PONAPI::Resource::Builder->new( %args, parent => $_[0] );
+    $self->_set_resource_builder( $builder );
+    return $builder;
+}
+
+has 'errors_builder' => ( 
+    is        => 'ro', 
+    isa       => 'PONAPI::Errors::Builder', 
+    lazy      => 1,
+    predicate => 'has_errors_builder',
+    builder   => '_build_errors_builder',
+);
+
+sub _build_errors_builder   {   PONAPI::Errors::Builder->new( parent => $_[0] ) }
+
+sub build {
+    my $self   = $_[0];
+    my $result = {};
+
+    # TODO:
+    # handle `meta` and `jsonapi` here
+    # - SL
+
+    if ( $self->has_errors_builder ) {
+        $result->{errors}   = $self->errors_builder->build;
+    }
+    else {
+        $result->{data}     = $self->resource_builder->build if $self->has_resource_builder;
+        $result->{links}    = $self->links_builder->build    if $self->has_links_builder;
+        $result->{included} = [ map { $_->build } @{ $self->_included } ]      
+            if $self->has_included;
+    }
+
+    return $result;
+}
 
 __PACKAGE__->meta->make_immutable;
-no Moose; 1;
 
-__END__
+no Moose; 1;

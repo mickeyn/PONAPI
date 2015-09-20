@@ -4,12 +4,14 @@ use strict;
 use warnings;
 
 use Test::More;
+use Test::Fatal;
+use Test::Moose;
 
 use Plack::Request;
 use JSON::XS;
 
 BEGIN {
-    use_ok('PONAPI::Builder');
+    use_ok('PONAPI::Document::Builder');
 }
 
 =pod
@@ -23,27 +25,24 @@ my $JSON = JSON::XS->new->utf8;
 # the expected result
 my $EXPECTED = $JSON->decode(q[
 {
-    "jsonapi":{"version":"1.0"},
-    "data":[
-        {
-            "type":"articles",
-            "id":"1",
-            "attributes":{
-                "title":"JSON API paints my bikeshed!",
-                "body":"The shortest article. Ever.",
-                "created":"2015-05-22 14:56:29",
-                "updated":"2015-05-22 14:56:28"
-            },
-            "relationships":{
-                "author":{
-                    "data":{
-                        "id":"42",
-                        "type":"people"
-                    }
+    "data":{
+        "type":"articles",
+        "id":"1",
+        "attributes":{
+            "title":"JSON API paints my bikeshed!",
+            "body":"The shortest article. Ever.",
+            "created":"2015-05-22 14:56:29",
+            "updated":"2015-05-22 14:56:28"
+        },
+        "relationships":{
+            "author":{
+                "data":{
+                    "id":"42",
+                    "type":"people"
                 }
             }
         }
-    ],
+    },
     "included":[
         {
             "type":"people",
@@ -123,29 +122,10 @@ is($ACTION, 'GET', '... got the action we expected from the request');
 
 # the Builder
 
-my $b = PONAPI::Builder->create( $ACTION, $TYPE, {} );
+my $b = PONAPI::Document::Builder->new;
 isa_ok($b, 'PONAPI::Document::Builder');
-
-is($b->type, $TYPE, '... got the type we expected');
-is($b->action, $ACTION, '... got the action we expected');
-
-ok(!$b->has_id, '... got the (lack of) id we expected');
-is($b->id, undef, '... got the (lack of) id we expected');
-
-=pod
-
-I am not sure that `action` slot makes sense anymore, it is never used again. 
-Our original intent was to have an 'empty' Builder also serve as a "request"
-of some kind, but I think that idea is no longer relevant since we have no 
-clean way to also include query parameters, etc.
-
-Also, requiring the HASH ref as the 3rd argument is odd, the only real valid
-value is `id`. Again I think this is somewhat historical I think, the decision 
-was the right one in context, but no longer is so since no other attributes 
-in the Document::Builder class are accessible from the constructor (they are
-all `init_arg => undef`).
-
-=cut
+does_ok( $b, 'PONAPI::Builder' );
+does_ok($b, 'PONAPI::Role::HasLinksBuilder');
 
 # building the document
 
@@ -154,44 +134,31 @@ my @articles = fetch_all_articles;
 foreach my $article ( @articles ) {
     my ($id, $title, $body, $created, $updated, $author_id) = @$article;
 
-    $b->add_data({
+    $b->set_resource(
         # this is from the request ... hmm, feels odd
         type => $TYPE, 
-
         # data from DB
         id => $id,
-
-        # specifying this seems silly since the builder
-        # should be able to tease this out 
-        attributes => {
-            title   => $title,
-            body    => $body, 
-            created => $created, 
-            updated => $updated,
-        },
-
-        # constructing relationships also feels very 
-        # much like we are constructing the end HASH
-        # ref, so the builder is not much help here
-        relationships => {
-            author => {
-                data => { type => 'people', id => $author_id },
-            }
-        }
-    });
+    )->add_attributes(
+        title   => $title,
+        body    => $body, 
+        created => $created, 
+        updated => $updated,
+    )->add_relationship( 
+        author => ( type => 'people', id => $author_id )
+    );
 
     if ( my ($author) = fetch_author( $author_id ) ) {
         my ($id, $name, $age, $gender) = @$author;
 
-        $b->add_included({
+        $b->add_included(
             type       => 'people',
             id         => $author_id,
-            attributes => {
-                name   => $name,
-                age    => $age,
-                gender => $gender
-            }
-        });
+        )->add_attributes(
+            name   => $name,
+            age    => $age,
+            gender => $gender
+        );
     }
 }
 
