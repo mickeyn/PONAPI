@@ -29,12 +29,12 @@ subtest '... testing constructor' => sub {
 
         add_resource
         has_resource
-        
+
         errors_builder
 
         links_builder
         add_link
-        add_links      
+        add_links
 
         build
 	];

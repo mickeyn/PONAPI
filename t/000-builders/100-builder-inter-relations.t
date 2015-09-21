@@ -20,8 +20,8 @@ subtest '... single document builder' => sub {
 
     my $resource;
     is(
-        exception { 
-            $resource = $root->add_resource( type => 'foo', id => 100 ) 
+        exception {
+            $resource = $root->add_resource( type => 'foo', id => 100 )
         },
         undef,
         '... set the resource sucessfully'
@@ -40,19 +40,19 @@ subtest '... single document builder' => sub {
 
     is($resource->parent, $root, '... the parent of resource is our root builder');
     is($links->parent, $root, '... the parent of links is our root builder');
-    is($errors->parent, $root, '... the parent of errors is our root builder');  
+    is($errors->parent, $root, '... the parent of errors is our root builder');
 
     is($resource->find_root, $root, '... the parent of resource is our root builder (find_root)');
     is($links->find_root, $root, '... the parent of links is our root builder (find_root)');
-    is($errors->find_root, $root, '... the parent of errors is our root builder (find_root)');    
+    is($errors->find_root, $root, '... the parent of errors is our root builder (find_root)');
 
-    subtest '... resource builder' => sub {     
+    subtest '... resource builder' => sub {
 
         my $relationship = $resource->add_relationship('foo' => ( type => 'foo', id => 200 ));
         isa_ok($relationship, 'PONAPI::Builder::Relationship');
 
         my $links = $resource->links_builder;
-        isa_ok($links, 'PONAPI::Builder::Links');  
+        isa_ok($links, 'PONAPI::Builder::Links');
 
         is($relationship->parent, $resource, '... the parent of relationship is the resource builder');
         is($relationship->parent->parent, $root, '... the grand-parent of relationship is the root builder');
@@ -69,7 +69,7 @@ subtest '... single document builder' => sub {
             isa_ok($resource_id, 'PONAPI::Builder::Resource::Identifier');
 
             my $links = $relationship->links_builder;
-            isa_ok($links, 'PONAPI::Builder::Links');        
+            isa_ok($links, 'PONAPI::Builder::Links');
 
             is($resource_id->parent, $relationship, '... the parent of resource_id is the relationship builder');
             is($resource_id->parent->parent, $resource, '... the grand-parent of resource_id is the resource builder');

@@ -12,17 +12,17 @@ BEGIN {
 }
 
 subtest '... adding attributes to resource' => sub {
-	
+
 	my $builder = PONAPI::Builder::Resource->new(
         id   => '1',
         type => 'articles',
     );
     isa_ok($builder, 'PONAPI::Builder::Resource');
     does_ok($builder, 'PONAPI::Builder');
-    does_ok($builder, 'PONAPI::Builder::Role::HasLinksBuilder');    
-    
+    does_ok($builder, 'PONAPI::Builder::Role::HasLinksBuilder');
+
     is(
-	    exception { 
+	    exception {
 	    	$builder->add_attributes(
 		    	this 		=> "should",
 		    	be			=> "an",
@@ -32,7 +32,7 @@ subtest '... adding attributes to resource' => sub {
 	    undef,
 	    '... got the (lack of) error we expected'
     );
-    
+
     is_deeply(
     	$builder->build,
     	{
@@ -41,7 +41,7 @@ subtest '... adding attributes to resource' => sub {
     		attributes => {
     			this 		=> "should",
 		    	be			=> "an",
-		    	attribute	=> "object",	
+		    	attribute	=> "object",
     		}
     	},
     	'... built as expected'
@@ -55,10 +55,10 @@ subtest '... adding complex attributes to resource' => sub {
     );
     isa_ok($builder, 'PONAPI::Builder::Resource');
     does_ok($builder, 'PONAPI::Builder');
-    does_ok($builder, 'PONAPI::Builder::Role::HasLinksBuilder');  
-    
+    does_ok($builder, 'PONAPI::Builder::Role::HasLinksBuilder');
+
     is(
-	    exception { 
+	    exception {
 	    	$builder->add_attributes(
 		    	an_attribute 	=> {
 		    		this 		=> "should",
@@ -70,7 +70,7 @@ subtest '... adding complex attributes to resource' => sub {
 	    undef,
 	    '... got the (lack of) error we expected'
     );
-    
+
     is_deeply(
     	$builder->build,
     	{

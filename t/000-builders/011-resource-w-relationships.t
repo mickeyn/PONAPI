@@ -13,7 +13,7 @@ BEGIN {
 
 
 subtest '... adding relationship to resource' => sub {
-	
+
 	my $builder = PONAPI::Builder::Resource->new(
         id   => '1',
         type => 'articles',
@@ -28,12 +28,12 @@ subtest '... adding relationship to resource' => sub {
     isa_ok($relationship_builder, 'PONAPI::Builder::Relationship');
     does_ok($relationship_builder, 'PONAPI::Builder');
     does_ok($relationship_builder, 'PONAPI::Builder::Role::HasLinksBuilder');
-    
+
     $relationship_builder->add_links(
         related => "/articles/1/related/person",
         self    => "/person/5",
     );
-    
+
     is_deeply(
     	$builder->build,
     	{
@@ -52,7 +52,7 @@ subtest '... adding relationship to resource' => sub {
                 }
             }
     	},
-    	'... built as expected' 
+    	'... built as expected'
 	);
 };
 
