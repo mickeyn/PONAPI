@@ -60,7 +60,7 @@ my $GOT = PONAPI::Builder::Document
                 title => 'Rails is Omakase',
                 body  => 'WHAT?!?!?!'
             )
-            ->add_relationship( 'author' => ( id => 9, type => 'people' ) )
+            ->add_relationship( 'author' => { id => 9, type => 'people' } )
                 ->add_links(
                     self    => '/articles/1/relationships/author',
                     related => '/articles/1/author'

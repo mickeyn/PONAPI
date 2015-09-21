@@ -48,7 +48,7 @@ subtest '... single document builder' => sub {
 
     subtest '... resource builder' => sub {
 
-        my $relationship = $resource->add_relationship('foo' => ( type => 'foo', id => 200 ));
+        my $relationship = $resource->add_relationship('foo' => { type => 'foo', id => 200 });
         isa_ok($relationship, 'PONAPI::Builder::Relationship');
 
         my $links = $resource->links_builder;

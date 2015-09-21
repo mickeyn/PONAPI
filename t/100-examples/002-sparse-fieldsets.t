@@ -146,7 +146,7 @@ foreach my $article ( @articles ) {
         created => $created,
         updated => $updated,
     )->add_relationship(
-        author => ( type => 'people', id => $author_id )
+        author => { type => 'people', id => $author_id }
     );
 
     if ( my ($author) = fetch_author( $author_id ) ) {

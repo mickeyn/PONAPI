@@ -64,13 +64,16 @@ has '_relationships' => (
 );
 
 sub add_relationship {
-    my ($self, $key, %args) = @_;
+    my ($self, $key, $resource) = @_;
+
+    die 'Relationship resource information must be a hash reference' 
+        if ref $resource ne 'HASH';
 
     $self->raise_error(
         title => 'Relationship key conflict, an attribute already exists for key: ' . $key
     ) if $self->has_attribute_for( $key );
 
-    my $builder = PONAPI::Builder::Relationship->new( parent => $self, %args );
+    my $builder = PONAPI::Builder::Relationship->new( parent => $self, %$resource );
     $self->_add_relationship( $key => $builder );
     return $builder
 }

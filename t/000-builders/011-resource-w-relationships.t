@@ -24,7 +24,7 @@ subtest '... adding relationship to resource' => sub {
     does_ok($builder, 'PONAPI::Builder::Role::HasMeta');
 
     my $relationship_builder = $builder->add_relationship(
-        'author' => ( id => 5, type => 'person' )
+        'author' => { id => 5, type => 'person' }
     );
     isa_ok($relationship_builder, 'PONAPI::Builder::Relationship');
     does_ok($relationship_builder, 'PONAPI::Builder');
