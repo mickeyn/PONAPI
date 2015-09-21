@@ -30,23 +30,30 @@ sub add_included {
     return $builder;
 }
 
-has '_resource_builder' => (
+has '_resource_builders' => (
     init_arg  => undef,
+    traits    => [ 'Array' ],
     is        => 'ro',
-    isa       => 'PONAPI::Builder::Resource',
-    predicate => '_has_resource_builder',
-    writer    => '_set_resource_builder',
+    isa       => 'ArrayRef[ PONAPI::Builder::Resource ]',
+    lazy      => 1,
+    default   => sub { +[] },
+    handles   => {
+        '_has_resource_builders' => 'count',
+        # private ...
+        '_add_resource_builder'  => 'push',
+        '_get_resource_builder'  => 'get',
+    }
 );
 
 sub has_resource {
     my $self = $_[0];
-    $self->_has_resource_builder;
+    $self->_has_resource_builders;
 }
 
 sub add_resource {
     my ($self, %args) = @_;
     my $builder = PONAPI::Builder::Resource->new( %args, parent => $_[0] );
-    $self->_set_resource_builder( $builder );
+    $self->_add_resource_builder( $builder );
     return $builder;
 }
 
@@ -69,8 +76,8 @@ sub build {
         $result->{meta}  = $self->_meta                if $self->has_meta;
         $result->{links} = $self->links_builder->build if $self->has_links_builder;
 
-        if ( $self->_has_resource_builder ) {
-            $result->{data}     = $self->_resource_builder->build;
+        if ( $self->_has_resource_builders ) {
+            $result->{data}     = $self->_get_resource_builder(0)->build;
             $result->{included} = +[ map { $_->build } @{ $self->_included } ]
                 if $self->has_included;
         }
