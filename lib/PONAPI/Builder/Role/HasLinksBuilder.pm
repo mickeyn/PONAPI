@@ -1,3 +1,4 @@
+# ABSTRACT: PONAPI - Perl JSON-API implementation (http://jsonapi.org/) v1.0
 package PONAPI::Builder::Role::HasLinksBuilder;
 use Moose::Role;
 
