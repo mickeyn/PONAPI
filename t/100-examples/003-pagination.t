@@ -4,14 +4,22 @@ use strict;
 use warnings;
 
 use Test::More;
+use Test::Fatal;
+use Test::Moose;
+
+use Plack::Request;
+use JSON::XS;
 
 BEGIN {
-    use_ok('PONAPI::Builder');
+    use_ok('PONAPI::Builder::Document');
 }
 
 # http://jsonapi.org/examples/#pagination
 
-my $DATA = q[
+my $JSON = JSON::XS->new->utf8;
+
+# the expected result
+my $EXPECTED = $JSON->decode(q[
 {
     "meta":{
         "total-pages":13
@@ -36,6 +44,6 @@ my $DATA = q[
         "last":"http://example.com/articles?page[number]=13&page[size]=1"
     }
 }
-];
+]);
 
 done_testing;

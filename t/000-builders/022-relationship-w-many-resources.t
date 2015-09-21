@@ -28,7 +28,10 @@ subtest '... testing relationship with multiple data' => sub {
     isa_ok($b, 'PONAPI::Builder::Relationship');
     does_ok($b, 'PONAPI::Builder');
     does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
-    does_ok($b, 'PONAPI::Builder::Role::HasMeta');    
+    does_ok($b, 'PONAPI::Builder::Role::HasMeta');   
+
+    ok($b->has_resource, '... we have a resource');
+    ok($b->has_resources, '... we have many resources');
 
     is_deeply(
         $b->build,

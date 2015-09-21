@@ -4,14 +4,22 @@ use strict;
 use warnings;
 
 use Test::More;
+use Test::Fatal;
+use Test::Moose;
+
+use Plack::Request;
+use JSON::XS;
 
 BEGIN {
-    use_ok('PONAPI::Builder');
+    use_ok('PONAPI::Builder::Document');
 }
 
 # http://jsonapi.org/
 
-my $DATA = q[
+my $JSON = JSON::XS->new->utf8;
+
+# the expected result
+my $EXPECTED = $JSON->decode(q[
 {
     "links":{
         "self":"http://example.com/articles",
@@ -109,6 +117,6 @@ my $DATA = q[
         }
     ]
 }
-];
+]);
 
 done_testing;

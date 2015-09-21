@@ -28,6 +28,7 @@ subtest '... testing constructor' => sub {
     ok(!$b->is_collection, '... this document is not a collection');
 
     ok(!$b->has_resource, '... the document does not have a resource');
+    ok(!$b->has_resources, '... the document does not have a resource');
 
     my $r = $b->add_resource( type => 'article', id => 10 );
     isa_ok($r, 'PONAPI::Builder::Resource');
@@ -39,6 +40,7 @@ subtest '... testing constructor' => sub {
     );
 
     ok($b->has_resource, '... the document now has a resource');    
+    ok(!$b->has_resources, '... the document does not have a resource');
 
     is_deeply(
         $b->build,
