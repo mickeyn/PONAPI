@@ -61,10 +61,7 @@ sub build {
     my $self   = $_[0];
     my $result = +{ jsonapi => { version => "1.0" } };
 
-    if ( $self->has_errors_builder ) {
-        $result->{errors}   = $self->errors_builder->build;
-    }
-    else {
+    if ( ! $self->has_errors_builder ) {
         $result->{meta}  = $self->_meta                if $self->has_meta;
         $result->{links} = $self->links_builder->build if $self->has_links_builder;
 
@@ -73,6 +70,13 @@ sub build {
             $result->{included} = +[ map { $_->build } @{ $self->_included } ]
                 if $self->has_included;
         }
+    }
+
+    if ( $self->has_errors_builder ) {
+        return +{
+            jsonapi => +{ version => "1.0" },
+            errors  => $self->errors_builder->build,
+        };
     }
 
     return $result;
