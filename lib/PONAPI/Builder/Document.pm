@@ -30,6 +30,8 @@ sub add_included {
     return $builder;
 }
 
+has 'is_collection' => ( is => 'ro', isa => 'Bool', default => 0 );
+
 has '_resource_builders' => (
     init_arg  => undef,
     traits    => [ 'Array' ],
@@ -37,8 +39,9 @@ has '_resource_builders' => (
     isa       => 'ArrayRef[ PONAPI::Builder::Resource ]',
     lazy      => 1,
     default   => sub { +[] },
+    predicate => '_has_resource_builders',
     handles   => {
-        '_has_resource_builders' => 'count',
+        '_num_resource_builders' => 'count',
         # private ...
         '_add_resource_builder'  => 'push',
         '_get_resource_builder'  => 'get',
@@ -47,11 +50,15 @@ has '_resource_builders' => (
 
 sub has_resource {
     my $self = $_[0];
-    $self->_has_resource_builders;
+    $self->_has_resource_builders && $self->_num_resource_builders > 0;
 }
 
 sub add_resource {
     my ($self, %args) = @_;
+
+    die 'Cannot add more then one resource unless the Document is in collection mode'
+        if $self->has_resource && !$self->is_collection;
+
     my $builder = PONAPI::Builder::Resource->new( %args, parent => $_[0] );
     $self->_add_resource_builder( $builder );
     return $builder;
@@ -77,7 +84,23 @@ sub build {
         $result->{links} = $self->links_builder->build if $self->has_links_builder;
 
         if ( $self->_has_resource_builders ) {
-            $result->{data}     = $self->_get_resource_builder(0)->build;
+            if ( $self->is_collection ) {
+                # if it is a collection, then 
+                # call build on each one ...
+                $result->{data} = [ map { $_->build } @{ $self->_resource_builders } ];
+            }
+            else {
+                # if it is a single resource, 
+                # just use that one
+                $result->{data} = $self->_get_resource_builder(0)->build
+                    if $self->has_resource;    
+
+                # XXX:
+                # ... but if there is no resource 
+                # at all, what should we do? null?
+                # - SL
+            }
+
             $result->{included} = +[ map { $_->build } @{ $self->_included } ]
                 if $self->has_included;
         }

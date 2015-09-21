@@ -37,6 +37,8 @@ subtest '... testing constructor' => sub {
         add_link
         add_links
 
+        is_collection
+
         build
     ];
 
