@@ -32,11 +32,11 @@ package PONAPI::Builder {
         my $self = shift;
 
         # XXX:
-        # we could check the args here and look for 
-        # a `level` key which would tell us if we 
+        # we could check the args here and look for
+        # a `level` key which would tell us if we
         # should throw an exception (immediate, fatal error)
         # or we should just stash the error and continue.
-        # It might get funky, but it would be nice to 
+        # It might get funky, but it would be nice to
         # unify some error handling, maybe, perhaps
         # I am not sure.
         # - SL
@@ -51,13 +51,13 @@ package PONAPI::Builder {
 package PONAPI::Role::HasLinksBuilder {
     use Moose::Role;
 
-    has 'links_builder' => ( 
-        is        => 'ro', 
-        isa       => 'PONAPI::Links::Builder', 
+    has 'links_builder' => (
+        is        => 'ro',
+        isa       => 'PONAPI::Links::Builder',
         lazy      => 1,
         predicate => 'has_links_builder',
         builder   => '_build_links_builder',
-    );    
+    );
 
     sub _build_links_builder { PONAPI::Links::Builder->new( parent => $_[0] ) }
 
@@ -74,13 +74,35 @@ package PONAPI::Role::HasLinksBuilder {
     }
 }
 
+package PONAPI::Role::HasMeta {
+    use Moose::Role;
+
+    has _meta => (
+        init_arg => undef,
+        traits   => [ 'Hash' ],
+        is       => 'ro',
+        isa      => 'HashRef',
+        default  => sub { +{} },
+        handles  => {
+            has_meta  => 'count',
+        }
+    );
+
+    sub add_meta {
+        my ($self, %args) = shift;
+        @{ $self->_meta }{ keys %args } = values %args;
+        return $self;
+    }
+}
+
 ## ----------------------------------------------------------------------------
 
 package PONAPI::Document::Builder {
     use Moose;
 
-    with 'PONAPI::Builder', 
-         'PONAPI::Role::HasLinksBuilder';
+    with 'PONAPI::Builder',
+         'PONAPI::Role::HasLinksBuilder',
+         'PONAPI::Role::HasMeta';
 
     has '_included' => (
         traits  => [ 'Array' ],
@@ -102,46 +124,46 @@ package PONAPI::Document::Builder {
         return $builder;
     }
 
-    has 'resource_builder' => ( 
-        is        => 'ro', 
-        isa       => 'PONAPI::Resource::Builder', 
+    has 'resource_builder' => (
+        is        => 'ro',
+        isa       => 'PONAPI::Resource::Builder',
         predicate => 'has_resource_builder',
         writer    => '_set_resource_builder',
     );
 
-    sub set_resource { 
+    sub set_resource {
         my ($self, %args) = @_;
         my $builder = PONAPI::Resource::Builder->new( %args, parent => $_[0] );
         $self->_set_resource_builder( $builder );
         return $builder;
     }
 
-    has 'errors_builder' => ( 
-        is        => 'ro', 
-        isa       => 'PONAPI::Errors::Builder', 
+    has 'errors_builder' => (
+        is        => 'ro',
+        isa       => 'PONAPI::Errors::Builder',
         lazy      => 1,
         predicate => 'has_errors_builder',
         builder   => '_build_errors_builder',
     );
 
-    sub _build_errors_builder   {   PONAPI::Errors::Builder->new( parent => $_[0] ) }
+    sub _build_errors_builder { PONAPI::Errors::Builder->new( parent => $_[0] ) }
 
     sub build {
         my $self   = $_[0];
-        my $result = {};
-
-        # TODO:
-        # handle `meta` and `jsonapi` here
-        # - SL
+        my $result = +{ jsonapi => { version => "1.0" } };
 
         if ( $self->has_errors_builder ) {
-            $result->{errors}   = $self->errors_builder->build;
+            $result->{errors} = $self->errors_builder->build;
         }
         else {
-            $result->{data}     = $self->resource_builder->build if $self->has_resource_builder;
-            $result->{links}    = $self->links_builder->build    if $self->has_links_builder;
-            $result->{included} = [ map { $_->build } @{ $self->_included } ]      
-                if $self->has_included;
+            $result->{meta}   = $self->_meta                if $self->has_meta;
+            $result->{links}  = $self->links_builder->build if $self->has_links_builder;
+
+            if ( $self->has_resource_builder ) {
+                $result->{data}     = $self->resource_builder->build;
+                $result->{included} = +[ map { $_->build } @{ $self->_included } ]
+                    if $self->has_included;
+            }
         }
 
         return $result;
@@ -152,7 +174,8 @@ package PONAPI::Resource::Builder {
     use Moose;
 
     with 'PONAPI::Builder',
-         'PONAPI::Role::HasLinksBuilder';
+         'PONAPI::Role::HasLinksBuilder',
+         'PONAPI::Role::HasMeta';
 
     has 'id'   => ( is => 'ro', isa => 'Str', required => 1 );
     has 'type' => ( is => 'ro', isa => 'Str', required => 1 );
@@ -177,8 +200,8 @@ package PONAPI::Resource::Builder {
         my $key   = $_[1];
         my $value = $_[2];
 
-        $self->raise_error( 
-            title => 'Attribute key conflict, a relation already exists for key: ' . $key 
+        $self->raise_error(
+            title => 'Attribute key conflict, a relation already exists for key: ' . $key
         ) if $self->has_relationship_for( $key );
 
         $self->_add_attribute( $key, $value );
@@ -210,8 +233,8 @@ package PONAPI::Resource::Builder {
     sub add_relationship {
         my ($self, $key, %args) = @_;
 
-        $self->raise_error( 
-            title => 'Relationship key conflict, an attribute already exists for key: ' . $key 
+        $self->raise_error(
+            title => 'Relationship key conflict, an attribute already exists for key: ' . $key
         ) if $self->has_attribute_for( $key );
 
         my $builder = PONAPI::Relationship::Builder->new( parent => $self, %args );
@@ -225,13 +248,13 @@ package PONAPI::Resource::Builder {
 
         $result->{id}            = $self->id;
         $result->{type}          = $self->type;
-        $result->{attributes}    = $self->_attributes;
-        $result->{links}         = $self->links_builder->build
-            if $self->has_links_builder;
-        $result->{relationships} = { 
-            map { 
-                $_ => $self->_get_relationship( $_ )->build 
-            } keys %{ $self->_relationships } 
+        $result->{attributes}    = $self->_attributes          if $self->has_attributes;
+        $result->{links}         = $self->links_builder->build if $self->has_links_builder;
+        $result->{meta}          = $self->_meta                if $self->has_meta;
+        $result->{relationships} = {
+            map {
+                $_ => $self->_get_relationship( $_ )->build
+            } keys %{ $self->_relationships }
         } if $self->has_relationships;
 
         return $result;
@@ -241,7 +264,8 @@ package PONAPI::Resource::Builder {
 package PONAPI::ResourceID::Builder {
     use Moose;
 
-    with 'PONAPI::Builder';
+    with 'PONAPI::Builder',
+         'PONAPI::Role::HasMeta';
 
     has 'id'   => ( is => 'ro', isa => 'Str', required => 1 );
     has 'type' => ( is => 'ro', isa => 'Str', required => 1 );
@@ -252,6 +276,7 @@ package PONAPI::ResourceID::Builder {
 
         $result->{id}   = $self->id;
         $result->{type} = $self->type;
+        $result->{meta} = $self->_meta if $self->has_meta;
 
         return $result;
     }
@@ -260,7 +285,8 @@ package PONAPI::ResourceID::Builder {
 package PONAPI::Links::Builder {
     use Moose;
 
-    with 'PONAPI::Builder';
+    with 'PONAPI::Builder',
+         'PONAPI::Role::HasMeta';
 
     has '_links' => (
         traits  => [ 'Hash' ],
@@ -280,6 +306,7 @@ package PONAPI::Links::Builder {
         my $self = $_[0];
         my $rel  = $_[1];
         my $url  = $_[2];
+
         $self->_add_link( $rel => $url );
         return $self;
     }
@@ -297,6 +324,8 @@ package PONAPI::Links::Builder {
         foreach my $key ( keys %{ $self->_links } ) {
             $result->{ $key } = $self->get_link( $key );
         }
+
+        $result->{meta} = $self->_meta if $self->has_meta;
 
         return $result;
     }
@@ -324,13 +353,14 @@ package PONAPI::Errors::Builder {
         my $self  = $_[0];
         my $error = $_[1];
 
+# TODO: verify error structure
+
         $self->_add_error( $error );
     }
 
     sub build {
         my $self   = $_[0];
-        my $result = [];
-        @$result = @{ $self->_errors };
+        my $result = +[ @{ $self->_errors } ];
         return $result;
     }
 }
@@ -338,38 +368,43 @@ package PONAPI::Errors::Builder {
 package PONAPI::Relationship::Builder {
     use Moose;
 
-    with 'PONAPI::Builder', 
-         'PONAPI::Role::HasLinksBuilder';
+    with 'PONAPI::Builder',
+         'PONAPI::Role::HasLinksBuilder',
+         'PONAPI::Role::HasMeta';
 
-    has 'resource_id_builder' => ( 
-        is        => 'ro', 
-        isa       => 'PONAPI::ResourceID::Builder', 
+    has 'resource_id_builder' => (
+        is        => 'ro',
+        isa       => 'PONAPI::ResourceID::Builder',
         predicate => 'has_resource_id_builder',
         writer    => '_set_resource_id_builder',
     );
 
-    sub BUILD { 
+    sub BUILD {
         my ($self, $param) = @_;
+
         $self->_set_resource_id_builder(
-            PONAPI::ResourceID::Builder->new( 
+            PONAPI::ResourceID::Builder->new(
                 parent => $self,
                 id     => $param->{id},
                 type   => $param->{type}
-            ) 
+            )
         );
+
+        $self->resource_id_builder->add_meta( %{ $param->{meta} } )
+            if $param->{meta};
     }
 
     sub build {
         my $self   = $_[0];
         my $result = {};
 
-        $self->raise_error( 
-            title => 'You must specify a resource identifier to relate with'   
+        $self->raise_error(
+            title => 'You must specify a resource identifier to relate with'
         ) unless $self->has_resource_id_builder;
 
         $result->{data}  = $self->resource_id_builder->build;
-        $result->{links} = $self->links_builder->build    
-            if $self->has_links_builder;
+        $result->{links} = $self->links_builder->build if $self->has_links_builder;
+        $result->{meta}  = $self->_meta                if $self->has_meta;
 
         return $result;
     }
@@ -406,19 +441,19 @@ subtest '... single document builder' => sub {
 
     is($resource->parent, $root, '... the parent of resource is our root builder');
     is($links->parent, $root, '... the parent of links is our root builder');
-    is($errors->parent, $root, '... the parent of errors is our root builder');  
+    is($errors->parent, $root, '... the parent of errors is our root builder');
 
     is($resource->find_root, $root, '... the parent of resource is our root builder (find_root)');
     is($links->find_root, $root, '... the parent of links is our root builder (find_root)');
-    is($errors->find_root, $root, '... the parent of errors is our root builder (find_root)');    
+    is($errors->find_root, $root, '... the parent of errors is our root builder (find_root)');
 
-    subtest '... resource builder' => sub {     
+    subtest '... resource builder' => sub {
 
         my $relationship = $resource->add_relationship('foo' => ( type => 'foo', id => 200 ));
         isa_ok($relationship, 'PONAPI::Relationship::Builder');
 
         my $links = $resource->links_builder;
-        isa_ok($links, 'PONAPI::Links::Builder');  
+        isa_ok($links, 'PONAPI::Links::Builder');
 
         is($relationship->parent, $resource, '... the parent of relationship is the resource builder');
         is($relationship->parent->parent, $root, '... the grand-parent of relationship is the root builder');
@@ -435,7 +470,7 @@ subtest '... single document builder' => sub {
             isa_ok($resource_id, 'PONAPI::ResourceID::Builder');
 
             my $links = $relationship->links_builder;
-            isa_ok($links, 'PONAPI::Links::Builder');        
+            isa_ok($links, 'PONAPI::Links::Builder');
 
             is($resource_id->parent, $relationship, '... the parent of resource_id is the relationship builder');
             is($resource_id->parent->parent, $resource, '... the grand-parent of resource_id is the resource builder');
@@ -469,20 +504,20 @@ my $JSON = JSON::XS->new->utf8;
 
 my $EXPECTED = $JSON->decode(q[
 {
-    "data":{  
+    "data":{
         "type":"articles",
         "id":"1",
-        "attributes":{  
+        "attributes":{
             "title":"Rails is Omakase",
             "body":"WHAT?!?!?!"
         },
-        "relationships":{  
-            "author":{  
-                "links":{  
+        "relationships":{
+            "author":{
+                "links":{
                     "self":"/articles/1/relationships/author",
                     "related":"/articles/1/author"
                 },
-                "data":{  
+                "data":{
                     "type":"people",
                     "id":"9"
                 }
@@ -512,9 +547,9 @@ my $GOT = PONAPI::Document::Builder
                 body  => 'WHAT?!?!?!'
             )
             ->add_relationship( 'author' => ( id => 9, type => 'people' ) )
-                ->add_links( 
+                ->add_links(
                     self    => '/articles/1/relationships/author',
-                    related => '/articles/1/author' 
+                    related => '/articles/1/author'
                 )
             ->parent
         ->parent
