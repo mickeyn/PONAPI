@@ -8,7 +8,7 @@ use Test::Fatal;
 use Test::Moose;
 
 BEGIN {
-    use_ok('PONAPI::Builder::Relationship');
+    use_ok('PONAPI::Builder::Document');
 }
 
 =pod
@@ -17,98 +17,102 @@ TODO:
 
 =cut
 
+subtest '... testing relationship with meta' => sub {
+    my $b = PONAPI::Builder::Document->new;
+    isa_ok( $b, 'PONAPI::Builder::Document' );
+    does_ok( $b, 'PONAPI::Builder' );
+    does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
+    does_ok($b, 'PONAPI::Builder::Role::HasMeta');    
 
-=pod
+    ok(!$b->has_meta, "... new document shouldn't have meta");
 
-TODO:{
-    local $TODO = "... update to the new API";
+    is(
+        exception { $b->add_meta( info => "a meta info" ) },
+        undef,
+        '... got the (lack of) error we expected'
+    );
 
+    ok($b->has_meta, "... the document should have meta now");
 
-    subtest '... testing relationship with meta' => sub {
-        my $b = PONAPI::Builder::Relationship->new( id => 10, type => 'foo' );
+    is_deeply(
+        $b->build,
+        {
+            jsonapi => { version => '1.0' },
+            meta    => { info => "a meta info" }
+        },
+        '... the document now has meta',
+    );
+};
 
-        ok(!$b->has_meta, "new relationship shouldn't have meta");
+subtest '... testing relationship with multiple meta' => sub {
+    my $b = PONAPI::Builder::Document->new;
+    isa_ok( $b, 'PONAPI::Builder::Document' );
+    does_ok( $b, 'PONAPI::Builder' );
+    does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
+    does_ok($b, 'PONAPI::Builder::Role::HasMeta');  
 
-        is(
-            exception { $b->add_meta(info => "a meta info") },
-            undef,
-            '... got the (lack of) error we expected'
-        );
+    ok(!$b->has_meta, "... new document shouldn't have meta");
 
-        ok($b->has_meta, "relationship should have meta");
+    is(
+        exception { $b->add_meta(info => "a meta info") },
+        undef,
+        '... got the (lack of) error we expected'
+    );
 
-        is_deeply(
-            $b->build,
-            {
-                meta => { info => "a meta info", }
-            },
-            '... Relationship with meta',
-        );
-    };
+    ok($b->has_meta, "... the document should have meta now");
 
-    subtest '... testing relationship with multiple meta' => sub {
-        my $b = PONAPI::Builder::Relationship->new( id => 10, type => 'foo' );
+    is(
+        exception { $b->add_meta(physic => "a meta physic") },
+        undef,
+        '... got the (lack of) error we expected'
+    );
 
-        ok(!$b->has_meta, "new relationship shouldn't have meta");
+    is_deeply(
+        $b->build,
+        {
+            jsonapi => { version => '1.0' },
+            meta    => {
+                info => "a meta info",
+                physic => "a meta physic",
+            }
+        },
+        '... document with meta',
+    );
+};
 
-        is(
-            exception { $b->add_meta(info => "a meta info") },
-            undef,
-            '... got the (lack of) error we expected'
-        );
+subtest '... testing relationship with meta object' => sub {
+    my $b = PONAPI::Builder::Document->new;
+    isa_ok( $b, 'PONAPI::Builder::Document' );
+    does_ok( $b, 'PONAPI::Builder' );
+    does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
+    does_ok($b, 'PONAPI::Builder::Role::HasMeta');  
 
-        ok($b->has_meta, "relationship should have meta");
+    ok(!$b->has_meta, "... new document shouldn't have meta");
 
-        is(
-            exception { $b->add_meta(physic => "a meta physic") },
-            undef,
-            '... got the (lack of) error we expected'
-        );
+    is(
+        exception { $b->add_meta(
+            foo => {
+                info => "a foo info",
+            }
+        )},
+        undef,
+        '... got the (lack of) error we expected'
+    );
 
-        is_deeply(
-            $b->build,
-            {
-                meta => {
-                    info => "a meta info",
-                    physic => "a meta physic",
-                }
-            },
-            '... Relationship with meta',
-        );
-    };
+    ok($b->has_meta, "... the document should have meta now");
 
-    subtest '... testing relationship with meta object' => sub {
-        my $b = PONAPI::Builder::Relationship->new( id => 10, type => 'foo' );
-
-        ok(!$b->has_meta, "new relationship shouldn't have meta");
-
-        is(
-            exception { $b->add_meta(
+    is_deeply(
+        $b->build,
+        {
+            jsonapi => { version => '1.0' },
+            meta    => {
                 foo => {
                     info => "a foo info",
                 }
-            )},
-            undef,
-            '... got the (lack of) error we expected'
-        );
-
-        ok($b->has_meta, "relationship should have meta");
-
-        is_deeply(
-            $b->build,
-            {
-                meta => {
-                    foo => {
-                        info => "a foo info",
-                    }
-                }
-            },
-            '... Relationship with meta object',
-        );
-    };
-
-}
-
-=cut
+            }
+        },
+        '... document with meta object',
+    );
+};
 
 done_testing;

@@ -14,7 +14,7 @@ has _meta => (
 );
 
 sub add_meta {
-    my ($self, %args) = shift;
+    my ($self, %args) = @_;
     @{ $self->_meta }{ keys %args } = values %args;
     return $self;
 }
