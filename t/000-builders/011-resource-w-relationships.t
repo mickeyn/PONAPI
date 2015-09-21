@@ -14,7 +14,7 @@ BEGIN {
 
 subtest '... adding relationship to resource' => sub {
 
-	my $builder = PONAPI::Builder::Resource->new(
+    my $builder = PONAPI::Builder::Resource->new(
         id   => '1',
         type => 'articles',
     );
@@ -35,24 +35,24 @@ subtest '... adding relationship to resource' => sub {
     );
 
     is_deeply(
-    	$builder->build,
-    	{
-    		id   => '1',
-    		type => 'articles',
-    		relationships => {
+        $builder->build,
+        {
+            id   => '1',
+            type => 'articles',
+            relationships => {
                 author => {
-                	data => {
+                    data => {
                         id => 5, type => 'person'
                     },
-    	        	links => {
-    	                related => "/articles/1/related/person",
+                    links => {
+                        related => "/articles/1/related/person",
                         self    => "/person/5",
-    	            }
+                    }
                 }
             }
-    	},
-    	'... built as expected'
-	);
+        },
+        '... built as expected'
+    );
 };
 
 done_testing;

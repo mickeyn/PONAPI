@@ -13,7 +13,7 @@ BEGIN {
 
 subtest '... adding attributes to resource' => sub {
 
-	my $builder = PONAPI::Builder::Resource->new(
+    my $builder = PONAPI::Builder::Resource->new(
         id   => '1',
         type => 'articles',
     );
@@ -22,34 +22,34 @@ subtest '... adding attributes to resource' => sub {
     does_ok($builder, 'PONAPI::Builder::Role::HasLinksBuilder');
 
     is(
-	    exception {
-	    	$builder->add_attributes(
-		    	this 		=> "should",
-		    	be			=> "an",
-		    	attribute	=> "object",
-		    )
-	    },
-	    undef,
-	    '... got the (lack of) error we expected'
+        exception {
+            $builder->add_attributes(
+                this        => "should",
+                be          => "an",
+                attribute   => "object",
+            )
+        },
+        undef,
+        '... got the (lack of) error we expected'
     );
 
     is_deeply(
-    	$builder->build,
-    	{
-    		id   => '1',
-        	type => 'articles',
-    		attributes => {
-    			this 		=> "should",
-		    	be			=> "an",
-		    	attribute	=> "object",
-    		}
-    	},
-    	'... built as expected'
+        $builder->build,
+        {
+            id   => '1',
+            type => 'articles',
+            attributes => {
+                this        => "should",
+                be          => "an",
+                attribute   => "object",
+            }
+        },
+        '... built as expected'
     )
 };
 
 subtest '... adding complex attributes to resource' => sub {
-	my $builder = PONAPI::Builder::Resource->new(
+    my $builder = PONAPI::Builder::Resource->new(
         id   => '1',
         type => 'articles',
     );
@@ -58,33 +58,33 @@ subtest '... adding complex attributes to resource' => sub {
     does_ok($builder, 'PONAPI::Builder::Role::HasLinksBuilder');
 
     is(
-	    exception {
-	    	$builder->add_attributes(
-		    	an_attribute 	=> {
-		    		this 		=> "should",
-		    		be			=> "a",
-		    		complex		=> "json",
-		    	}
-	    	)
-	    },
-	    undef,
-	    '... got the (lack of) error we expected'
+        exception {
+            $builder->add_attributes(
+                an_attribute    => {
+                    this        => "should",
+                    be          => "a",
+                    complex     => "json",
+                }
+            )
+        },
+        undef,
+        '... got the (lack of) error we expected'
     );
 
     is_deeply(
-    	$builder->build,
-    	{
-    		id   => '1',
-        	type => 'articles',
-    		attributes => {
-		    	an_attribute 	=> {
-		    		this 		=> "should",
-		    		be			=> "a",
-		    		complex		=> "json",
-		    	}
-    		}
-    	},
-    	'... built as expected'
+        $builder->build,
+        {
+            id   => '1',
+            type => 'articles',
+            attributes => {
+                an_attribute    => {
+                    this        => "should",
+                    be          => "a",
+                    complex     => "json",
+                }
+            }
+        },
+        '... built as expected'
     );
 };
 

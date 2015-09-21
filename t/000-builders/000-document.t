@@ -7,7 +7,7 @@ use Test::More;
 use Test::Moose;
 
 BEGIN {
-	use_ok('PONAPI::Builder::Document');
+    use_ok('PONAPI::Builder::Document');
 }
 
 =pod
@@ -18,12 +18,12 @@ TODO:
 
 subtest '... testing constructor' => sub {
 
-	my $b = PONAPI::Builder::Document->new;
-	isa_ok( $b, 'PONAPI::Builder::Document' );
+    my $b = PONAPI::Builder::Document->new;
+    isa_ok( $b, 'PONAPI::Builder::Document' );
     does_ok( $b, 'PONAPI::Builder' );
     does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
 
-	can_ok( $b, $_ ) foreach qw[
+    can_ok( $b, $_ ) foreach qw[
         add_included
         has_included
 
@@ -37,7 +37,7 @@ subtest '... testing constructor' => sub {
         add_links
 
         build
-	];
+    ];
 
 };
 
