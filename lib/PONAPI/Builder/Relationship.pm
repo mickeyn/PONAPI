@@ -35,10 +35,6 @@ sub build {
     my $self   = $_[0];
     my $result = {};
 
-    $self->raise_error(
-        title => 'You must specify a resource identifier to relate with'
-    ) unless $self->has_resource_id_builder;
-
     $result->{data}  = $self->resource_id_builder->build;
     $result->{links} = $self->links_builder->build if $self->has_links_builder;
     $result->{meta}  = $self->_meta                if $self->has_meta;
