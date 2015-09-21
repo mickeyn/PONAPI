@@ -53,6 +53,11 @@ sub has_resource {
     $self->_has_resource_builders && $self->_num_resource_builders > 0;
 }
 
+sub has_resources {
+    my $self = $_[0];
+    $self->_has_resource_builders && $self->_num_resource_builders > 1;
+}
+
 sub add_resource {
     my ($self, %args) = @_;
 
