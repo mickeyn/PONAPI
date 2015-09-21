@@ -9,6 +9,7 @@ with 'PONAPI::Builder',
      'PONAPI::Builder::Role::HasMeta';
 
 has 'resource_id_builder' => (
+    init_arg  => undef,
     is        => 'ro',
     isa       => 'PONAPI::Builder::Resource::Identifier',
     predicate => 'has_resource_id_builder',

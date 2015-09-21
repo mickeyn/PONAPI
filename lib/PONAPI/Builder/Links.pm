@@ -6,12 +6,13 @@ with 'PONAPI::Builder',
      'PONAPI::Builder::Role::HasMeta';
 
 has '_links' => (
-    traits  => [ 'Hash' ],
-    is      => 'ro',
-    isa     => 'HashRef',
-    lazy    => 1,
-    default => sub { +{} },
-    handles => {
+    init_arg => undef,
+    traits   => [ 'Hash' ],
+    is       => 'ro',
+    isa      => 'HashRef',
+    lazy     => 1,
+    default  => sub { +{} },
+    handles  => {
         'has_links' => 'count',
         'has_link'  => 'exists',
         'get_link'  => 'get',

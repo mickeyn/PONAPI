@@ -5,6 +5,7 @@ use Moose::Role;
 use PONAPI::Builder::Links;
 
 has 'links_builder' => (
+    init_arg  => undef,
     is        => 'ro',
     isa       => 'PONAPI::Builder::Links',
     lazy      => 1,

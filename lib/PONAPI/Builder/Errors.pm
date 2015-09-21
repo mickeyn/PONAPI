@@ -5,12 +5,13 @@ use Moose;
 with 'PONAPI::Builder';
 
 has '_errors' => (
-    traits  => [ 'Array' ],
-    is      => 'ro',
-    isa     => 'ArrayRef[ HashRef ]',
-    lazy    => 1,
-    default => sub { +[] },
-    handles => {
+    init_arg => undef,
+    traits   => [ 'Array' ],
+    is       => 'ro',
+    isa      => 'ArrayRef[ HashRef ]',
+    lazy     => 1,
+    default  => sub { +[] },
+    handles  => {
         'has_errors' => 'count',
         # private ...
         '_add_error' => 'push',

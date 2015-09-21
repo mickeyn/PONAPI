@@ -12,12 +12,13 @@ has 'id'   => ( is => 'ro', isa => 'Str', required => 1 );
 has 'type' => ( is => 'ro', isa => 'Str', required => 1 );
 
 has '_attributes' => (
-    traits  => [ 'Hash' ],
-    is      => 'ro',
-    isa     => 'HashRef',
-    lazy    => 1,
-    default => sub { +{} },
-    handles => {
+    init_arg => undef,
+    traits   => [ 'Hash' ],
+    is       => 'ro',
+    isa      => 'HashRef',
+    lazy     => 1,
+    default  => sub { +{} },
+    handles  => {
         'has_attributes'    => 'count',
         'has_attribute_for' => 'exists',
         # private ...
@@ -47,12 +48,13 @@ sub add_attributes {
 }
 
 has '_relationships' => (
-    traits  => [ 'Hash' ],
-    is      => 'ro',
-    isa     => 'HashRef[ PONAPI::Builder::Relationship ]',
-    lazy    => 1,
-    default => sub { +{} },
-    handles => {
+    init_arg => undef,
+    traits   => [ 'Hash' ],
+    is       => 'ro',
+    isa      => 'HashRef[ PONAPI::Builder::Relationship ]',
+    lazy     => 1,
+    default  => sub { +{} },
+    handles  => {
         'has_relationships'    => 'count',
         'has_relationship_for' => 'exists',
         # private ...

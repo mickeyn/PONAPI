@@ -10,12 +10,13 @@ with 'PONAPI::Builder',
      'PONAPI::Builder::Role::HasMeta';
 
 has '_included' => (
-    traits  => [ 'Array' ],
-    is      => 'ro',
-    isa     => 'ArrayRef[ PONAPI::Builder::Resource ]',
-    lazy    => 1,
-    default => sub { +[] },
-    handles => {
+    init_arg => undef,
+    traits   => [ 'Array' ],
+    is       => 'ro',
+    isa      => 'ArrayRef[ PONAPI::Builder::Resource ]',
+    lazy     => 1,
+    default  => sub { +[] },
+    handles  => {
         'has_included'  => 'count',
         # private ...
         '_add_included' => 'push',
@@ -30,6 +31,7 @@ sub add_included {
 }
 
 has '_resource_builder' => (
+    init_arg  => undef,
     is        => 'ro',
     isa       => 'PONAPI::Builder::Resource',
     predicate => '_has_resource_builder',
@@ -49,6 +51,7 @@ sub add_resource {
 }
 
 has 'errors_builder' => (
+    init_arg  => undef,
     is        => 'ro',
     isa       => 'PONAPI::Builder::Errors',
     lazy      => 1,
