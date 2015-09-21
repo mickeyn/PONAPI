@@ -39,7 +39,6 @@ subtest '... adding relationship to resource' => sub {
     	{
     		id   => '1',
     		type => 'articles',
-            attributes => {},
     		relationships => {
                 author => {
                 	data => {

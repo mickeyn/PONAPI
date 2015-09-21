@@ -25,6 +25,7 @@ my $JSON = JSON::XS->new->utf8;
 # the expected result
 my $EXPECTED = $JSON->decode(q[
 {
+    "jsonapi":{"version":"1.0"},
     "data":{
         "type":"articles",
         "id":"1",
