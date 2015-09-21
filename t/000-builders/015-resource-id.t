@@ -25,6 +25,7 @@ subtest '... testing constructor' => sub {
     );
     isa_ok($b, 'PONAPI::Builder::Resource::Identifier');
     does_ok($b, 'PONAPI::Builder');
+    does_ok($b, 'PONAPI::Builder::Role::HasMeta');
 
     is($b->id, '1', '... got the expected id');
     is($b->type, 'articles', '... got the expected type');

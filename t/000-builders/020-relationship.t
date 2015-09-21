@@ -23,6 +23,7 @@ subtest '... testing constructor' => sub {
     isa_ok($b, 'PONAPI::Builder::Relationship');
     does_ok($b, 'PONAPI::Builder');
     does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
+    does_ok($b, 'PONAPI::Builder::Role::HasMeta');
 
     isa_ok($b->resource_id_builder, 'PONAPI::Builder::Resource::Identifier');
     does_ok($b->resource_id_builder, 'PONAPI::Builder');

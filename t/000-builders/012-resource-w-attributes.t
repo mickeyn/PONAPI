@@ -20,6 +20,7 @@ subtest '... adding attributes to resource' => sub {
     isa_ok($builder, 'PONAPI::Builder::Resource');
     does_ok($builder, 'PONAPI::Builder');
     does_ok($builder, 'PONAPI::Builder::Role::HasLinksBuilder');
+    does_ok($builder, 'PONAPI::Builder::Role::HasMeta');
 
     is(
         exception {
