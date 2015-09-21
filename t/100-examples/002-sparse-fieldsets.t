@@ -26,7 +26,7 @@ my $JSON = JSON::XS->new->utf8;
 my $EXPECTED = $JSON->decode(q[
 {
     "jsonapi":{"version":"1.0"},
-    "data":{
+    "data":[{
         "type":"articles",
         "id":"1",
         "attributes":{
@@ -43,7 +43,7 @@ my $EXPECTED = $JSON->decode(q[
                 }
             }
         }
-    },
+    }],
     "included":[
         {
             "type":"people",
@@ -123,10 +123,12 @@ is($ACTION, 'GET', '... got the action we expected from the request');
 
 # the Builder
 
-my $b = PONAPI::Builder::Document->new;
+my $b = PONAPI::Builder::Document->new( is_collection => 1 );
 isa_ok($b, 'PONAPI::Builder::Document');
 does_ok( $b, 'PONAPI::Builder' );
 does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
+
+ok($b->is_collection, '... we are a collection document');
 
 # building the document
 

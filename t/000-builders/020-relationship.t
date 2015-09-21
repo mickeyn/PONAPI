@@ -19,20 +19,15 @@ TODO:
 
 subtest '... testing constructor' => sub {
 
-    my $b = PONAPI::Builder::Relationship->new( id => 10, type => 'foo' );
+    my $b = PONAPI::Builder::Relationship->new( resource => { id => 10, type => 'foo' } );
     isa_ok($b, 'PONAPI::Builder::Relationship');
     does_ok($b, 'PONAPI::Builder');
     does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
     does_ok($b, 'PONAPI::Builder::Role::HasMeta');
 
-    isa_ok($b->resource_id_builder, 'PONAPI::Builder::Resource::Identifier');
-    does_ok($b->resource_id_builder, 'PONAPI::Builder');
-
-    is($b->resource_id_builder->id, 10, '... got the ID we expected');
-    is($b->resource_id_builder->type, 'foo', '... got the type we expected');
-
     can_ok( $b, $_ ) foreach qw[
-        resource_id_builder
+        has_resource
+        has_resources
 
         links_builder
         add_link
@@ -46,30 +41,31 @@ subtest '... testing constructor' => sub {
 subtest '... testing constructor errors' => sub {
 
     like(
-        exception { PONAPI::Builder::Relationship->new },
-        qr/^Attribute \(.+\) does not pass the type constraint /,
+        exception { PONAPI::Builder::Relationship->new( resource => {} ) },
+        qr/^Attribute \(.+\) is required /,
         '... got the error we expected'
     );
 
     like(
-        exception { PONAPI::Builder::Relationship->new( id => '1' ) },
-        qr/^Attribute \(type\) does not pass the type constraint /,
+        exception { PONAPI::Builder::Relationship->new( resource => { id => '1' } ) },
+        qr/^Attribute \(type\) is required /,
         '... got the error we expected'
     );
 
     like(
-        exception { PONAPI::Builder::Relationship->new( type => 'articles' ) },
-        qr/^Attribute \(id\) does not pass the type constraint /,
+        exception { PONAPI::Builder::Relationship->new( resource => { type => 'articles' } ) },
+        qr/^Attribute \(id\) is required /,
         '... got the error we expected'
     );
 
 };
 
 subtest '... testing links sub-building' => sub {
-    my $b = PONAPI::Builder::Relationship->new( id => 10, type => 'foo' );
+    my $b = PONAPI::Builder::Relationship->new( resource => { id => 10, type => 'foo' } );
     isa_ok($b, 'PONAPI::Builder::Relationship');
     does_ok($b, 'PONAPI::Builder');
     does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
+    does_ok($b, 'PONAPI::Builder::Role::HasMeta');
 
     ok(!$b->has_links, "new relationship should not have links");
 

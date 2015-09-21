@@ -65,17 +65,8 @@ subtest '... single document builder' => sub {
         is($links->find_root, $root, '... the grand-parent of links is the root builder (find_root)');
 
         subtest '... relationship builder' => sub {
-            my $resource_id = $relationship->resource_id_builder;
-            isa_ok($resource_id, 'PONAPI::Builder::Resource::Identifier');
-
             my $links = $relationship->links_builder;
             isa_ok($links, 'PONAPI::Builder::Links');
-
-            is($resource_id->parent, $relationship, '... the parent of resource_id is the relationship builder');
-            is($resource_id->parent->parent, $resource, '... the grand-parent of resource_id is the resource builder');
-            is($resource_id->parent->parent->parent, $root, '... the great-grand-parent of resource_id is the root builder');
-
-            is($resource_id->find_root, $root, '... the great-grand-parent of resource_id is the root builder (find_root)');
 
             is($links->parent, $relationship, '... the parent of links is the relationship builder');
             is($links->parent->parent, $resource, '... the grand-parent of links is the resource builder');

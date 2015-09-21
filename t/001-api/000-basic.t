@@ -35,7 +35,23 @@ my $EXPECTED = $JSON->decode(q[
                     "type":"people",
                     "id":"9"
                 }
-            }
+            },
+            "comments":{
+                    "links":{
+                        "self":"/articles/1/relationships/comments",
+                        "related":"/articles/1/comments"
+                    },
+                    "data":[
+                        {
+                            "type":"comments",
+                            "id":"5"
+                        },
+                        {
+                            "type":"comments",
+                            "id":"12"
+                        }
+                    ]
+                }
         }
     },
     "included":[
@@ -64,6 +80,15 @@ my $GOT = PONAPI::Builder::Document
                 ->add_links(
                     self    => '/articles/1/relationships/author',
                     related => '/articles/1/author'
+                )
+            ->parent
+            ->add_relationship( 'comments' => [
+                    { id => 5, type => 'comments' },
+                    { id => 12, type => 'comments' },
+                ])
+                ->add_links(
+                    self    => '/articles/1/relationships/comments',
+                    related => '/articles/1/comments'
                 )
             ->parent
         ->parent

@@ -18,45 +18,28 @@ TODO:
 =cut
 
 
-=pod
+subtest '... testing relationship with multiple data' => sub {
+    my $b = PONAPI::Builder::Relationship->new( 
+        resources => [
+            { id => "1", type => "articles" }, 
+            { id => "1", type => "nouns" }
+        ]
+    );
+    isa_ok($b, 'PONAPI::Builder::Relationship');
+    does_ok($b, 'PONAPI::Builder');
+    does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
+    does_ok($b, 'PONAPI::Builder::Role::HasMeta');    
 
-TODO:{
-    local $TODO = "... update to the new API";
-
-    subtest '... testing relationship with multiple data' => sub {
-        my $b = PONAPI::Builder::Relationship->new( id => 10, type => 'foo' );
-
-        $b->add_data({
-            id => "1",
-            type => "articles",
-        });
-
-        $b->add_data({
-            id => "1",
-            type => "nouns"
-        });
-
-        is_deeply(
-            $b->build,
-            {
-                data =>
-                [
-                    {
-                        id => "1",
-                        type => "articles",
-                    },
-                    {
-                        id => "1",
-                        type => "nouns"
-                    }
-                ]
-            },
-            '... Relationship with multiple data',
-        );
-    };
-
-}
-
-=cut
+    is_deeply(
+        $b->build,
+        {
+            data => [
+                { id => "1", type => "articles" }, 
+                { id => "1", type => "nouns" },
+            ]
+        },
+        '... Relationship with multiple data',
+    );
+};
 
 done_testing;

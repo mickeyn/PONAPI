@@ -66,14 +66,20 @@ has '_relationships' => (
 sub add_relationship {
     my ($self, $key, $resource) = @_;
 
-    die 'Relationship resource information must be a hash reference' 
-        if ref $resource ne 'HASH';
-
     $self->raise_error(
         title => 'Relationship key conflict, an attribute already exists for key: ' . $key
     ) if $self->has_attribute_for( $key );
 
-    my $builder = PONAPI::Builder::Relationship->new( parent => $self, %$resource );
+    die 'Relationship resource information must be a reference (HASH or ARRAY)'
+        unless ref $resource 
+            && (ref $resource eq 'HASH' || ref $resource eq 'ARRAY');
+
+    my $builder = PONAPI::Builder::Relationship->new( 
+        parent => $self, 
+        (ref $resource eq 'HASH')
+            ? (resource  => $resource) # if we know it is a HASH ...
+            : (resources => $resource) # ... and we can assume it is an ARRAY ref if not
+    );
     $self->_add_relationship( $key => $builder );
     return $builder
 }

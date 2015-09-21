@@ -8,34 +8,68 @@ with 'PONAPI::Builder',
      'PONAPI::Builder::Role::HasLinksBuilder',
      'PONAPI::Builder::Role::HasMeta';
 
-has 'resource_id_builder' => (
+has '_resource_id_builders' => (
     init_arg  => undef,
+    traits    => [ 'Array' ],
     is        => 'ro',
-    isa       => 'PONAPI::Builder::Resource::Identifier',
-    predicate => 'has_resource_id_builder',
-    writer    => '_set_resource_id_builder',
+    isa       => 'ArrayRef[ PONAPI::Builder::Resource::Identifier ]',
+    lazy      => 1,
+    default   => sub { +[] },
+    predicate => '_has_resource_id_builders',
+    handles   => {
+        '_num_resource_id_builders' => 'count',
+        # private ...
+        '_add_resource_id_builder'  => 'push',
+        '_get_resource_id_builder'  => 'get',
+    }
 );
+
+sub has_resource {
+    my $self = $_[0];
+    $self->_has_resource_id_builders && $self->_num_resource_id_builders > 0;
+}
+
+sub has_resources {
+    my $self = $_[0];
+    $self->_has_resource_id_builders && $self->_num_resource_id_builders > 1;
+}
 
 sub BUILD {
     my ($self, $param) = @_;
 
-    $self->_set_resource_id_builder(
-        PONAPI::Builder::Resource::Identifier->new(
-            parent => $self,
-            id     => $param->{id},
-            type   => $param->{type}
-        )
-    );
+    my @resources;
+    if ( exists $param->{resource} ) {  
+        $resources[0] = $param->{resource};
+    }
+    elsif ( exists $param->{resources} ) {
+        @resources = @{ $param->{resources} };
+    }
+    else {
+        # XXX - is this an error condition?
+    }
 
-    $self->resource_id_builder->add_meta( %{ $param->{meta} } )
-        if $param->{meta};
+    foreach my $resource ( @resources ) {
+        my $b = PONAPI::Builder::Resource::Identifier->new( parent => $self, %$resource );
+        $b->add_meta( %{ $resource->{meta} } ) if $resource->{meta};
+        $self->_add_resource_id_builder( $b );        
+    }
 }
 
 sub build {
     my $self   = $_[0];
     my $result = {};
 
-    $result->{data}  = $self->resource_id_builder->build;
+    if ( $self->has_resources ) {
+        # if it is a collection, then 
+        # call build on each one ...
+        $result->{data} = [ map { $_->build } @{ $self->_resource_id_builders } ];
+    }
+    else {
+        # if it is a single resource, 
+        # just use that one
+        $result->{data} = $self->_get_resource_id_builder(0)->build;    
+    }
+
     $result->{links} = $self->links_builder->build if $self->has_links_builder;
     $result->{meta}  = $self->_meta                if $self->has_meta;
 
