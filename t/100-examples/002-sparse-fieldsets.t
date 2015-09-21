@@ -62,7 +62,7 @@ my $EXPECTED = $JSON->decode(q[
 sub fetch_action_and_type_from_request {
     my $r = shift;
 
-    my $path = $r->path_info; 
+    my $path = $r->path_info;
     $path =~ s/^\///;
 
     return ($r->method, $path);
@@ -70,10 +70,10 @@ sub fetch_action_and_type_from_request {
 
 sub fetch_all_articles {
     return (
-        [ 
+        [
             1,                               # id
             'JSON API paints my bikeshed!',  # title
-            'The shortest article. Ever.',   # body 
+            'The shortest article. Ever.',   # body
             '2015-05-22 14:56:29',           # created
             '2015-05-22 14:56:28',           # updated
             42,                              # author_id
@@ -82,11 +82,11 @@ sub fetch_all_articles {
 }
 
 sub fetch_author {
-    my ($id) = @_; 
+    my ($id) = @_;
     return (
-        [ 
+        [
             42,     # id
-            'John', # name 
+            'John', # name
             80,     # age
             'male'  # gender
         ]
@@ -103,7 +103,7 @@ GET /articles?include=author
 
 # the Plack request we will get ....
 
-my $r = Plack::Request->new({ 
+my $r = Plack::Request->new({
     REQUEST_METHOD => 'GET',
     PATH_INFO      => '/articles',
     QUERY_STRING   => 'include=author',
@@ -136,15 +136,15 @@ foreach my $article ( @articles ) {
 
     $b->add_resource(
         # this is from the request ... hmm, feels odd
-        type => $TYPE, 
+        type => $TYPE,
         # data from DB
         id => $id,
     )->add_attributes(
         title   => $title,
-        body    => $body, 
-        created => $created, 
+        body    => $body,
+        created => $created,
         updated => $updated,
-    )->add_relationship( 
+    )->add_relationship(
         author => ( type => 'people', id => $author_id )
     );
 

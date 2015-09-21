@@ -17,20 +17,20 @@ my $JSON = JSON::XS->new->utf8;
 
 my $EXPECTED = $JSON->decode(q[
 {
-    "data":{  
+    "data":{
         "type":"articles",
         "id":"1",
-        "attributes":{  
+        "attributes":{
             "title":"Rails is Omakase",
             "body":"WHAT?!?!?!"
         },
-        "relationships":{  
-            "author":{  
-                "links":{  
+        "relationships":{
+            "author":{
+                "links":{
                     "self":"/articles/1/relationships/author",
                     "related":"/articles/1/author"
                 },
-                "data":{  
+                "data":{
                     "type":"people",
                     "id":"9"
                 }
@@ -60,9 +60,9 @@ my $GOT = PONAPI::Builder::Document
                 body  => 'WHAT?!?!?!'
             )
             ->add_relationship( 'author' => ( id => 9, type => 'people' ) )
-                ->add_links( 
+                ->add_links(
                     self    => '/articles/1/relationships/author',
-                    related => '/articles/1/author' 
+                    related => '/articles/1/author'
                 )
             ->parent
         ->parent

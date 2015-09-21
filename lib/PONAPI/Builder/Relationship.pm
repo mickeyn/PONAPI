@@ -3,38 +3,43 @@ use Moose;
 
 use PONAPI::Builder::Resource::Identifier;
 
-with 'PONAPI::Builder', 
-     'PONAPI::Builder::Role::HasLinksBuilder';
+with 'PONAPI::Builder',
+     'PONAPI::Builder::Role::HasLinksBuilder',
+     'PONAPI::Builder::Role::HasMeta';
 
-has 'resource_id_builder' => ( 
-    is        => 'ro', 
-    isa       => 'PONAPI::Builder::Resource::Identifier', 
+has 'resource_id_builder' => (
+    is        => 'ro',
+    isa       => 'PONAPI::Builder::Resource::Identifier',
     predicate => 'has_resource_id_builder',
     writer    => '_set_resource_id_builder',
 );
 
-sub BUILD { 
+sub BUILD {
     my ($self, $param) = @_;
+
     $self->_set_resource_id_builder(
-        PONAPI::Builder::Resource::Identifier->new( 
+        PONAPI::Builder::Resource::Identifier->new(
             parent => $self,
             id     => $param->{id},
             type   => $param->{type}
-        ) 
+        )
     );
+
+    $self->resource_id_builder->add_meta( %{ $param->{meta} } )
+        if $param->{meta};
 }
 
 sub build {
     my $self   = $_[0];
     my $result = {};
 
-    $self->raise_error( 
-        title => 'You must specify a resource identifier to relate with'   
+    $self->raise_error(
+        title => 'You must specify a resource identifier to relate with'
     ) unless $self->has_resource_id_builder;
 
     $result->{data}  = $self->resource_id_builder->build;
-    $result->{links} = $self->links_builder->build    
-        if $self->has_links_builder;
+    $result->{links} = $self->links_builder->build if $self->has_links_builder;
+    $result->{meta}  = $self->_meta                if $self->has_meta;
 
     return $result;
 }

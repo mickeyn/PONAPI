@@ -1,7 +1,8 @@
 package PONAPI::Builder::Links;
 use Moose;
 
-with 'PONAPI::Builder';
+with 'PONAPI::Builder',
+     'PONAPI::Builder::Role::HasMeta';
 
 has '_links' => (
     traits  => [ 'Hash' ],
@@ -39,6 +40,8 @@ sub build {
     foreach my $key ( keys %{ $self->_links } ) {
         $result->{ $key } = $self->get_link( $key );
     }
+
+    $result->{meta} = $self->_meta if $self->has_meta;
 
     return $result;
 }

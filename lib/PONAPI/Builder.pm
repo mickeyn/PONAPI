@@ -22,11 +22,11 @@ sub raise_error {
     my $self = shift;
 
     # XXX:
-    # we could check the args here and look for 
-    # a `level` key which would tell us if we 
+    # we could check the args here and look for
+    # a `level` key which would tell us if we
     # should throw an exception (immediate, fatal error)
     # or we should just stash the error and continue.
-    # It might get funky, but it would be nice to 
+    # It might get funky, but it would be nice to
     # unify some error handling, maybe, perhaps
     # I am not sure.
     # - SL
