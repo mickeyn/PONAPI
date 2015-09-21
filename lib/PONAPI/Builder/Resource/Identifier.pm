@@ -1,7 +1,8 @@
 package PONAPI::Builder::Resource::Identifier;
 use Moose;
 
-with 'PONAPI::Builder';
+with 'PONAPI::Builder',
+     'PONAPI::Builder::Role::HasMeta';
 
 has 'id'   => ( is => 'ro', isa => 'Str', required => 1 );
 has 'type' => ( is => 'ro', isa => 'Str', required => 1 );
@@ -12,6 +13,7 @@ sub build {
 
     $result->{id}   = $self->id;
     $result->{type} = $self->type;
+    $result->{meta} = $self->_meta if $self->has_meta;
 
     return $result;
 }

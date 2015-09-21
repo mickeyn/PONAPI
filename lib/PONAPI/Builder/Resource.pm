@@ -4,7 +4,8 @@ use Moose;
 use PONAPI::Builder::Relationship;
 
 with 'PONAPI::Builder',
-     'PONAPI::Builder::Role::HasLinksBuilder';
+     'PONAPI::Builder::Role::HasLinksBuilder',
+     'PONAPI::Builder::Role::HasMeta';
 
 has 'id'   => ( is => 'ro', isa => 'Str', required => 1 );
 has 'type' => ( is => 'ro', isa => 'Str', required => 1 );
@@ -29,8 +30,8 @@ sub add_attribute {
     my $key   = $_[1];
     my $value = $_[2];
 
-    $self->raise_error( 
-        title => 'Attribute key conflict, a relation already exists for key: ' . $key 
+    $self->raise_error(
+        title => 'Attribute key conflict, a relation already exists for key: ' . $key
     ) if $self->has_relationship_for( $key );
 
     $self->_add_attribute( $key, $value );
@@ -62,8 +63,8 @@ has '_relationships' => (
 sub add_relationship {
     my ($self, $key, %args) = @_;
 
-    $self->raise_error( 
-        title => 'Relationship key conflict, an attribute already exists for key: ' . $key 
+    $self->raise_error(
+        title => 'Relationship key conflict, an attribute already exists for key: ' . $key
     ) if $self->has_attribute_for( $key );
 
     my $builder = PONAPI::Builder::Relationship->new( parent => $self, %args );
@@ -77,13 +78,13 @@ sub build {
 
     $result->{id}            = $self->id;
     $result->{type}          = $self->type;
-    $result->{attributes}    = $self->_attributes;
-    $result->{links}         = $self->links_builder->build
-        if $self->has_links_builder;
-    $result->{relationships} = { 
-        map { 
-            $_ => $self->_get_relationship( $_ )->build 
-        } keys %{ $self->_relationships } 
+    $result->{attributes}    = $self->_attributes          if $self->has_attributes;
+    $result->{links}         = $self->links_builder->build if $self->has_links_builder;
+    $result->{meta}          = $self->_meta                if $self->has_meta;
+    $result->{relationships} = {
+        map {
+            $_ => $self->_get_relationship( $_ )->build
+        } keys %{ $self->_relationships }
     } if $self->has_relationships;
 
     return $result;
@@ -92,4 +93,3 @@ sub build {
 __PACKAGE__->meta->make_immutable;
 
 no Moose; 1;
-
