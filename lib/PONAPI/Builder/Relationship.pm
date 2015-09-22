@@ -38,7 +38,7 @@ sub BUILD {
     my ($self, $param) = @_;
 
     my @resources;
-    if ( exists $param->{resource} ) {  
+    if ( exists $param->{resource} ) {
         $resources[0] = $param->{resource};
     }
     elsif ( exists $param->{resources} ) {
@@ -51,7 +51,7 @@ sub BUILD {
     foreach my $resource ( @resources ) {
         my $b = PONAPI::Builder::Resource::Identifier->new( parent => $self, %$resource );
         $b->add_meta( %{ $resource->{meta} } ) if $resource->{meta};
-        $self->_add_resource_id_builder( $b );        
+        $self->_add_resource_id_builder( $b );
     }
 }
 
@@ -60,14 +60,14 @@ sub build {
     my $result = {};
 
     if ( $self->has_resources ) {
-        # if it is a collection, then 
+        # if it is a collection, then
         # call build on each one ...
         $result->{data} = [ map { $_->build } @{ $self->_resource_id_builders } ];
     }
     else {
-        # if it is a single resource, 
+        # if it is a single resource,
         # just use that one
-        $result->{data} = $self->_get_resource_id_builder(0)->build;    
+        $result->{data} = $self->_get_resource_id_builder(0)->build;
     }
 
     $result->{links} = $self->links_builder->build if $self->has_links_builder;

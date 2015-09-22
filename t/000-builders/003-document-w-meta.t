@@ -19,10 +19,10 @@ TODO:
 
 subtest '... testing relationship with meta' => sub {
     my $b = PONAPI::Builder::Document->new;
-    isa_ok( $b, 'PONAPI::Builder::Document' );
-    does_ok( $b, 'PONAPI::Builder' );
+    isa_ok( $b, 'PONAPI::Builder::Document');
+    does_ok($b, 'PONAPI::Builder');
     does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
-    does_ok($b, 'PONAPI::Builder::Role::HasMeta');    
+    does_ok($b, 'PONAPI::Builder::Role::HasMeta');
 
     ok(!$b->has_meta, "... new document shouldn't have meta");
 
@@ -46,10 +46,10 @@ subtest '... testing relationship with meta' => sub {
 
 subtest '... testing relationship with multiple meta' => sub {
     my $b = PONAPI::Builder::Document->new;
-    isa_ok( $b, 'PONAPI::Builder::Document' );
-    does_ok( $b, 'PONAPI::Builder' );
+    isa_ok( $b, 'PONAPI::Builder::Document');
+    does_ok($b, 'PONAPI::Builder');
     does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
-    does_ok($b, 'PONAPI::Builder::Role::HasMeta');  
+    does_ok($b, 'PONAPI::Builder::Role::HasMeta');
 
     ok(!$b->has_meta, "... new document shouldn't have meta");
 
@@ -82,10 +82,10 @@ subtest '... testing relationship with multiple meta' => sub {
 
 subtest '... testing relationship with meta object' => sub {
     my $b = PONAPI::Builder::Document->new;
-    isa_ok( $b, 'PONAPI::Builder::Document' );
-    does_ok( $b, 'PONAPI::Builder' );
+    isa_ok( $b, 'PONAPI::Builder::Document');
+    does_ok($b, 'PONAPI::Builder');
     does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
-    does_ok($b, 'PONAPI::Builder::Role::HasMeta');  
+    does_ok($b, 'PONAPI::Builder::Role::HasMeta');
 
     ok(!$b->has_meta, "... new document shouldn't have meta");
 

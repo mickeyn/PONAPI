@@ -20,8 +20,8 @@ TODO:
 subtest '... testing constructor' => sub {
 
     my $b = PONAPI::Builder::Document->new( is_collection => 1 );
-    isa_ok( $b, 'PONAPI::Builder::Document' );
-    does_ok( $b, 'PONAPI::Builder' );
+    isa_ok( $b, 'PONAPI::Builder::Document');
+    does_ok($b, 'PONAPI::Builder');
     does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
     does_ok($b, 'PONAPI::Builder::Role::HasMeta');
 
@@ -39,8 +39,8 @@ subtest '... testing constructor' => sub {
         '... could not add another resource with not a collection'
     );
 
-    ok($b->has_resource, '... the document now has a resource');   
-    ok($b->has_resources, '... the document does not have a resource'); 
+    ok($b->has_resource, '... the document now has a resource');
+    ok($b->has_resources, '... the document does not have a resource');
 
     is_deeply(
         $b->build,

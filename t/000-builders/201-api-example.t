@@ -113,15 +113,15 @@ my $builder = PONAPI::Builder::Document
     ->add_included( type => 'comments', id => 5 )
         ->add_attribute( "body" => "First!" )
         ->add_links( self => "http://example.com/comments/5" )
-        ->add_relationship( 
-            author => { type => 'people', id => 2 } 
+        ->add_relationship(
+            author => { type => 'people', id => 2 }
         )->parent
     ->parent
     ->add_included( type => 'comments', id => 12 )
         ->add_attribute( "body" => "I like XML better" )
         ->add_links( self => "http://example.com/comments/12" )
-        ->add_relationship( 
-            author => { type => 'people', id => 9 } 
+        ->add_relationship(
+            author => { type => 'people', id => 9 }
         )->parent
     ->parent
 ;

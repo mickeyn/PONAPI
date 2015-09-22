@@ -19,16 +19,16 @@ TODO:
 
 
 subtest '... testing relationship with multiple data' => sub {
-    my $b = PONAPI::Builder::Relationship->new( 
+    my $b = PONAPI::Builder::Relationship->new(
         resources => [
-            { id => "1", type => "articles" }, 
+            { id => "1", type => "articles" },
             { id => "1", type => "nouns" }
         ]
     );
     isa_ok($b, 'PONAPI::Builder::Relationship');
     does_ok($b, 'PONAPI::Builder');
     does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
-    does_ok($b, 'PONAPI::Builder::Role::HasMeta');   
+    does_ok($b, 'PONAPI::Builder::Role::HasMeta');
 
     ok($b->has_resource, '... we have a resource');
     ok($b->has_resources, '... we have many resources');
@@ -37,7 +37,7 @@ subtest '... testing relationship with multiple data' => sub {
         $b->build,
         {
             data => [
-                { id => "1", type => "articles" }, 
+                { id => "1", type => "articles" },
                 { id => "1", type => "nouns" },
             ]
         },

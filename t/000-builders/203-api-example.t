@@ -125,7 +125,7 @@ is($ACTION, 'GET', '... got the action we expected from the request');
 
 my $b = PONAPI::Builder::Document->new( is_collection => 1 );
 isa_ok($b, 'PONAPI::Builder::Document');
-does_ok( $b, 'PONAPI::Builder' );
+does_ok($b, 'PONAPI::Builder');
 does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
 
 ok($b->is_collection, '... we are a collection document');

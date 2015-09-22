@@ -90,18 +90,18 @@ sub build {
 
         if ( $self->_has_resource_builders ) {
             if ( $self->is_collection ) {
-                # if it is a collection, then 
+                # if it is a collection, then
                 # call build on each one ...
                 $result->{data} = [ map { $_->build } @{ $self->_resource_builders } ];
             }
             else {
-                # if it is a single resource, 
+                # if it is a single resource,
                 # just use that one
                 $result->{data} = $self->_get_resource_builder(0)->build
-                    if $self->has_resource;    
+                    if $self->has_resource;
 
                 # XXX:
-                # ... but if there is no resource 
+                # ... but if there is no resource
                 # at all, what should we do? null?
                 # - SL
             }

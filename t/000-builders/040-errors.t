@@ -20,7 +20,7 @@ TODO:
 subtest '... testing constructor' => sub {
 
     my $b = PONAPI::Builder::Errors->new;
-    isa_ok($b, 'PONAPI::Builder::Errors');
+    isa_ok( $b, 'PONAPI::Builder::Errors');
     does_ok($b, 'PONAPI::Builder');
 
     can_ok( $b, $_ ) foreach qw[

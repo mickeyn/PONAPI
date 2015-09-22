@@ -9,18 +9,13 @@ use Test::Moose;
 
 BEGIN {
     use_ok('PONAPI::Builder::Links');
+    use_ok('PONAPI::Builder::Document');
 }
-
-=pod
-
-TODO:
-
-=cut
 
 subtest '... testing constructor' => sub {
 
     my $b = PONAPI::Builder::Links->new;
-    isa_ok($b, 'PONAPI::Builder::Links');
+    isa_ok( $b, 'PONAPI::Builder::Links');
     does_ok($b, 'PONAPI::Builder');
     does_ok($b, 'PONAPI::Builder::Role::HasMeta');
 
