@@ -21,6 +21,7 @@ my $JSON = JSON::XS->new->utf8;
 # the expected result
 my $EXPECTED = $JSON->decode(q[
 {
+    "jsonapi":{"version":"1.0"},
     "meta":{
         "total-pages":13
     },
@@ -46,12 +47,32 @@ my $EXPECTED = $JSON->decode(q[
 }
 ]);
 
-my $GOT;
+# ...
 
-TODO: { 
-    local $TODO = '... need to write this test';
-    is_deeply( $GOT, $EXPECTED, '... got the expected result' );
-}
+my $builder = PONAPI::Builder::Document->new( is_collection => 1 )
 
+    -> add_meta ( "total-pages" => 13 )
+
+    -> add_resource( type => 'articles', id => 3 )
+       -> add_attributes(
+              title   => "JSON API paints my bikeshed!",
+              body    => "The shortest article. Ever.",
+              created => "2015-05-22T14:56:29.000Z",
+              updated => "2015-05-22T14:56:28.000Z",
+          )
+       -> parent
+
+    -> add_links(
+           self  => "http://example.com/articles?page[number]=3&page[size]=1",
+           first => "http://example.com/articles?page[number]=1&page[size]=1",
+           prev  => "http://example.com/articles?page[number]=2&page[size]=1",
+           next  => "http://example.com/articles?page[number]=4&page[size]=1",
+           last  => "http://example.com/articles?page[number]=13&page[size]=1",
+       )
+;
+
+my $GOT = $builder->build;
+
+is_deeply( $GOT, $EXPECTED, '... got the expected result' );
 
 done_testing;
