@@ -71,11 +71,11 @@ sub add_relationship {
     ) if $self->has_attribute_for( $key );
 
     die 'Relationship resource information must be a reference (HASH or ARRAY)'
-        unless ref $resource 
+        unless ref $resource
             && (ref $resource eq 'HASH' || ref $resource eq 'ARRAY');
 
-    my $builder = PONAPI::Builder::Relationship->new( 
-        parent => $self, 
+    my $builder = PONAPI::Builder::Relationship->new(
+        parent => $self,
         (ref $resource eq 'HASH')
             ? (resource  => $resource) # if we know it is a HASH ...
             : (resources => $resource) # ... and we can assume it is an ARRAY ref if not

@@ -21,6 +21,7 @@ my $JSON = JSON::XS->new->utf8;
 # the expected result
 my $EXPECTED = $JSON->decode(q[
 {
+    "jsonapi":{"version":"1.0"},
     "links":{
         "self":"http://example.com/articles",
         "next":"http://example.com/articles?page[offset]=2",
@@ -42,6 +43,9 @@ my $EXPECTED = $JSON->decode(q[
                     "data":{
                         "type":"people",
                         "id":"9"
+                    },
+                    "meta":{
+                        "why":"because I can"
                     }
                 },
                 "comments":{
@@ -119,11 +123,62 @@ my $EXPECTED = $JSON->decode(q[
 }
 ]);
 
-my $GOT;
+# ...
 
-TODO: { 
-    local $TODO = '... need to write this test';
-    is_deeply( $GOT, $EXPECTED, '... got the expected result' );
-}
+my $builder = PONAPI::Builder::Document->new( is_collection => 1 )
+
+    -> add_resource( type => 'articles', id => 1 )
+       -> add_attribute( title => "JSON API paints my bikeshed!" )
+
+       -> add_relationship ( 'author' => { type => "people", id => 9 } )
+           -> add_meta     ( why => "because I can" )
+           -> add_links    (
+                self    => "http://example.com/articles/1/relationships/author",
+                related => "http://example.com/articles/1/author",
+              )
+           -> parent
+
+       -> add_relationship( 'comments' => [ { type => "comments", id =>  5 },
+                                            { type => "comments", id => 12 } ] )
+          -> add_links(
+               self    => "http://example.com/articles/1/relationships/comments",
+               related => "http://example.com/articles/1/comments",
+             )
+          -> parent
+
+       -> add_link( self => "http://example.com/articles/1" )
+       -> parent
+
+    -> add_links(
+         self => "http://example.com/articles",
+         next => "http://example.com/articles?page[offset]=2",
+         last => "http://example.com/articles?page[offset]=10"
+       )
+
+    -> add_included        ( type => "people", id => 9 )
+       -> add_attributes   ( "first-name" => "Dan", "last-name" => "Gebhardt", "twitter" => "dgeb" )
+       -> add_link         ( "self" => "http://example.com/people/9" )
+       -> parent
+
+    -> add_included        ( type => "comments", id => 5 )
+       -> add_attribute    ( body => "First!" )
+       -> add_link         ( self => "http://example.com/comments/5" )
+       -> add_relationship ( author => { type => "people", id => 2 } )
+          -> parent
+       -> parent
+
+    -> add_included        ( type => "comments", id => 12 )
+       -> add_attribute    ( body => "I like XML better" )
+       -> add_link         ( self => "http://example.com/comments/12" )
+       -> add_relationship ( author => { type => "people", id => 9 } )
+          ->parent
+
+    -> parent
+;
+
+my $GOT = $builder->build;
+
+is_deeply( $GOT, $EXPECTED, '... got the expected result' );
 
 done_testing;
+
