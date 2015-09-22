@@ -32,6 +32,7 @@ subtest '... testing constructor' => sub {
 
         add_link
         add_links
+        add_meta
 
         build
     ];
