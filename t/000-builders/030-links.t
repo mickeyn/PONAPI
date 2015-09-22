@@ -9,7 +9,6 @@ use Test::Moose;
 
 BEGIN {
     use_ok('PONAPI::Builder::Links');
-    use_ok('PONAPI::Builder::Document');
 }
 
 subtest '... testing constructor' => sub {
