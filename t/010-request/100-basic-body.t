@@ -9,7 +9,7 @@ use Test::Fatal;
 use JSON::XS;
 
 BEGIN {
-    use_oK('PONAPI::Request::Body');
+    use_ok('PONAPI::Request::Body');
 }
 
 my $payload = JSON::XS->new->utf8->decode(q[
