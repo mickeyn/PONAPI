@@ -81,7 +81,8 @@ has 'errors_builder' => (
 sub _build_errors_builder { PONAPI::Builder::Errors->new( parent => $_[0] ) }
 
 sub build {
-    my $self   = $_[0];
+    my $self   = shift;
+    my %args   = @_;
     my $result = +{ jsonapi => { version => "1.0" } };
 
     if ( ! $self->has_errors_builder ) {
@@ -92,12 +93,12 @@ sub build {
             if ( $self->is_collection ) {
                 # if it is a collection, then
                 # call build on each one ...
-                $result->{data} = [ map { $_->build } @{ $self->_resource_builders } ];
+                $result->{data} = [ map { $_->build( %args ) } @{ $self->_resource_builders } ];
             }
             else {
                 # if it is a single resource,
                 # just use that one
-                $result->{data} = $self->_get_resource_builder(0)->build
+                $result->{data} = $self->_get_resource_builder(0)->build( %args )
                     if $self->has_resource;
 
                 # XXX:
@@ -106,7 +107,7 @@ sub build {
                 # - SL
             }
 
-            $result->{included} = +[ map { $_->build } @{ $self->_included } ]
+            $result->{included} = +[ map { $_->build( %args ) } @{ $self->_included } ]
                 if $self->has_included;
         }
     }

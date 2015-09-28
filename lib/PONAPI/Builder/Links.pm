@@ -17,7 +17,8 @@ has '_links' => (
         'has_link'  => 'exists',
         'get_link'  => 'get',
         # private ...
-        '_add_link' => 'set',
+        '_add_link'   => 'set',
+        '_keys_links' => 'keys',
     }
 );
 
@@ -39,7 +40,7 @@ sub build {
     my $self   = $_[0];
     my $result = {};
 
-    foreach my $key ( keys %{ $self->_links } ) {
+    foreach my $key ( $self->_keys_links ) {
         $result->{ $key } = $self->get_link( $key );
     }
 

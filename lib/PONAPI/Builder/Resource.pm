@@ -22,8 +22,9 @@ has '_attributes' => (
         'has_attributes'    => 'count',
         'has_attribute_for' => 'exists',
         # private ...
-        '_add_attribute' => 'set',
-        '_get_attribute' => 'get',
+        '_add_attribute'   => 'set',
+        '_get_attribute'   => 'get',
+        '_keys_attributes' => 'keys',
     }
 );
 
@@ -58,8 +59,9 @@ has '_relationships' => (
         'has_relationships'    => 'count',
         'has_relationship_for' => 'exists',
         # private ...
-        '_add_relationship' => 'set',
-        '_get_relationship' => 'get',
+        '_add_relationship'   => 'set',
+        '_get_relationship'   => 'get',
+        '_keys_relationships' => 'keys',
     }
 );
 
@@ -85,18 +87,28 @@ sub add_relationship {
 }
 
 sub build {
-    my $self   = $_[0];
+    my $self   = shift;
+    my %args   = @_;
     my $result = {};
 
-    $result->{id}            = $self->id;
-    $result->{type}          = $self->type;
-    $result->{attributes}    = $self->_attributes          if $self->has_attributes;
-    $result->{links}         = $self->links_builder->build if $self->has_links_builder;
-    $result->{meta}          = $self->_meta                if $self->has_meta;
-    $result->{relationships} = {
-        map {
-            $_ => $self->_get_relationship( $_ )->build
-        } keys %{ $self->_relationships }
+    $result->{id}    = $self->id;
+    $result->{type}  = $self->type;
+    $result->{links} = $self->links_builder->build if $self->has_links_builder;
+    $result->{meta}  = $self->_meta                if $self->has_meta;
+
+    # support filtered output for attributes/relationships through args
+    my @field_filters;
+    @field_filters = @{ $args{fields}{ $self->type } }
+        if exists $args{fields} and exists $args{fields}{ $self->type };
+
+    $result->{attributes} = +{
+        map { my $v = $self->_get_attribute($_); $v ? ( $_ => $v ) : () }
+        ( @field_filters ? @field_filters : $self->_keys_attributes )
+    } if $self->has_attributes;
+
+    $result->{relationships} = +{
+        map { my $v = $self->_get_relationship($_); $v ? ( $_ => $v->build ) : () }
+        ( @field_filters ? @field_filters : $self->_keys_relationships )
     } if $self->has_relationships;
 
     return $result;
