@@ -22,6 +22,10 @@ hook before => sub {
         query_parameters->add( $k => \%params );
     }
 
+    # sort flags
+    my @sort = map { /^(\-)?(.+)$/; +[ $2, ( $1 ? 'DESC' : 'ASC' ) ] } split ',' => query_parameters->get('sort');
+    query_parameters->remove('sort') and query_parameters->add( 'sort', \@sort );
+
     # default to undef so we don't have to check it in all route-handlers
     query_parameters->get('include') or query_parameters->add( 'include', undef );
 

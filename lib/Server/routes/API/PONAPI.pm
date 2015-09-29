@@ -64,6 +64,7 @@ prefix '/:resource_type' => sub {
             include  => query_parameters->get_all('include'),
             fields   => query_parameters->get_all('fields'),
             page     => query_parameters->get_all('page'),
+            sort     => query_parameters->get_all('sort'),
         );
     };
 
@@ -88,6 +89,7 @@ prefix '/:resource_type/:resource_id' => sub {
             include  => query_parameters->get_all('include'),
             fields   => query_parameters->get_all('fields'),
             page     => query_parameters->get_all('page'),
+            sort     => query_parameters->get_all('sort'),
         );
     };
 
@@ -100,6 +102,7 @@ prefix '/:resource_type/:resource_id' => sub {
             include  => query_parameters->get_all('include'),
             fields   => query_parameters->get_all('fields'),
             page     => query_parameters->get_all('page'),
+            sort     => query_parameters->get_all('sort'),
         );
     };
 
