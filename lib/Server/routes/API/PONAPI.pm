@@ -2,7 +2,8 @@ package API::PONAPI;
 
 use Dancer2;
 
-use API::PONAPI::Hooks;
+use Dancer2::Plugin::JSONAPI::MediaType;
+use Dancer2::Plugin::JSONAPI::Params;
 
 use PONAPI::Builder::Document;
 
