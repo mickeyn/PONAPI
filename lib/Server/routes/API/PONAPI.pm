@@ -27,7 +27,8 @@ set serializer => 'JSON';
         $b->add_resource( type => $args{type}, id => 2 );
         $b->add_resource( type => $args{type}, id => 3 );
 
-        return $b->build;
+        my @fields = exists $args{fields} ? ( fields => $args{fields} ) : ();
+        return $b->build( @fields );
     }
 
     sub retrieve {
@@ -41,7 +42,8 @@ set serializer => 'JSON';
 
         $b->add_links( self => "https://www.booking.com" );
 
-        return $b->build;
+        my @fields = exists $args{fields} ? ( fields => $args{fields} ) : ();
+        return $b->build( @fields );
     }
 
     sub retrieve_relationship { return $todo }
