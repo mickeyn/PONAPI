@@ -24,9 +24,10 @@ on_plugin_import {
                 }
 
                 # sort flags
-                my @sort =
-                    map { /^(\-)?(.+)$/; +[ $2, ( $1 ? 'DESC' : 'ASC' ) ] }
-                    split ',' => $dsl->query_parameters->get('sort');
+                my @sort;
+                @sort = map { /^(\-)?(.+)$/; +[ $2, ( $1 ? 'DESC' : 'ASC' ) ] }
+                        split ',' => $dsl->query_parameters->get('sort')
+                            if exists $dsl->query_parameters->{sort};
 
                 $dsl->query_parameters->remove('sort')
                     and $dsl->query_parameters->add( 'sort', \@sort );
