@@ -3,6 +3,7 @@ package PONAPI::Builder::Document;
 use Moose;
 
 use PONAPI::Builder::Resource;
+use PONAPI::Builder::Resource::Null;
 use PONAPI::Builder::Errors;
 
 with 'PONAPI::Builder',
@@ -36,7 +37,7 @@ has '_resource_builders' => (
     init_arg  => undef,
     traits    => [ 'Array' ],
     is        => 'ro',
-    isa       => 'ArrayRef[ PONAPI::Builder::Resource ]',
+    isa       => 'ArrayRef[ PONAPI::Builder::Resource | PONAPI::Builder::Resource::Null ]',
     lazy      => 1,
     default   => sub { +[] },
     predicate => '_has_resource_builders',
@@ -65,6 +66,14 @@ sub add_resource {
         if $self->has_resource && !$self->is_collection;
 
     my $builder = PONAPI::Builder::Resource->new( %args, parent => $_[0] );
+    $self->_add_resource_builder( $builder );
+    return $builder;
+}
+
+sub add_null_resource {
+    my $self = $_[0];
+
+    my $builder = PONAPI::Builder::Resource::Null->new( parent => $self );
     $self->_add_resource_builder( $builder );
     return $builder;
 }
@@ -100,11 +109,6 @@ sub build {
                 # just use that one
                 $result->{data} = $self->_get_resource_builder(0)->build( %args )
                     if $self->has_resource;
-
-                # XXX:
-                # ... but if there is no resource
-                # at all, what should we do? null?
-                # - SL
             }
 
             $result->{included} = +[ map { $_->build( %args ) } @{ $self->_included } ]

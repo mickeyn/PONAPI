@@ -34,11 +34,11 @@ on_plugin_import {
                     and $dsl->query_parameters->add( 'sort', \@sort );
 
                 # include paramerts
-                my @include =
+                my %include = map { $_ => 1 }
                     map { split /,/ } $dsl->query_parameters->get_all('include');
 
                 $dsl->query_parameters->remove('include')
-                    and $dsl->query_parameters->add( 'include', \@include );
+                    and $dsl->query_parameters->add( 'include', \%include );
             },
         )
     );
