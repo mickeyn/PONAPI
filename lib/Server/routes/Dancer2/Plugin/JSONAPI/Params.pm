@@ -23,16 +23,6 @@ on_plugin_import {
                     $dsl->query_parameters->add( $k => \%params );
                 }
 
-                # sort paramerts
-                my @sort;
-                @sort =
-                    map { /^(\-)?(.+)$/; +[ $2, ( $1 ? 'DESC' : 'ASC' ) ] }
-                    split ',' => $dsl->query_parameters->get('sort')
-                        if exists $dsl->query_parameters->{sort};
-
-                $dsl->query_parameters->remove('sort')
-                    and $dsl->query_parameters->add( 'sort', \@sort );
-
                 # include paramerts
                 my %include = map { $_ => 1 }
                     map { split /,/ } $dsl->query_parameters->get_all('include');

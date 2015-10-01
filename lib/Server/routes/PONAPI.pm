@@ -19,7 +19,6 @@ prefix '/:resource_type' => sub {
             fields   => query_parameters->get('fields'),
             filter   => query_parameters->get('filter'),
             page     => query_parameters->get('page'),
-            sort     => query_parameters->get('sort'),
             include  => query_parameters->get_all('include'),
         );
     };
@@ -45,7 +44,6 @@ prefix '/:resource_type/:resource_id' => sub {
             fields   => query_parameters->get('fields'),
             include  => query_parameters->get_all('include'),
             page     => query_parameters->get('page'),
-            sort     => query_parameters->get('sort'),
         );
     };
 
@@ -59,7 +57,6 @@ prefix '/:resource_type/:resource_id' => sub {
             filter   => query_parameters->get('filter'),
             include  => query_parameters->get_all('include'),
             page     => query_parameters->get('page'),
-            sort     => query_parameters->get('sort'),
         );
     };
 

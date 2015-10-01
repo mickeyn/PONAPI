@@ -98,8 +98,6 @@ sub retrieve_all {
 
     # TODO: apply other filters
 
-    # TODO: apply sorting
-
     _add_resource( $doc, $type, $_, $args{include} ) for @ids;
 
     my @fields = exists $args{fields} ? ( fields => $args{fields} ) : ();
