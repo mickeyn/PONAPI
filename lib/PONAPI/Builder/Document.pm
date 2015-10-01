@@ -114,6 +114,14 @@ sub build {
             $result->{included} = +[ map { $_->build( %args ) } @{ $self->_included } ]
                 if $self->has_included;
         }
+        else {
+            if ( $self->is_collection ) {
+                $result->{data} = [];
+            }
+            else {
+                die "[PANIC] OH NOES, THIS SHOULD NEVER HAPPEN!!!!!";
+            }
+        }
     }
 
     if ( $self->has_errors_builder ) {
