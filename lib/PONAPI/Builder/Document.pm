@@ -119,7 +119,8 @@ sub build {
                 $result->{data} = [];
             }
             else {
-                die "[PANIC] OH NOES, THIS SHOULD NEVER HAPPEN!!!!!";
+                die "[PANIC] OH NOES, THIS SHOULD NEVER HAPPEN!!!!!"
+                    if ! $self->has_meta;
             }
         }
     }
