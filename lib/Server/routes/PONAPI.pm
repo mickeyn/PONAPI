@@ -1,4 +1,4 @@
-package API::PONAPI;
+package PONAPI;
 
 use Dancer2;
 
