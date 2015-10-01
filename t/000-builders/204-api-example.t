@@ -49,7 +49,7 @@ my $EXPECTED = $JSON->decode(q[
 
 # ...
 
-my $builder = PONAPI::Builder::Document->new( is_collection => 1 )
+my $doc = PONAPI::Builder::Document->new( is_collection => 1 )
 
     -> add_meta ( "total-pages" => 13 )
 
@@ -71,7 +71,7 @@ my $builder = PONAPI::Builder::Document->new( is_collection => 1 )
        )
 ;
 
-my $GOT = $builder->build;
+my $GOT = $doc->build;
 
 is_deeply( $GOT, $EXPECTED, '... got the expected result' );
 

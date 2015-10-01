@@ -19,31 +19,31 @@ TODO:
 
 subtest '... testing constructor' => sub {
 
-    my $b = PONAPI::Builder::Document->new( is_collection => 1 );
-    isa_ok( $b, 'PONAPI::Builder::Document');
-    does_ok($b, 'PONAPI::Builder');
-    does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
-    does_ok($b, 'PONAPI::Builder::Role::HasMeta');
+    my $doc = PONAPI::Builder::Document->new( is_collection => 1 );
+    isa_ok( $doc, 'PONAPI::Builder::Document');
+    does_ok($doc, 'PONAPI::Builder');
+    does_ok($doc, 'PONAPI::Builder::Role::HasLinksBuilder');
+    does_ok($doc, 'PONAPI::Builder::Role::HasMeta');
 
-    ok($b->is_collection, '... this document is a collection');
+    ok($doc->is_collection, '... this document is a collection');
 
-    ok(!$b->has_resource, '... the document does not have a resource');
-    ok(!$b->has_resources, '... the document does not have a resource');
+    ok(!$doc->has_resource, '... the document does not have a resource');
+    ok(!$doc->has_resources, '... the document does not have a resource');
 
-    my $r = $b->add_resource( type => 'article', id => 10 );
+    my $r = $doc->add_resource( type => 'article', id => 10 );
     isa_ok($r, 'PONAPI::Builder::Resource');
 
     is(
-        exception { $b->add_resource( type => 'article', id => 11 ) },
+        exception { $doc->add_resource( type => 'article', id => 11 ) },
         undef,
         '... could not add another resource with not a collection'
     );
 
-    ok($b->has_resource, '... the document now has a resource');
-    ok($b->has_resources, '... the document does not have a resource');
+    ok($doc->has_resource, '... the document now has a resource');
+    ok($doc->has_resources, '... the document does not have a resource');
 
     is_deeply(
-        $b->build,
+        $doc->build,
         {
             jsonapi => { version => '1.0' },
             data    => [

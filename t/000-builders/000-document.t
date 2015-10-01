@@ -18,13 +18,13 @@ TODO:
 
 subtest '... testing constructor' => sub {
 
-    my $b = PONAPI::Builder::Document->new;
-    isa_ok( $b, 'PONAPI::Builder::Document');
-    does_ok($b, 'PONAPI::Builder');
-    does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
-    does_ok($b, 'PONAPI::Builder::Role::HasMeta');
+    my $doc = PONAPI::Builder::Document->new;
+    isa_ok( $doc, 'PONAPI::Builder::Document');
+    does_ok($doc, 'PONAPI::Builder');
+    does_ok($doc, 'PONAPI::Builder::Role::HasLinksBuilder');
+    does_ok($doc, 'PONAPI::Builder::Role::HasMeta');
 
-    can_ok( $b, $_ ) foreach qw[
+    can_ok( $doc, $_ ) foreach qw[
         add_included
         has_included
 

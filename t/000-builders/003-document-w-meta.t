@@ -18,24 +18,24 @@ TODO:
 =cut
 
 subtest '... testing relationship with meta' => sub {
-    my $b = PONAPI::Builder::Document->new;
-    isa_ok( $b, 'PONAPI::Builder::Document');
-    does_ok($b, 'PONAPI::Builder');
-    does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
-    does_ok($b, 'PONAPI::Builder::Role::HasMeta');
+    my $doc = PONAPI::Builder::Document->new;
+    isa_ok( $doc, 'PONAPI::Builder::Document');
+    does_ok($doc, 'PONAPI::Builder');
+    does_ok($doc, 'PONAPI::Builder::Role::HasLinksBuilder');
+    does_ok($doc, 'PONAPI::Builder::Role::HasMeta');
 
-    ok(!$b->has_meta, "... new document shouldn't have meta");
+    ok(!$doc->has_meta, "... new document shouldn't have meta");
 
     is(
-        exception { $b->add_meta( info => "a meta info" ) },
+        exception { $doc->add_meta( info => "a meta info" ) },
         undef,
         '... got the (lack of) error we expected'
     );
 
-    ok($b->has_meta, "... the document should have meta now");
+    ok($doc->has_meta, "... the document should have meta now");
 
     is_deeply(
-        $b->build,
+        $doc->build,
         {
             jsonapi => { version => '1.0' },
             meta    => { info => "a meta info" }
@@ -45,30 +45,30 @@ subtest '... testing relationship with meta' => sub {
 };
 
 subtest '... testing relationship with multiple meta' => sub {
-    my $b = PONAPI::Builder::Document->new;
-    isa_ok( $b, 'PONAPI::Builder::Document');
-    does_ok($b, 'PONAPI::Builder');
-    does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
-    does_ok($b, 'PONAPI::Builder::Role::HasMeta');
+    my $doc = PONAPI::Builder::Document->new;
+    isa_ok( $doc, 'PONAPI::Builder::Document');
+    does_ok($doc, 'PONAPI::Builder');
+    does_ok($doc, 'PONAPI::Builder::Role::HasLinksBuilder');
+    does_ok($doc, 'PONAPI::Builder::Role::HasMeta');
 
-    ok(!$b->has_meta, "... new document shouldn't have meta");
+    ok(!$doc->has_meta, "... new document shouldn't have meta");
 
     is(
-        exception { $b->add_meta(info => "a meta info") },
+        exception { $doc->add_meta(info => "a meta info") },
         undef,
         '... got the (lack of) error we expected'
     );
 
-    ok($b->has_meta, "... the document should have meta now");
+    ok($doc->has_meta, "... the document should have meta now");
 
     is(
-        exception { $b->add_meta(physic => "a meta physic") },
+        exception { $doc->add_meta(physic => "a meta physic") },
         undef,
         '... got the (lack of) error we expected'
     );
 
     is_deeply(
-        $b->build,
+        $doc->build,
         {
             jsonapi => { version => '1.0' },
             meta    => {
@@ -81,16 +81,16 @@ subtest '... testing relationship with multiple meta' => sub {
 };
 
 subtest '... testing relationship with meta object' => sub {
-    my $b = PONAPI::Builder::Document->new;
-    isa_ok( $b, 'PONAPI::Builder::Document');
-    does_ok($b, 'PONAPI::Builder');
-    does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
-    does_ok($b, 'PONAPI::Builder::Role::HasMeta');
+    my $doc = PONAPI::Builder::Document->new;
+    isa_ok( $doc, 'PONAPI::Builder::Document');
+    does_ok($doc, 'PONAPI::Builder');
+    does_ok($doc, 'PONAPI::Builder::Role::HasLinksBuilder');
+    does_ok($doc, 'PONAPI::Builder::Role::HasMeta');
 
-    ok(!$b->has_meta, "... new document shouldn't have meta");
+    ok(!$doc->has_meta, "... new document shouldn't have meta");
 
     is(
-        exception { $b->add_meta(
+        exception { $doc->add_meta(
             foo => {
                 info => "a foo info",
             }
@@ -99,10 +99,10 @@ subtest '... testing relationship with meta object' => sub {
         '... got the (lack of) error we expected'
     );
 
-    ok($b->has_meta, "... the document should have meta now");
+    ok($doc->has_meta, "... the document should have meta now");
 
     is_deeply(
-        $b->build,
+        $doc->build,
         {
             jsonapi => { version => '1.0' },
             meta    => {

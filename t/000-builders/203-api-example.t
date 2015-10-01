@@ -123,12 +123,12 @@ is($ACTION, 'GET', '... got the action we expected from the request');
 
 # the Builder
 
-my $b = PONAPI::Builder::Document->new( is_collection => 1 );
-isa_ok($b, 'PONAPI::Builder::Document');
-does_ok($b, 'PONAPI::Builder');
-does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
+my $doc = PONAPI::Builder::Document->new( is_collection => 1 );
+isa_ok($doc, 'PONAPI::Builder::Document');
+does_ok($doc, 'PONAPI::Builder');
+does_ok($doc, 'PONAPI::Builder::Role::HasLinksBuilder');
 
-ok($b->is_collection, '... we are a collection document');
+ok($doc->is_collection, '... we are a collection document');
 
 # building the document
 
@@ -137,11 +137,11 @@ my @articles = fetch_all_articles;
 foreach my $article ( @articles ) {
     my ($id, $title, $body, $created, $updated, $author_id) = @$article;
 
-    $b->add_resource(
+    $doc->add_resource(
         # this is from the request ... hmm, feels odd
         type => $TYPE,
         # data from DB
-        id => $id,
+        id   => $id,
     )->add_attributes(
         title   => $title,
         body    => $body,
@@ -154,9 +154,9 @@ foreach my $article ( @articles ) {
     if ( my ($author) = fetch_author( $author_id ) ) {
         my ($id, $name, $age, $gender) = @$author;
 
-        $b->add_included(
-            type       => 'people',
-            id         => $author_id,
+        $doc->add_included(
+            type   => 'people',
+            id     => $author_id,
         )->add_attributes(
             name   => $name,
             age    => $age,
@@ -165,7 +165,7 @@ foreach my $article ( @articles ) {
     }
 }
 
-my $GOT = $b->build;
+my $GOT = $doc->build;
 
 #use Data::Dumper;
 #warn Dumper $GOT;

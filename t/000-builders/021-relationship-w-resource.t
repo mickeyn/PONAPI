@@ -18,17 +18,17 @@ TODO:
 =cut
 
 subtest '... testing links sub-building' => sub {
-    my $b = PONAPI::Builder::Relationship->new( resource => { id => 10, type => 'foo' } );
-    isa_ok($b, 'PONAPI::Builder::Relationship');
-    does_ok($b, 'PONAPI::Builder');
-    does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
-    does_ok($b, 'PONAPI::Builder::Role::HasMeta');
+    my $doc = PONAPI::Builder::Relationship->new( resource => { id => 10, type => 'foo' } );
+    isa_ok($doc, 'PONAPI::Builder::Relationship');
+    does_ok($doc, 'PONAPI::Builder');
+    does_ok($doc, 'PONAPI::Builder::Role::HasLinksBuilder');
+    does_ok($doc, 'PONAPI::Builder::Role::HasMeta');
 
-    ok($b->has_resource, '... we have a resource');
-    ok(!$b->has_resources, '... we do not have a resources');
+    ok($doc->has_resource, '... we have a resource');
+    ok(!$doc->has_resources, '... we do not have a resources');
 
     is_deeply(
-        $b->build,
+        $doc->build,
         {
             data  => { id => 10, type => 'foo' },
         },

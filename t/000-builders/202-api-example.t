@@ -125,7 +125,7 @@ my $EXPECTED = $JSON->decode(q[
 
 # ...
 
-my $builder = PONAPI::Builder::Document->new( is_collection => 1 )
+my $doc = PONAPI::Builder::Document->new( is_collection => 1 )
 
     -> add_resource( type => 'articles', id => 1 )
        -> add_attribute( title => "JSON API paints my bikeshed!" )
@@ -176,9 +176,8 @@ my $builder = PONAPI::Builder::Document->new( is_collection => 1 )
     -> parent
 ;
 
-my $GOT = $builder->build;
+my $GOT = $doc->build;
 
 is_deeply( $GOT, $EXPECTED, '... got the expected result' );
 
 done_testing;
-
