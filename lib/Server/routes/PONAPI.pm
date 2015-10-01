@@ -16,10 +16,10 @@ prefix '/:resource_type' => sub {
     get '' => sub {
         return DAL::Mockup->retrieve_all(
             type     => route_parameters->get('resource_type'),
+            fields   => query_parameters->get('fields'),
+            page     => query_parameters->get('page'),
+            sort     => query_parameters->get('sort'),
             include  => query_parameters->get_all('include'),
-            fields   => query_parameters->get_all('fields'),
-            page     => query_parameters->get_all('page'),
-            sort     => query_parameters->get_all('sort'),
         );
     };
 
@@ -41,10 +41,10 @@ prefix '/:resource_type/:resource_id' => sub {
         return DAL::Mockup->retrieve(
             type     => route_parameters->get('resource_type'),
             id       => route_parameters->get('resource_id'),
+            fields   => query_parameters->get('fields'),
             include  => query_parameters->get_all('include'),
-            fields   => query_parameters->get_all('fields'),
-            page     => query_parameters->get_all('page'),
-            sort     => query_parameters->get_all('sort'),
+            page     => query_parameters->get('page'),
+            sort     => query_parameters->get('sort'),
         );
     };
 
@@ -54,10 +54,10 @@ prefix '/:resource_type/:resource_id' => sub {
             type     => route_parameters->get('resource_type'),
             id       => route_parameters->get('resource_id'),
             rel_type => route_parameters->get('relationship_type'),
+            fields   => query_parameters->get('fields'),
             include  => query_parameters->get_all('include'),
-            fields   => query_parameters->get_all('fields'),
-            page     => query_parameters->get_all('page'),
-            sort     => query_parameters->get_all('sort'),
+            page     => query_parameters->get('page'),
+            sort     => query_parameters->get('sort'),
         );
     };
 
@@ -67,9 +67,9 @@ prefix '/:resource_type/:resource_id' => sub {
             type     => route_parameters->get('resource_type'),
             id       => route_parameters->get('resource_id'),
             rel_type => route_parameters->get('relationship_type'),
+            # fields   => query_parameters->get('fields'),
             # include  => query_parameters->get_all('include'),
-            # fields   => query_parameters->get_all('fields'),
-            page     => query_parameters->get_all('page'),
+            page     => query_parameters->get('page'),
         );
     };
 
