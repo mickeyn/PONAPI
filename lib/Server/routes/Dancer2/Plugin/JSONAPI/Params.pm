@@ -9,7 +9,7 @@ on_plugin_import {
             name => 'before',
             code => sub {
                 # break fields[] & page[] paramerts
-                for my $k ( qw< fields page > ) {
+                for my $k ( qw< fields filter page > ) {
                     my %params;
 
                     for ( $dsl->query_parameters->keys ) {

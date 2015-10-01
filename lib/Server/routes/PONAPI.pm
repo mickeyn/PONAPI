@@ -17,6 +17,7 @@ prefix '/:resource_type' => sub {
         return DAL::Mockup->retrieve_all(
             type     => route_parameters->get('resource_type'),
             fields   => query_parameters->get('fields'),
+            filter   => query_parameters->get('filter'),
             page     => query_parameters->get('page'),
             sort     => query_parameters->get('sort'),
             include  => query_parameters->get_all('include'),
@@ -48,27 +49,27 @@ prefix '/:resource_type/:resource_id' => sub {
         );
     };
 
-    # Retrieve a related resource indirectly
+    # Retrieve related resources indirectly
     get '/:relationship_type' => sub {
         return DAL::Mockup->retrieve(
             type     => route_parameters->get('resource_type'),
             id       => route_parameters->get('resource_id'),
             rel_type => route_parameters->get('relationship_type'),
             fields   => query_parameters->get('fields'),
+            filter   => query_parameters->get('filter'),
             include  => query_parameters->get_all('include'),
             page     => query_parameters->get('page'),
             sort     => query_parameters->get('sort'),
         );
     };
 
-    # Retrieve a relationship for a single resource
+    # Retrieve relationships for a single resource by type
     get '/relationships/:relationship_type' => sub {
         return DAL::Mockup->retrieve_relationship(
             type     => route_parameters->get('resource_type'),
             id       => route_parameters->get('resource_id'),
             rel_type => route_parameters->get('relationship_type'),
-            # fields   => query_parameters->get('fields'),
-            # include  => query_parameters->get_all('include'),
+            filter   => query_parameters->get('filter'),
             page     => query_parameters->get('page'),
         );
     };

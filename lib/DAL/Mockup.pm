@@ -90,7 +90,17 @@ sub retrieve_all {
         return $doc->build;
     }
 
-    _add_resource( $doc, $type, $_, $args{include} ) for keys %{ $data{$type} };
+    my $id_filter = exists $args{filter}{id} ? delete $args{filter}{id} : undef;
+
+    my @ids = $id_filter
+        ? grep { exists $data{$type}{$_} } @{ $id_filter }
+        : keys %{ $data{$type} };
+
+    # TODO: apply other filters
+
+    # TODO: apply sorting
+
+    _add_resource( $doc, $type, $_, $args{include} ) for @ids;
 
     my @fields = exists $args{fields} ? ( fields => $args{fields} ) : ();
     return $doc->build( @fields );
