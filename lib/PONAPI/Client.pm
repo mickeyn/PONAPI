@@ -1,22 +1,35 @@
 package PONAPI::Client;
 
-use Hijk;
+use Moose;
 
+use Hijk;
 use URI;
 use URI::QueryParam;
 use JSON::XS qw( decode_json );
+
+has host => (
+    is      => 'ro',
+    isa     => 'Str',
+    default => sub { 'localhost' },
+);
+
+has port => (
+    is      => 'ro',
+    isa     => 'Num',
+    default => sub { 5000 },
+);
 
 
 ### public methods
 
 sub retrieve_all {
-    my ( $class, %args ) = @_;
+    my ( $self, %args ) = @_;
     $args{method} = 'retrieve_all';
 
-    my $type  = _validate_param( 'type', \%args );
-    my $query = _get_query( \%args );
+    my $type  = $self->_validate_param( 'type', \%args );
+    my $query = $self->_get_query( \%args );
 
-    return _send_ponapi_request(
+    return $self->_send_ponapi_request(
         method       => "GET",
         path         => "/$type",
         query_string => $query,
@@ -24,14 +37,14 @@ sub retrieve_all {
 }
 
 sub retrieve {
-    my ( $class, %args ) = @_;
+    my ( $self, %args ) = @_;
     $args{method} = 'retrieve';
 
-    my $type  = _validate_param( 'type', \%args );
-    my $id    = _validate_param( 'id',   \%args );
-    my $query = _get_query( \%args );
+    my $type  = $self->_validate_param( 'type', \%args );
+    my $id    = $self->_validate_param( 'id',   \%args );
+    my $query = $self->_get_query( \%args );
 
-    return _send_ponapi_request(
+    return $self->_send_ponapi_request(
         method       => "GET",
         path         => "/$type/$id",
         query_string => $query,
@@ -39,15 +52,15 @@ sub retrieve {
 }
 
 sub retrieve_relationship {
-    my ( $class, %args ) = @_;
+    my ( $self, %args ) = @_;
     $args{method} = 'retrieve_relationship';
 
-    my $type         = type_validate_param( 'type',     \%args );
-    my $id           = type_validate_param( 'id',       \%args );
-    my $rel_type     = type_validate_param( 'rel_type', \%args );
-    my $query_string = _get_query    ( \%args );
+    my $type         = $self->type_validate_param( 'type',     \%args );
+    my $id           = $self->type_validate_param( 'id',       \%args );
+    my $rel_type     = $self->type_validate_param( 'rel_type', \%args );
+    my $query_string = $self->_get_query( \%args );
 
-    return _send_ponapi_request(
+    return $self->_send_ponapi_request(
         method       => "GET",
         path         => "/$type/$id/$rel_type",
         query_string => $query_string,
@@ -58,7 +71,7 @@ sub retrieve_relationship {
 ### private methods
 
 sub _validate_param {
-    my ( $key, $args ) = @_;
+    my ( $self, $key, $args ) = @_;
     my $method = ( $args->{method} ||= "anon" );
 
     my $val = $args->{$key} || die "[PONAPI::Client] $method: missing '$key' param\n";
@@ -68,7 +81,7 @@ sub _validate_param {
 }
 
 sub _get_query {
-    my $args   = shift;
+    my ( $self, $args ) = @_;
     my $method = ( $args->{method} ||= "anon" );
 
     my $u = URI->new("", "http");
@@ -87,12 +100,13 @@ sub _get_query {
 }
 
 sub _send_ponapi_request {
+    my $self = shift;
     my %args = @_;
 
     my $res = Hijk::request({
         %args,
-        host => "localhost",
-        port => "5000",
+        host => $self->host,
+        port => $self->port,
         head => [ 'Content-Type' => 'application/vnd.api+json' ],
     });
 
@@ -100,6 +114,8 @@ sub _send_ponapi_request {
 }
 
 
-1;
+__PACKAGE__->meta->make_immutable;
+
+no Moose; 1;
 
 __END__
