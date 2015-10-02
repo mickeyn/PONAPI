@@ -8,7 +8,7 @@ on_plugin_import {
         Dancer2::Core::Hook->new(
             name => 'before',
             code => sub {
-                # break fields[] & page[] paramerts
+                # read fields[], filter[] and page[] paramerts
                 for my $k ( qw< fields filter page > ) {
                     my %params;
 
