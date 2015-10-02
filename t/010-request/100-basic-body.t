@@ -40,7 +40,7 @@ is($body->get_attribute('src'), 'http://example.com/images/productivity.png', '.
 
 is_deeply([ sort $body->get_attribute_keys ], [ 'src', 'title' ], '... got the right attribute keys');
 is_deeply(
-    $body->attributes, 
+    $body->attributes,
     {
         title => 'Ember Hamster',
         src   => 'http://example.com/images/productivity.png'

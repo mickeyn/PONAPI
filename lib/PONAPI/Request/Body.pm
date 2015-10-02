@@ -15,17 +15,17 @@ has '_data' => (
     }
 );
 
-# NOTES: 
+# NOTES:
 # - The `type` is the only thing required
 # - No `links`, they are managed by the server
 # - No `meta`, that is also server managed
 #   - if we have a need to change `meta`, it should be done
 #     via a more "meta" channel, such as headers
-# - No `jsonapi`, just no need     
+# - No `jsonapi`, just no need
 
 sub BUILD {
     my $self = $_[0];
-    die 'The `type` feild is required' 
+    die 'The `type` feild is required'
         if not exists $self->{_data}->{type};
 
     $self->{_data}->{attributes}    //= +{};
