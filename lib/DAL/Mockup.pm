@@ -83,7 +83,6 @@ my $todo = PONAPI::Builder::Document->new
     ->build;
 
 sub retrieve_relationship { return $todo }
-sub update                { return $todo }
 ###
 
 sub retrieve_all {
@@ -179,13 +178,41 @@ sub create {
     return $doc->build;
 }
 
+sub update {
+    my ( $class, %args ) = @_;
+
+    my $doc = PONAPI::Builder::Document->new();
+
+    my $type = ( $args{type} ||= undef );
+    my $id   = ( $args{id}   ||= undef );
+    my $data = ( $args{data} ||= undef );
+
+    if ( !$type ) {
+        $doc->raise_error({ message => "can't create a resource without a 'type'" });
+        return $doc->build;
+    }
+
+    if ( !$id ) {
+        $doc->raise_error({ message => "can't create a resource without an 'id'" });
+        return $doc->build;
+    }
+
+    if ( !$data and ref($data) eq 'HASH' ) {
+        $doc->raise_error({ message => "can't create a resource without data" });
+        return $doc->build;
+    }
+
+    $doc->add_meta( message => "successfully updated the resource /$type/$id => " . encode_json($data) );
+    return $doc->build;
+}
+
 sub del {
     my ( $class, %args ) = @_;
 
     my $doc = PONAPI::Builder::Document->new();
 
     my $type = ( $args{type} ||= undef );
-    my $id   = ( $args{id} ||= undef );
+    my $id   = ( $args{id}   ||= undef );
 
     if ( !$type ) {
         $doc->raise_error({ message => "can't create a resource without a 'type'" });

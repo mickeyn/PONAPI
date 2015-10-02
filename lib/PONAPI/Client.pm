@@ -87,6 +87,21 @@ sub create {
     );
 }
 
+sub update {
+    my ( $self, %args ) = @_;
+    $args{method} = 'update';
+
+    my $type = $self->_validate_param( 'type', \%args );
+    my $id   = $self->_validate_param( 'id',   \%args );
+    my $data = $self->_validate_param( 'data', \%args );
+
+    return $self->_send_ponapi_request(
+        method => "PATCH",
+        path   => "/$type/$id",
+        body   => encode_json( { data => $data } ),
+    );
+}
+
 sub del {
     my ( $self, %args ) = @_;
     $args{method} = 'del';
