@@ -5,7 +5,7 @@ use Moose;
 use Hijk;
 use URI;
 use URI::QueryParam;
-use JSON::XS qw( decode_json );
+use JSON::XS qw( decode_json encode_json );
 
 has host => (
     is      => 'ro',
@@ -55,15 +55,48 @@ sub retrieve_relationship {
     my ( $self, %args ) = @_;
     $args{method} = 'retrieve_relationship';
 
-    my $type         = $self->type_validate_param( 'type',     \%args );
-    my $id           = $self->type_validate_param( 'id',       \%args );
-    my $rel_type     = $self->type_validate_param( 'rel_type', \%args );
+    my $type         = $self->_validate_param( 'type',     \%args );
+    my $id           = $self->_validate_param( 'id',       \%args );
+    my $rel_type     = $self->_validate_param( 'rel_type', \%args );
     my $query_string = $self->_get_query( \%args );
 
     return $self->_send_ponapi_request(
         method       => "GET",
         path         => "/$type/$id/$rel_type",
         query_string => $query_string,
+    );
+}
+
+sub create {
+    my ( $self, %args ) = @_;
+    $args{method} = 'create';
+
+    my $type = $self->_validate_param( 'type', \%args );
+    my $data = $self->_validate_param( 'data', \%args );
+
+    # in case of client-generated id
+    if ( exists $args{id} ) {
+        my $id = $self->_validate_param( 'id', \%args );
+        $data->{id} = $id;
+    }
+
+    return $self->_send_ponapi_request(
+        method => "POST",
+        path   => "/$type",
+        body   => encode_json( { data => $data } ),
+    );
+}
+
+sub del {
+    my ( $self, %args ) = @_;
+    $args{method} = 'del';
+
+    my $type = $self->_validate_param( 'type', \%args );
+    my $id   = $self->_validate_param( 'id',   \%args );
+
+    return $self->_send_ponapi_request(
+        method => "DELETE",
+        path   => "/$type/$id",
     );
 }
 
@@ -75,7 +108,13 @@ sub _validate_param {
     my $method = ( $args->{method} ||= "anon" );
 
     my $val = $args->{$key} || die "[PONAPI::Client] $method: missing '$key' param\n";
-    !ref($val) or die "[PONAPI::Client] $method: $key must be a scalar\n";
+
+    if ( $key eq 'data' ) {
+        ref($val) eq 'HASH' or die "[PONAPI::Client] $method: $key must be a hashref\n";
+    }
+    else {
+        !ref($val) or die "[PONAPI::Client] $method: $key must be a scalar\n";
+    }
 
     return $val;
 }

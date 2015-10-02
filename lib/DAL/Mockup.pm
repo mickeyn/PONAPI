@@ -3,6 +3,8 @@ package DAL::Mockup;
 use strict;
 use warnings;
 
+use JSON::XS qw( encode_json );
+
 use PONAPI::Builder::Document;
 
 ##################################
@@ -75,9 +77,14 @@ my %data = (
 );
 ##################################
 
+## TODO:
 my $todo = PONAPI::Builder::Document->new
     ->add_meta( message => "not implemented yet" )
     ->build;
+
+sub retrieve_relationship { return $todo }
+sub update                { return $todo }
+###
 
 sub retrieve_all {
     my ( $class, %args ) = @_;
@@ -111,7 +118,7 @@ sub retrieve {
     my $type = $args{type};
 
     unless ( exists $data{$type} ) {
-        $doc->add_error( { message => "type doesn't exist" } );
+        $doc->raise_error( { message => "type doesn't exist" } );
         return $doc->build;
     }
 
@@ -150,11 +157,49 @@ sub _add_resource {
     }
 }
 
-sub retrieve_relationship { return $todo }
-sub create { return $todo }
-sub update { return $todo }
-sub del    { return $todo }
+sub create {
+    my ( $class, %args ) = @_;
 
+    my $doc = PONAPI::Builder::Document->new();
+
+    my $type = ( $args{type} ||= undef );
+    my $data = ( $args{data} ||= undef );
+
+    if ( !$type ) {
+        $doc->raise_error({ message => "can't create a resource without a 'type'" });
+        return $doc->build;
+    }
+
+    if ( !$data and ref($data) eq 'HASH' ) {
+        $doc->raise_error({ message => "can't create a resource without data" });
+        return $doc->build;
+    }
+
+    $doc->add_meta( message => "successfully created the resource: $type => " . encode_json($data) );
+    return $doc->build;
+}
+
+sub del {
+    my ( $class, %args ) = @_;
+
+    my $doc = PONAPI::Builder::Document->new();
+
+    my $type = ( $args{type} ||= undef );
+    my $id   = ( $args{id} ||= undef );
+
+    if ( !$type ) {
+        $doc->raise_error({ message => "can't create a resource without a 'type'" });
+        return $doc->build;
+    }
+
+    if ( !$id ) {
+        $doc->raise_error({ message => "can't create a resource without an 'id'" });
+        return $doc->build;
+    }
+
+    $doc->add_meta( message => "successfully deleted the resource /$type/$id" );
+    return $doc->build;
+}
 
 
 1;
