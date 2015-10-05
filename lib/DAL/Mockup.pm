@@ -116,7 +116,7 @@ sub retrieve_all {
     # TODO: apply other filters
 
     my $doc = PONAPI::Builder::Document->new( is_collection => 1 );
-    _add_resource( $doc, $type, $_, $args{include} ) for @ids;
+    _add_resource( $doc, $type, $_, 0, $args{include} ) for @ids;
 
     my @fields = exists $args{fields} ? ( fields => $args{fields} ) : ();
     return $doc->build( @fields );
@@ -124,30 +124,77 @@ sub retrieve_all {
 
 sub retrieve {
     my ( $class, %args ) = @_;
-    my $doc = PONAPI::Builder::Document->new();
 
     my ( $type, $id ) = @args{qw< type id >};
-
     exists $data{$type} or return _error( "type $type doesn't exist" );
+
+    my $doc = PONAPI::Builder::Document->new();
 
     unless ( exists $data{$type}{$id} ) {
         $doc->add_null_resource(undef);
         return $doc->build;
     }
 
-    _add_resource( $doc, $type, $id, $args{include} );
+    _add_resource( $doc, $type, $id, 0, $args{include} );
 
     my @fields = exists $args{fields} ? ( fields => $args{fields} ) : ();
     return $doc->build( @fields );
 }
 
+sub retrieve_relationships {
+    return _retrieve_relationships( @_, relationships_only => 1 );
+}
+
+sub retrieve_by_relationship {
+    return _retrieve_relationships( @_, relationships_only => 0 );
+}
+
+sub _retrieve_relationships {
+    my ( $class, %args ) = @_;
+
+    my ( $type, $id, $rel_type ) = @args{qw< type id rel_type >};
+    exists $data{$type}      or return _error( "type $type doesn't exist" );
+    exists $data{$type}{$id} or return _error( "id $id doesn't exist" );
+    exists $data{$type}{$id}{relationships} or return _error( "resource has no relationships" );
+
+    my $relationships = $data{$type}{$id}{relationships}{$rel_type};
+    $relationships or return _error( "relationships type $rel_type doesn't exist" );
+
+    ref($relationships) eq 'ARRAY'
+        and return _retrieve_relationships_collection( %args, relationships => $relationships );
+
+    return _retrieve_relationships_single_resource( %args, relationships => $relationships );
+}
+
+sub _retrieve_relationships_single_resource {
+    my %args = @_;
+    my $rel = $args{relationships};
+
+    my $doc = PONAPI::Builder::Document->new();
+    _add_resource( $doc, $rel->{type}, $rel->{id}, $args{relationships_only} );
+    return $doc->build;
+}
+
+sub _retrieve_relationships_collection {
+    my %args = @_;
+    my $rel = $args{relationships};
+
+    my $doc = PONAPI::Builder::Document->new( is_collection => 1 );
+    _add_resource( $doc, $_->{type}, $_->{id}, $args{relationships_only} ) for @{$rel};
+    return $doc->build;
+}
+
 sub _add_resource {
-    my ( $doc, $type, $id, $include ) = @_;
+    my ( $doc, $type, $id, $identifier_only, $include ) = @_;
 
     my $resource = $doc->add_resource( type => $type, id => $id );
 
+    return if $identifier_only;
+
     $resource->add_attributes( %{ $data{$type}{$id}{attributes} } )
         if keys %{ $data{$type}{$id}{attributes} };
+
+    return unless exists $data{$type}{$id}{relationships};
 
     my %relationships = %{ $data{$type}{$id}{relationships} };
     for my $k ( keys %relationships ) {
@@ -163,57 +210,10 @@ sub _add_resource {
     }
 }
 
-sub retrieve_relationships {
-    my ( $class, %args ) = @_;
-
-    my ( $type, $id, $rel_type ) = @args{qw< type id rel_type >};
-
-    exists $data{$type}      or return _error( "type $type doesn't exist" );
-    exists $data{$type}{$id} or return _error( "id $id doesn't exist" );
-    exists $data{$type}{$id}{relationships} or return _error( "resource has no relationships" );
-
-    my $relationships = $data{$type}{$id}{relationships}{$rel_type};
-    $relationships or return _error( "relationships type $rel_type doesn't exist" );
-
-    my $collection = ref($relationships) eq 'ARRAY' ? 1 : 0;
-    my $doc = PONAPI::Builder::Document->new( is_collection => $collection );
-    if ( $collection ) {
-        $doc->add_resource( %{$_} ) for @{$relationships};
-    } else {
-        $doc->add_resource( %{$relationships} );
-    }
-    return $doc->build;
-}
-
-sub retrieve_by_relationship {
-    my ( $class, %args ) = @_;
-
-    my ( $type, $id, $rel_type ) = @args{qw< type id rel_type >};
-
-    exists $data{$type}      or return _error( "type $type doesn't exist" );
-    exists $data{$type}{$id} or return _error( "id $id doesn't exist" );
-    exists $data{$type}{$id}{relationships} or return _error( "resource has no relationships" );
-
-    my $relationships = $data{$type}{$id}{relationships}{$rel_type};
-    $relationships or return _error( "relationships type $rel_type doesn't exist" );
-
-    # TODO: apply filters/etc.
-
-    my $collection = ref($relationships) eq 'ARRAY' ? 1 : 0;
-    my $doc = PONAPI::Builder::Document->new( is_collection => $collection );
-    if ( $collection ) {
-        _add_resource( $doc, $_->{type}, $_->{id} ) for @{$relationships};
-    } else {
-        _add_resource( $doc, $relationships->{type}, $relationships->{id} );
-    }
-    return $doc->build;
-}
-
 sub create {
     my ( $class, %args ) = @_;
 
     my ( $type, $data ) = @args{qw< type data >};
-
     $type or return _error( "type $type doesn't exist" );
     $data and ref($data) eq 'HASH' or return _error( "can't create a resource without data" );
 
@@ -229,7 +229,6 @@ sub update {
     my ( $class, %args ) = @_;
 
     my ( $type, $id, $data ) = @args{qw< type id data >};
-
     $type or return _error( "can't update a resource without a 'type'" );
     $id   or return _error( "can't update a resource without an 'id'"  );
     $data or return _error( "can't update a resource without data"     );
@@ -245,7 +244,6 @@ sub del {
     my ( $class, %args ) = @_;
 
     my ( $type, $id ) = @args{qw< type id >};
-
     $type or return _error( "can't delete a resource without a 'type'" );
     $id   or return _error( "can't delete a resource without an 'id'"  );
 
