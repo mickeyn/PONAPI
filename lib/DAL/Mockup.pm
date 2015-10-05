@@ -141,13 +141,8 @@ sub retrieve {
     return $doc->build( @fields );
 }
 
-sub retrieve_relationships {
-    return _retrieve_relationships( @_, relationships_only => 1 );
-}
-
-sub retrieve_by_relationship {
-    return _retrieve_relationships( @_, relationships_only => 0 );
-}
+sub retrieve_relationships   { _retrieve_relationships( @_, rel_only => 1 ) }
+sub retrieve_by_relationship { _retrieve_relationships( @_, rel_only => 0 ) }
 
 sub _retrieve_relationships {
     my ( $class, %args ) = @_;
@@ -171,7 +166,7 @@ sub _retrieve_relationships_single_resource {
     my $rel = $args{relationships};
 
     my $doc = PONAPI::Builder::Document->new();
-    _add_resource( $doc, $rel->{type}, $rel->{id}, $args{relationships_only} );
+    _add_resource( $doc, $rel->{type}, $rel->{id}, $args{rel_only} );
     return $doc->build;
 }
 
@@ -180,7 +175,7 @@ sub _retrieve_relationships_collection {
     my $rel = $args{relationships};
 
     my $doc = PONAPI::Builder::Document->new( is_collection => 1 );
-    _add_resource( $doc, $_->{type}, $_->{id}, $args{relationships_only} ) for @{$rel};
+    _add_resource( $doc, $_->{type}, $_->{id}, $args{rel_only} ) for @{$rel};
     return $doc->build;
 }
 
