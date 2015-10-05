@@ -51,9 +51,9 @@ sub retrieve {
     );
 }
 
-sub retrieve_relationship {
+sub retrieve_relationships {
     my ( $self, %args ) = @_;
-    $args{method} = 'retrieve_relationship';
+    $args{method} = 'retrieve_relationships';
 
     my $type         = $self->_validate_param( 'type',     \%args );
     my $id           = $self->_validate_param( 'id',       \%args );
@@ -62,7 +62,7 @@ sub retrieve_relationship {
 
     return $self->_send_ponapi_request(
         method       => "GET",
-        path         => "/$type/$id/$rel_type",
+        path         => "/$type/$id/relationships/$rel_type",
         query_string => $query_string,
     );
 }
