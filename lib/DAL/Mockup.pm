@@ -250,9 +250,7 @@ sub del {
 }
 
 sub _error {
-    my $doc = PONAPI::Builder::Document->new();
-    $doc->raise_error({ message => shift });
-    return $doc->build;
+    PONAPI::Builder::Document->new()->raise_error({ message => shift })->build;
 }
 
 

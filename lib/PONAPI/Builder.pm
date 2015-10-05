@@ -34,8 +34,7 @@ sub raise_error {
 
     $self->find_root->errors_builder->add_error( @_ );
 
-    # What should this return?
-    return;
+    return $self;
 }
 
 no Moose::Role; 1;
