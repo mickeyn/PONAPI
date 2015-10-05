@@ -231,8 +231,8 @@ sub update {
     my ( $type, $id, $data ) = @args{qw< type id data >};
 
     $type or return _error( "can't update a resource without a 'type'" );
-    $type or return _error( "can't update a resource without an 'id'"  );
-    $type or return _error( "can't update a resource without data"     );
+    $id   or return _error( "can't update a resource without an 'id'"  );
+    $data or return _error( "can't update a resource without data"     );
 
     # TODO: update the resource
 
@@ -247,7 +247,7 @@ sub del {
     my ( $type, $id ) = @args{qw< type id >};
 
     $type or return _error( "can't delete a resource without a 'type'" );
-    $type or return _error( "can't delete a resource without an 'id'"  );
+    $id   or return _error( "can't delete a resource without an 'id'"  );
 
     # TODO: delte the resource
 
