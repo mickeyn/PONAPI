@@ -83,14 +83,10 @@ my %data = (
 
 sub retrieve_all {
     my ( $class, %args ) = @_;
-    my $doc = PONAPI::Builder::Document->new( is_collection => 1 );
 
     my $type = $args{type};
 
-    unless ( exists $data{$type} ) {
-        $doc->raise_error({ message => "type doesn't exist" });
-        return $doc->build;
-    }
+    exists $data{$type} or return _error( "type $type doesn't exist" );
 
     my $id_filter = exists $args{filter}{id} ? delete $args{filter}{id} : undef;
 
@@ -100,6 +96,7 @@ sub retrieve_all {
 
     # TODO: apply other filters
 
+    my $doc = PONAPI::Builder::Document->new( is_collection => 1 );
     _add_resource( $doc, $type, $_, $args{include} ) for @ids;
 
     my @fields = exists $args{fields} ? ( fields => $args{fields} ) : ();
@@ -110,14 +107,9 @@ sub retrieve {
     my ( $class, %args ) = @_;
     my $doc = PONAPI::Builder::Document->new();
 
-    my $type = $args{type};
+    my ( $type, $id ) = @args{qw< type id >};
 
-    unless ( exists $data{$type} ) {
-        $doc->raise_error( { message => "type doesn't exist" } );
-        return $doc->build;
-    }
-
-    my $id = $args{id};
+    exists $data{$type} or return _error( "type $type doesn't exist" );
 
     unless ( exists $data{$type}{$id} ) {
         $doc->add_null_resource(undef);
@@ -174,29 +166,17 @@ sub retrieve_relationships {
     return $doc->build;
 }
 
-sub _error {
-    my $doc = PONAPI::Builder::Document->new();
-    $doc->raise_error({ message => shift });
-    return $doc->build;
-}
-
 sub create {
     my ( $class, %args ) = @_;
 
+    my ( $type, $data ) = @args{qw< type data >};
+
+    $type or return _error( "type $type doesn't exist" );
+    $data and ref($data) eq 'HASH' or return _error( "can't create a resource without data" );
+
+    # TODO: create the resource
+
     my $doc = PONAPI::Builder::Document->new();
-
-    my $type = ( $args{type} ||= undef );
-    my $data = ( $args{data} ||= undef );
-
-    if ( !$type ) {
-        $doc->raise_error({ message => "can't create a resource without a 'type'" });
-        return $doc->build;
-    }
-
-    if ( !$data and ref($data) eq 'HASH' ) {
-        $doc->raise_error({ message => "can't create a resource without data" });
-        return $doc->build;
-    }
 
     $doc->add_meta( message => "successfully created the resource: $type => " . encode_json($data) );
     return $doc->build;
@@ -205,27 +185,15 @@ sub create {
 sub update {
     my ( $class, %args ) = @_;
 
+    my ( $type, $id, $data ) = @args{qw< type id data >};
+
+    $type or return _error( "can't update a resource without a 'type'" );
+    $type or return _error( "can't update a resource without an 'id'"  );
+    $type or return _error( "can't update a resource without data"     );
+
+    # TODO: update the resource
+
     my $doc = PONAPI::Builder::Document->new();
-
-    my $type = ( $args{type} ||= undef );
-    my $id   = ( $args{id}   ||= undef );
-    my $data = ( $args{data} ||= undef );
-
-    if ( !$type ) {
-        $doc->raise_error({ message => "can't create a resource without a 'type'" });
-        return $doc->build;
-    }
-
-    if ( !$id ) {
-        $doc->raise_error({ message => "can't create a resource without an 'id'" });
-        return $doc->build;
-    }
-
-    if ( !$data and ref($data) eq 'HASH' ) {
-        $doc->raise_error({ message => "can't create a resource without data" });
-        return $doc->build;
-    }
-
     $doc->add_meta( message => "successfully updated the resource /$type/$id => " . encode_json($data) );
     return $doc->build;
 }
@@ -233,22 +201,21 @@ sub update {
 sub del {
     my ( $class, %args ) = @_;
 
+    my ( $type, $id ) = @args{qw< type id >};
+
+    $type or return _error( "can't delete a resource without a 'type'" );
+    $type or return _error( "can't delete a resource without an 'id'"  );
+
+    # TODO: delte the resource
+
     my $doc = PONAPI::Builder::Document->new();
-
-    my $type = ( $args{type} ||= undef );
-    my $id   = ( $args{id}   ||= undef );
-
-    if ( !$type ) {
-        $doc->raise_error({ message => "can't create a resource without a 'type'" });
-        return $doc->build;
-    }
-
-    if ( !$id ) {
-        $doc->raise_error({ message => "can't create a resource without an 'id'" });
-        return $doc->build;
-    }
-
     $doc->add_meta( message => "successfully deleted the resource /$type/$id" );
+    return $doc->build;
+}
+
+sub _error {
+    my $doc = PONAPI::Builder::Document->new();
+    $doc->raise_error({ message => shift });
     return $doc->build;
 }
 
