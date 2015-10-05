@@ -67,6 +67,22 @@ sub retrieve_relationships {
     );
 }
 
+sub retrieve_by_relationship {
+    my ( $self, %args ) = @_;
+    $args{method} = 'retrieve_by_relationship';
+
+    my $type         = $self->_validate_param( 'type',     \%args );
+    my $id           = $self->_validate_param( 'id',       \%args );
+    my $rel_type     = $self->_validate_param( 'rel_type', \%args );
+    my $query_string = $self->_get_query( \%args );
+
+    return $self->_send_ponapi_request(
+        method       => "GET",
+        path         => "/$type/$id/$rel_type",
+        query_string => $query_string,
+    );
+}
+
 sub create {
     my ( $self, %args ) = @_;
     $args{method} = 'create';

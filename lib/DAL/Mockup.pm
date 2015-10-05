@@ -53,6 +53,25 @@ my %data = (
         },
     },
 
+    comments => {
+        5  => {
+            attributes => {
+                body => "First!",
+            },
+            relationships => {
+                articles => { type => "articles", id => 2 },
+            },
+        },
+        12 => {
+            attributes => {
+                body => "I like XML better",
+            },
+            relationships => {
+                articles => { type => "articles", id => 2 },
+            },
+        },
+    },
+
     people => {
         42 => {
             attributes => {
@@ -162,6 +181,30 @@ sub retrieve_relationships {
         $doc->add_resource( %{$_} ) for @{$relationships};
     } else {
         $doc->add_resource( %{$relationships} );
+    }
+    return $doc->build;
+}
+
+sub retrieve_by_relationship {
+    my ( $class, %args ) = @_;
+
+    my ( $type, $id, $rel_type ) = @args{qw< type id rel_type >};
+
+    exists $data{$type}      or return _error( "type $type doesn't exist" );
+    exists $data{$type}{$id} or return _error( "id $id doesn't exist" );
+    exists $data{$type}{$id}{relationships} or return _error( "resource has no relationships" );
+
+    my $relationships = $data{$type}{$id}{relationships}{$rel_type};
+    $relationships or return _error( "relationships type $rel_type doesn't exist" );
+
+    # TODO: apply filters/etc.
+
+    my $collection = ref($relationships) eq 'ARRAY' ? 1 : 0;
+    my $doc = PONAPI::Builder::Document->new( is_collection => $collection );
+    if ( $collection ) {
+        _add_resource( $doc, $_->{type}, $_->{id} ) for @{$relationships};
+    } else {
+        _add_resource( $doc, $relationships->{type}, $relationships->{id} );
     }
     return $doc->build;
 }

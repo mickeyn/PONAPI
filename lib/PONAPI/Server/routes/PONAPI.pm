@@ -49,7 +49,7 @@ prefix '/:resource_type/:resource_id' => sub {
 
     # Retrieve related resources indirectly
     get '/:relationship_type' => sub {
-        return DAL::Mockup->retrieve(
+        return DAL::Mockup->retrieve_by_relationship(
             type     => route_parameters->get('resource_type'),
             id       => route_parameters->get('resource_id'),
             rel_type => route_parameters->get('relationship_type'),
