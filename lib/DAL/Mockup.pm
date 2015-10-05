@@ -32,7 +32,11 @@ my %data = (
                 updated => "2015-06-22T14:56:28.000Z",
             },
             relationships => {
-                author => { type => "people", id => 88 },
+                author   => { type => "people", id => 88 },
+                comments => [
+                    { type => "comments", id => 5 },
+                    { type => "comments", id => 12 },
+                ],
             },
         },
 
@@ -76,14 +80,6 @@ my %data = (
     },
 );
 ##################################
-
-## TODO:
-my $todo = PONAPI::Builder::Document->new
-    ->add_meta( message => "not implemented yet" )
-    ->build;
-
-sub retrieve_relationship { return $todo }
-###
 
 sub retrieve_all {
     my ( $class, %args ) = @_;
@@ -154,6 +150,34 @@ sub _add_resource {
                 if exists $data{$t}{$i}{attributes};
         }
     }
+}
+
+sub retrieve_relationships {
+    my ( $class, %args ) = @_;
+
+    my ( $type, $id, $rel_type ) = @args{qw< type id rel_type >};
+
+    exists $data{$type}      or return _error( "type $type doesn't exist" );
+    exists $data{$type}{$id} or return _error( "id $id doesn't exist" );
+    exists $data{$type}{$id}{relationships} or return _error( "resource has no relationships" );
+
+    my $relationships = $data{$type}{$id}{relationships}{$rel_type};
+    $relationships or return _error( "relationships type $rel_type doesn't exist" );
+
+    my $collection = ref($relationships) eq 'ARRAY' ? 1 : 0;
+    my $doc = PONAPI::Builder::Document->new( is_collection => $collection );
+    if ( $collection ) {
+        $doc->add_resource( %{$_} ) for @{$relationships};
+    } else {
+        $doc->add_resource( %{$relationships} );
+    }
+    return $doc->build;
+}
+
+sub _error {
+    my $doc = PONAPI::Builder::Document->new();
+    $doc->raise_error({ message => shift });
+    return $doc->build;
 }
 
 sub create {

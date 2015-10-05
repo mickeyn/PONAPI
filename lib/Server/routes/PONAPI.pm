@@ -62,11 +62,11 @@ prefix '/:resource_type/:resource_id' => sub {
 
     # Retrieve relationships for a single resource by type
     get '/relationships/:relationship_type' => sub {
-        return DAL::Mockup->retrieve_relationship(
+        return DAL::Mockup->retrieve_relationships(
             type     => route_parameters->get('resource_type'),
             id       => route_parameters->get('resource_id'),
             rel_type => route_parameters->get('relationship_type'),
-            filter   => query_parameters->get('filter'),
+#            filter   => query_parameters->get('filter'),
             page     => query_parameters->get('page'),
         );
     };
