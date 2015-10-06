@@ -19,6 +19,7 @@ subtest '... creating a document with links' => sub {
     does_ok($doc, 'PONAPI::Builder::Role::HasLinksBuilder');
     does_ok($doc, 'PONAPI::Builder::Role::HasMeta');
 
+    $doc->add_meta( info => "test: document w/links" );
     $doc->add_links(
         self    => "http://example.com/articles/1",
         related => {
@@ -31,6 +32,7 @@ subtest '... creating a document with links' => sub {
         $doc->build,
         {
             jsonapi => { version => '1.0' },
+            meta    => { info => "test: document w/links" },
             links   => {
                 self    => "http://example.com/articles/1",
                 related => {
