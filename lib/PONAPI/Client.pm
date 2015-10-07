@@ -164,7 +164,7 @@ sub _get_query {
         $u->query_param( $k.'['.$_.']' => $args->{$k}{$_} ) for keys %{ $args->{$k} };
     }
 
-    $u->query_param( $args->{include} ) if exists $args->{include};
+    $u->query_param( include => $args->{include} ) if exists $args->{include};
 
     return $u->query;
 }
