@@ -186,21 +186,28 @@ sub _add_resource {
 
     return if $identifier_only;
 
-    $resource->add_attributes( %{ $data{$type}{$id}{attributes} } )
-        if keys %{ $data{$type}{$id}{attributes} };
+    my $data_rec = $data{$type}{$id};
 
-    return unless exists $data{$type}{$id}{relationships};
+    $resource->add_attributes( %{ $data_rec->{attributes} } )
+        if keys %{ $data_rec->{attributes} };
 
-    my %relationships = %{ $data{$type}{$id}{relationships} };
-    for my $k ( keys %relationships ) {
-        $resource->add_relationship( $k => $relationships{$k} );
+    return unless exists $data_rec->{relationships};
 
-        my ( $t, $i ) = @{ $relationships{$k} }{qw< type id >};
+    my %rels = %{ $data_rec->{relationships} };
 
-        if ( $include and exists $include->{$k} and exists $data{$t}{$i} ) {
-            my $included = $doc->add_included( type => $t, id => $i );
-            $included->add_attributes( %{ $data{$t}{$i}{attributes} } )
-                if exists $data{$t}{$i}{attributes};
+    for my $k ( keys %rels ) {
+        my @rels = ( ref($rels{$k}) eq 'ARRAY' ) ? @{ $rels{$k} } : $rels{$k};
+
+        for my $r ( @rels ) {
+            $resource->add_relationship( $k => $r );
+
+            # handle include request
+            my ( $t, $i ) = @{$r}{qw< type id >};
+            if ( exists $include->{$k} and exists $data{$t}{$i} ) {
+                my $included = $doc->add_included( type => $t, id => $i );
+                $included->add_attributes( %{ $data{$t}{$i}{attributes} } )
+                    if exists $data{$t}{$i}{attributes};
+            }
         }
     }
 }
