@@ -3,14 +3,14 @@
     attributes:
         body: "First!"
     relationships:
-        articles:
+        article:
             type: "articles"
             id: 2
 12:
     attributes:
         body: "I like XML better"
     relationships:
-        articles:
+        article:
             type: "articles"
             id: 2
 
