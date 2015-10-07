@@ -1,7 +1,7 @@
-package PONAPI::DAL::Schema::Mock;
+package PONAPI::DAO::Repository::Mock;
 use Moose;
 
-with 'PONAPI::DAL::Schema';
+with 'PONAPI::DAO::Repository';
 
 has 'data' => (
     is       => 'ro',

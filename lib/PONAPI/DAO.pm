@@ -1,12 +1,12 @@
-package PONAPI::DAL;
+package PONAPI::DAO;
 use Moose;
 
-use PONAPI::DAL::Schema;
+use PONAPI::DAO::Repository;
 use PONAPI::Builder::Document;
 
-has 'schema' => (
+has 'repository' => (
     is       => 'ro',
-    does     => 'PONAPI::DAL::Schema',
+    does     => 'PONAPI::DAO::Repository',
     required => 1,
 );
 
@@ -15,7 +15,7 @@ sub retrieve_all {
 
     my $doc = PONAPI::Builder::Document->new( is_collection => 1 );
     eval {
-        $self->schema->retrieve_all(
+        $self->repository->retrieve_all(
             document => $doc,
             type     => $args{type},
             includes => $args{include},
@@ -40,7 +40,7 @@ sub retrieve {
 
     my $doc = PONAPI::Builder::Document->new();
     eval {
-        $self->schema->retrieve(
+        $self->repository->retrieve(
             document => $doc,
             type     => $args{type},
             id       => $args{id},
@@ -71,7 +71,7 @@ sub retrieve_relationships   {
     # - SL
     my $doc = PONAPI::Builder::Document->new( is_collection => 1 );
     eval {
-        $self->schema->retrieve_relationships(
+        $self->repository->retrieve_relationships(
             document => $doc,
             type     => $args{type},
             id       => $args{id},
@@ -95,7 +95,7 @@ sub retrieve_by_relationship {
     # - SL
     my $doc = PONAPI::Builder::Document->new( is_collection => 1 );
     eval {
-        $self->schema->retrieve_by_relationship(
+        $self->repository->retrieve_by_relationship(
             document => $doc,
             type     => $args{type},
             id       => $args{id},
@@ -114,7 +114,7 @@ sub create {
 
     my $doc = PONAPI::Builder::Document->new();
     eval {
-        $self->schema->create(
+        $self->repository->create(
             document => $doc,
             type     => $args{type},
             id       => $args{id}, # optional ...
@@ -133,7 +133,7 @@ sub update {
 
     my $doc = PONAPI::Builder::Document->new();
     eval {
-        $self->schema->update(
+        $self->repository->update(
             document => $doc,
             type     => $args{type},
             id       => $args{id},
@@ -152,7 +152,7 @@ sub delete : method {
 
     my $doc = PONAPI::Builder::Document->new();
     eval {
-        $self->schema->delete(
+        $self->repository->delete(
             document => $doc,
             type     => $args{type},
             id       => $args{id},

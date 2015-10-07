@@ -1,4 +1,4 @@
-package PONAPI::DAL::Schema;
+package PONAPI::DAO::Repository;
 use Moose::Role;
 
 requires 'retrieve';
