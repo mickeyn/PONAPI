@@ -8,27 +8,21 @@ on_plugin_import {
         Dancer2::Core::Hook->new(
             name => 'before',
             code => sub {
-                # read fields[], filter[] and page[] paramerts
-                for my $k ( qw< fields filter page > ) {
-                    my %params;
+                my %params = ( fields => {}, filter => {}, page => {}, include => {} );
 
-                    for ( $dsl->query_parameters->keys ) {
-                        /^$k\[(.+)\]$/ or next;
-                        $params{$1} = +[
-                            split /,/ => $dsl->query_parameters->get($_)
-                        ];
-                        $dsl->query_parameters->remove($_);
+                for my $p ( keys %{ $dsl->query_parameters } ) { # unique keys
+                    my @values = map { split /,/ } $dsl->query_parameters->get_all($p);
+                    $dsl->query_parameters->remove($p);
+
+                    for my $k ( qw< fields filter page > ) {
+                        $p =~ /^$k\[(.+)\]$/ or next;
+                        $params{$k}{$1} = \@values;
                     }
 
-                    $dsl->query_parameters->add( $k => \%params );
+                    $p eq 'include' and $params{include}{$_} = 1 for @values;
                 }
 
-                # include paramerts
-                my %include = map { $_ => 1 }
-                    map { split /,/ } $dsl->query_parameters->get_all('include');
-
-                $dsl->query_parameters->remove('include')
-                    and $dsl->query_parameters->add( 'include', \%include );
+                $dsl->query_parameters->add( $_, $params{$_} ) for keys %params;
             },
         )
     );
