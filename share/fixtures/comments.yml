@@ -1,0 +1,17 @@
+---
+5:
+    attributes:
+        body: "First!"
+    relationships:
+        articles:
+            type: "articles"
+            id: 2
+12:
+    attributes:
+        body: "I like XML better"
+    relationships:
+        articles:
+            type: "articles"
+            id: 2
+
+

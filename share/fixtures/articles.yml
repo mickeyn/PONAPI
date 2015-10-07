@@ -1,0 +1,38 @@
+---
+1:
+    attributes:
+        title: "JSON API paints my bikeshed!"
+        body: "The shortest article. Ever."
+        created: "2015-05-22T14:56:29.000Z"
+        updated: "2015-05-22T14:56:28.000Z"
+    relationships:
+        author:
+            type: "people" 
+            id: 42
+2:
+    attributes:
+        title: "A second title"
+        body: "The 2nd shortest article. Ever."
+        created: "2015-06-22T14:56:29.000Z"
+        updated: "2015-06-22T14:56:28.000Z"
+    relationships:
+        author:
+            type: "people"
+            id: 88
+        comments:
+            - type: "comments"
+              id: 5
+            - type: "comments"
+              id: 12
+3:
+    attributes:
+        title: "a third one"
+        body: "The 3rd shortest article. Ever."
+        created: "2015-07-22T14:56:29.000Z"
+        updated: "2015-07-22T14:56:28.000Z"
+    relationships:
+        author:
+            type: "people"
+            id: 91
+
+

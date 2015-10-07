@@ -13,31 +13,24 @@ has 'schema' => (
 sub retrieve_all {
     my ( $self, %args ) = @_;
 
-    my $type = $args{type};
-
-    exists $data{$type} or return _error( "type $type doesn't exist" );
-
-    my $id_filter = exists $args{filter}{id} ? delete $args{filter}{id} : undef;
-
-    my @ids = $id_filter
-        ? grep { exists $data{$type}{$_} } @{ $id_filter }
-        : keys %{ $data{$type} };
-
-    # TODO: apply other filters
-
     my $doc = PONAPI::Builder::Document->new( is_collection => 1 );
-
     eval {
         $self->schema->retrieve_all(
             document => $doc,
-            type     => $type,
-            ids      => \@ids,
-            includes => $args{include}
+            type     => $args{type},
+            includes => $args{include},
+            fields   => $args{fields},
         );
+        1;
     } or do {
         return _error( "$@" );
     };    
 
+    # XXX:
+    # should this really be here? 
+    # I know we discussed it, but 
+    # this feels wrong. 
+    # - SL 
     my @fields = exists $args{fields} ? ( fields => $args{fields} ) : ();
     return $doc->build( @fields );
 }
@@ -45,27 +38,25 @@ sub retrieve_all {
 sub retrieve {
     my ( $self, %args ) = @_;
 
-    my ( $type, $id ) = @args{qw< type id >};
-    exists $data{$type} or return _error( "type $type doesn't exist" );
-
     my $doc = PONAPI::Builder::Document->new();
-
-    unless ( exists $data{$type}{$id} ) {
-        $doc->add_null_resource(undef);
-        return $doc->build;
-    }
-
     eval {
         $self->schema->retrieve(
             document => $doc,
-            type     => $type,
-            id       => $id,
-            includes => $args{include}
+            type     => $args{type},
+            id       => $args{id},
+            includes => $args{include},
+            fields   => $args{fields},
         );
+        1;
     } or do {
         return _error( "$@" );
     };   
 
+    # XXX:
+    # should this really be here? 
+    # I know we discussed it, but 
+    # this feels wrong. 
+    # - SL 
     my @fields = exists $args{fields} ? ( fields => $args{fields} ) : ();
     return $doc->build( @fields );
 }
@@ -87,6 +78,7 @@ sub retrieve_relationships   {
             rel_type => $args{rel_type},
             rel_only => 1,
         );
+        1;
     } or do {
         return _error( "$@" );
     };    
@@ -110,6 +102,7 @@ sub retrieve_by_relationship {
             rel_type => $args{rel_type},
             rel_only => 0,
         );
+        1;
     } or do {
         return _error( "$@" );
     };    
@@ -127,10 +120,11 @@ sub create {
             id       => $args{id}, # optional ...
             data     => $args{data},
         );
+        1;
     } or do {
         return _error( "$@" );
     };
-    $doc->add_meta( message => "successfully created the resource: $type => " . encode_json($data) );
+    $doc->add_meta( message => "successfully created the resource: " . $args{type} . " => " . encode_json($args{data}) );
     return $doc->build;
 }
 
@@ -145,10 +139,11 @@ sub update {
             id       => $args{id},
             data     => $args{data},
         );
+        1;
     } or do {
         return _error( "$@" );
     };        
-    $doc->add_meta( message => "successfully updated the resource /$type/$id => " . encode_json($data) );
+    $doc->add_meta( message => "successfully updated the resource /" . $args{type} . "/" . $args{id} . " => " . encode_json($args{data}) );
     return $doc->build;
 }
 
@@ -162,10 +157,11 @@ sub delete : method {
             type     => $args{type},
             id       => $args{id},
         );
+        1;
     } or do {
         return _error( "$@" );
     };
-    $doc->add_meta( message => "successfully deleted the resource /$type/$id" );
+    $doc->add_meta( message => "successfully deleted the resource /" . $args{type} . "/" . $args{id} );
     return $doc->build;
 }
 
