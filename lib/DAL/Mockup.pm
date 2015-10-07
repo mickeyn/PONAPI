@@ -18,6 +18,7 @@ my %data = (
                 body    => "The shortest article. Ever.",
                 created => "2015-05-22T14:56:29.000Z",
                 updated => "2015-05-22T14:56:28.000Z",
+                status  => "ok",
             },
             relationships => {
                 author => { type => "people", id => 42 },
@@ -30,6 +31,7 @@ my %data = (
                 body    => "The 2nd shortest article. Ever.",
                 created => "2015-06-22T14:56:29.000Z",
                 updated => "2015-06-22T14:56:28.000Z",
+                status  => "ok",
             },
             relationships => {
                 author   => { type => "people", id => 88 },
@@ -46,6 +48,7 @@ my %data = (
                 body    => "The 3rd shortest article. Ever.",
                 created => "2015-07-22T14:56:29.000Z",
                 updated => "2015-07-22T14:56:28.000Z",
+                status  => "pending approval",
             },
             relationships => {
                 author => { type => "people", id => 91 },
@@ -107,19 +110,35 @@ sub retrieve_all {
 
     exists $data{$type} or return _error( "type $type doesn't exist" );
 
-    my $id_filter = exists $args{filter}{id} ? delete $args{filter}{id} : undef;
-
-    my @ids = $id_filter
-        ? grep { exists $data{$type}{$_} } @{ $id_filter }
-        : keys %{ $data{$type} };
-
-    # TODO: apply other filters
+    my $ids = _get_ids_filtered( $type, $args{filter} );
 
     my $doc = PONAPI::Builder::Document->new( is_collection => 1 );
-    _add_resource( $doc, $type, $_, 0, $args{include} ) for @ids;
+    _add_resource( $doc, $type, $_, 0, $args{include} ) for @{ $ids };
 
     my @fields = exists $args{fields} ? ( fields => $args{fields} ) : ();
     return $doc->build( @fields );
+}
+
+sub _get_ids_filtered {
+    my ( $type, $filters ) = @_;
+    my @ids;
+
+    # id filter
+
+    my $id_filter = exists $filters->{id} ? delete $filters->{id} : undef;
+    @ids = $id_filter
+        ? grep { exists $data{$type}{$_} } @{ $id_filter }
+        : keys %{ $data{$type} };
+
+    # attribute filters
+    for my $f ( keys %{ $filters } ) {
+        @ids = grep {
+            my $att = $data{$type}{$_}{attributes}{$f};
+            grep { $att eq $_ } @{ $filters->{$f} }
+        } @ids;
+    }
+
+    return \@ids;
 }
 
 sub retrieve {
