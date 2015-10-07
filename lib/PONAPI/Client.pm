@@ -161,7 +161,8 @@ sub _get_query {
     for my $k ( qw< filter fields page > ) {
         next unless $args->{$k};
         ref $args->{$k} eq 'HASH' or die "[PONAPI::Client] $method: '$k' must be a hash";
-        $u->query_param( $k.'['.$_.']' => $args->{$k}{$_} ) for keys %{ $args->{$k} };
+        $u->query_param( $k.'['.$_.']' => join ',' => @{ $args->{$k}{$_} } )
+            for keys %{ $args->{$k} };
     }
 
     $u->query_param( include => $args->{include} ) if exists $args->{include};
