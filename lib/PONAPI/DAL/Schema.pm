@@ -9,6 +9,4 @@ requires 'create';
 requires 'update';
 requires 'delete';
 
-no Moose::Role;
-
-1;
+no Moose::Role; 1;
