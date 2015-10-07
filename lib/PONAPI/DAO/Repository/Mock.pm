@@ -3,11 +3,43 @@ use Moose;
 
 with 'PONAPI::DAO::Repository';
 
+has 'rel_spec' => (
+    is       => 'ro',
+    isa      => 'HashRef',
+    required => 1,
+);
+
 has 'data' => (
     is       => 'ro',
     isa      => 'HashRef',
     required => 1,
 );
+
+sub has_type {
+    my ($self, $type) = @_;
+    !! exists $self->data->{ $type };
+}
+
+sub has_relationship {
+    my ($self, $type, $rel_name, $rel_spec) = @_;
+
+    my $spec = $self->rel_spec;
+
+    return 0 unless exists $spec->{ $type };
+    return 0 unless exists $spec->{ $type }->{ $rel_name };
+
+    if ( exists $rel_spec->{has_one} ) {
+        return 0 unless exists $spec->{ $type }->{ $rel_name }->{has_one};
+        return $spec->{ $type }->{ $rel_name }->{has_one} eq $rel_spec->{has_one};        
+    }
+    elsif ( exists $rel_spec->{has_many} ) {
+        return 0 unless exists $spec->{ $type }->{ $rel_name }->{has_many};
+        return $spec->{ $type }->{ $rel_name }->{has_many} eq $rel_spec->{has_many};        
+    }
+    else {
+        die "Rel-spec must specify either has_one or has_many, not: " . (join ', ' => keys %$rel_spec);
+    }
+}
 
 sub retrieve_all {
     my ($self, %args) = @_;    
