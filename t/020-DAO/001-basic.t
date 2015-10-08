@@ -6,6 +6,7 @@ use warnings;
 use Data::Dumper;
 use YAML::XS;
 use Path::Class;
+use Scalar::Util qw[ blessed ];
 
 use Test::More;
 
@@ -42,16 +43,40 @@ ok($repository->has_type('comments'), '... we have the comments type');
 
 ok(!$repository->has_type('widgets'), '... we do not have the widgets type');
 
-ok($repository->has_relationship('articles' => author   => { has_one  => 'people'   } ), '... we have the expected relationship');
-ok($repository->has_relationship('articles' => comments => { has_many => 'comments' } ), '... we have the expected relationship');
-ok($repository->has_relationship('comments' => article  => { has_one  => 'articles' } ), '... we have the expected relationship');
+is_deeply($repository->has_relationship(articles => 'author'   ), { has_one  => 'people'   }, '... we have the expected relationship');
+is_deeply($repository->has_relationship(articles => 'comments' ), { has_many => 'comments' }, '... we have the expected relationship');
+is_deeply($repository->has_relationship(comments => 'article'  ), { has_one  => 'articles' }, '... we have the expected relationship');
 
-ok(!$repository->has_relationship('people'   => articles => { has_many => 'articles' } ), '... we do not have the relationship (as expected)');
-ok(!$repository->has_relationship('comments' => author   => { has_one  => 'people'   } ), '... we do not have the relationship (as expected)');
+ok(!$repository->has_relationship(people   => 'articles' ), '... we do not have the relationship (as expected)');
+ok(!$repository->has_relationship(comments => 'author' ), '... we do not have the relationship (as expected)');
 
-my $dal = PONAPI::DAO->new( repository => $repository );
-isa_ok($dal, 'PONAPI::DAO');
+my $dao = PONAPI::DAO->new( repository => $repository );
+isa_ok($dao, 'PONAPI::DAO');
 
-warn Dumper $dal->retrieve_all( type => 'people' );
+my $doc = $dao->retrieve_all( type => 'people' );
+
+ok(!blessed($doc), '.... the document we got is not blessed');
+is(ref $doc, 'HASH', '.... the document we got is a HASH ref');
+
+ok(exists $doc->{'jsonapi'}, '... we have a `jsonapi` key');
+ok(exists $doc->{'data'}, '... we have a `data` key');
+is(scalar keys %$doc, 2, '... only got 2 keys');
+
+is(ref $doc->{'data'}, 'ARRAY', '.... the document->{data} we got is an ARRAY ref');
+
+foreach my $person ( @{$doc->{'data'}} ) {
+    is(ref $person, 'HASH', '.... the resource we got is a HASH ref');
+    is($person->{type}, 'people', '... got the expected type');
+
+    ok(exists $person->{id}, '... the `id` key exists');
+    ok(exists $person->{attributes}, '... the `attributes` key exists');
+
+    ok(exists $person->{attributes}->{name}, '... the attribute `name` key exists');
+    ok(exists $person->{attributes}->{age}, '... the attribute `age` key exists');
+    ok(exists $person->{attributes}->{gender}, '... the attribute `gender` key exists');
+}
+
 
 done_testing;
+
+

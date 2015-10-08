@@ -21,24 +21,12 @@ sub has_type {
 }
 
 sub has_relationship {
-    my ($self, $type, $rel_name, $rel_spec) = @_;
+    my ($self, $type, $rel_name) = @_;
 
     my $spec = $self->rel_spec;
-
     return 0 unless exists $spec->{ $type };
     return 0 unless exists $spec->{ $type }->{ $rel_name };
-
-    if ( exists $rel_spec->{has_one} ) {
-        return 0 unless exists $spec->{ $type }->{ $rel_name }->{has_one};
-        return $spec->{ $type }->{ $rel_name }->{has_one} eq $rel_spec->{has_one};        
-    }
-    elsif ( exists $rel_spec->{has_many} ) {
-        return 0 unless exists $spec->{ $type }->{ $rel_name }->{has_many};
-        return $spec->{ $type }->{ $rel_name }->{has_many} eq $rel_spec->{has_many};        
-    }
-    else {
-        die "Rel-spec must specify either has_one or has_many, not: " . (join ', ' => keys %$rel_spec);
-    }
+    return $spec->{ $type }->{ $rel_name };
 }
 
 sub retrieve_all {
@@ -47,14 +35,15 @@ sub retrieve_all {
     my $doc     = $args{document};
     my $type    = $args{type};
     my $include = $args{include};
+    my $data    = $self->data;
 
-    exists $self->data->{$type} or return die( "type $type doesn't exist" );
+    exists $data->{$type} or return die( "type $type doesn't exist" );
 
     my $id_filter = exists $args{filter}{id} ? delete $args{filter}{id} : undef;
 
     my @ids = $id_filter
-        ? grep { exists $self->data->{$type}{$_} } @{ $id_filter }
-        : keys %{ $self->data->{$type} };
+        ? grep { exists $data->{$type}{$_} } @{ $id_filter }
+        : keys %{ $data->{$type} };
 
     # TODO: apply other filters
 
@@ -68,10 +57,11 @@ sub retrieve {
     my $type    = $args{type};
     my $id      = $args{id};
     my $include = $args{include};
+    my $data    = $self->data;
 
-    exists $self->data->{$type} or return die( "type $type doesn't exist" );
+    exists $data->{$type} or return die( "type $type doesn't exist" );
 
-    unless ( exists $self->data->{$type}{$id} ) {
+    unless ( exists $data->{$type}{$id} ) {
         $doc->add_null_resource(undef);
         return;
     }
@@ -141,25 +131,26 @@ sub delete : method {
 sub _add_resource {
     my ( $self, $doc, $type, $id, $identifier_only, $include ) = @_;
 
+    my $data     = $self->data;
     my $resource = $doc->add_resource( type => $type, id => $id );
 
     return if $identifier_only;
 
-    $resource->add_attributes( %{ $self->data->{$type}{$id}{attributes} } )
-        if keys %{ $self->data->{$type}{$id}{attributes} };
+    $resource->add_attributes( %{ $data->{$type}{$id}{attributes} } )
+        if keys %{ $data->{$type}{$id}{attributes} };
 
-    return unless exists $self->data->{$type}{$id}{relationships};
+    return unless exists $data->{$type}{$id}{relationships};
 
-    my %relationships = %{ $self->data->{$type}{$id}{relationships} };
+    my %relationships = %{ $data->{$type}{$id}{relationships} };
     for my $k ( keys %relationships ) {
         $resource->add_relationship( $k => $relationships{$k} );
 
         my ( $t, $i ) = @{ $relationships{$k} }{qw< type id >};
 
-        if ( $include and exists $include->{$k} and exists $self->data->{$t}{$i} ) {
+        if ( $include and exists $include->{$k} and exists $data->{$t}{$i} ) {
             my $included = $doc->add_included( type => $t, id => $i );
-            $included->add_attributes( %{ $self->data->{$t}{$i}{attributes} } )
-                if exists $self->data->{$t}{$i}{attributes};
+            $included->add_attributes( %{ $data->{$t}{$i}{attributes} } )
+                if exists $data->{$t}{$i}{attributes};
         }
     }
 }
@@ -167,12 +158,14 @@ sub _add_resource {
 sub _retrieve_relationships {
     my ($self, %args) = @_;
 
-    my ( $type, $id, $rel_type ) = @args{qw< type id rel_type >};
-    exists $self->data->{$type}      or die( "type $type doesn't exist" );
-    exists $self->data->{$type}{$id} or die( "id $id doesn't exist" );
-    exists $self->data->{$type}{$id}{relationships} or die( "resource has no relationships" );
+    my $data = $self->data;
 
-    my $relationships = $self->data->{$type}{$id}{relationships}{$rel_type};
+    my ( $type, $id, $rel_type ) = @args{qw< type id rel_type >};
+    exists $data->{$type}      or die( "type $type doesn't exist" );
+    exists $data->{$type}{$id} or die( "id $id doesn't exist" );
+    exists $data->{$type}{$id}{relationships} or die( "resource has no relationships" );
+
+    my $relationships = $data->{$type}{$id}{relationships}{$rel_type};
     $relationships or die( "relationships type $rel_type doesn't exist" );
 
     ref($relationships) eq 'ARRAY'

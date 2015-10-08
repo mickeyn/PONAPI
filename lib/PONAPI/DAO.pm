@@ -15,22 +15,21 @@ sub retrieve_all {
 
     my $doc = PONAPI::Builder::Document->new( is_collection => 1 );
     eval {
-        $self->repository->retrieve_all(
+        $self->repository->retrieve_all( 
             document => $doc,
-            type     => $args{type},
-            includes => $args{include},
-            fields   => $args{fields},
+            %args
         );
         1;
     } or do {
-        return _error( "$@" );
-    };    
+        $doc->raise_error({ message => "$@" });
+    };
 
     # XXX:
-    # should this really be here? 
-    # I know we discussed it, but 
-    # this feels wrong. 
-    # - SL 
+    # this also gets passed to the repository
+    # and we add it here, we might want to 
+    # think about this a bit. It is fine for 
+    # now, but should be revisited.
+    # - SL
     my @fields = exists $args{fields} ? ( fields => $args{fields} ) : ();
     return $doc->build( @fields );
 }
@@ -40,72 +39,77 @@ sub retrieve {
 
     my $doc = PONAPI::Builder::Document->new();
     eval {
-        $self->repository->retrieve(
+        $self->repository->retrieve( 
             document => $doc,
-            type     => $args{type},
-            id       => $args{id},
-            includes => $args{include},
-            fields   => $args{fields},
+            %args
         );
         1;
     } or do {
-        return _error( "$@" );
-    };   
+        $doc->raise_error({ message => "$@" });
+    };
 
     # XXX:
-    # should this really be here? 
-    # I know we discussed it, but 
-    # this feels wrong. 
+    # see comment in &retrieve_all 
     # - SL 
     my @fields = exists $args{fields} ? ( fields => $args{fields} ) : ();
     return $doc->build( @fields );
 }
 
-sub retrieve_relationships   { 
+sub retrieve_relationships   {
     my ($self, %args) = @_;
 
-    # NOTE: 
-    # make everything a collection for
-    # now, we can fix this later with
-    # the type metadata
-    # - SL
-    my $doc = PONAPI::Builder::Document->new( is_collection => 1 );
-    eval {
-        $self->repository->retrieve_relationships(
-            document => $doc,
-            type     => $args{type},
-            id       => $args{id},
-            rel_type => $args{rel_type},
-            rel_only => 1,
+    my $doc;
+    if ( my $rel = $self->has_relationship( $args{type}, $args{rel_type} ) ) {
+        $doc = PONAPI::Builder::Document->new(
+            is_collection => $rel->{has_many} ? 1 : 0
         );
-        1;
-    } or do {
-        return _error( "$@" );
-    };    
+        eval {
+            $self->repository->retrieve_relationships(
+                document => $doc,
+                rel_only => 1,
+                %args 
+            );
+            1;
+        } or do {
+            $doc->raise_error({ message => "$@" });
+        };
+    }
+    else {
+        $doc = PONAPI::Builder::Document->new;
+        $doc->raise_error({
+            message => 'Relationship (' . $args{rel_type} . ') not found for type(' . $args{type} . ')'
+        })
+    }
+
     return $doc->build;
 }
 
 sub retrieve_by_relationship { 
     my ($self, %args) = @_;
 
-    # NOTE: 
-    # make everything a collection for
-    # now, we can fix this later with
-    # the type metadata
-    # - SL
-    my $doc = PONAPI::Builder::Document->new( is_collection => 1 );
-    eval {
-        $self->repository->retrieve_by_relationship(
-            document => $doc,
-            type     => $args{type},
-            id       => $args{id},
-            rel_type => $args{rel_type},
-            rel_only => 0,
+    my $doc;
+    if ( my $rel = $self->has_relationship( $args{type}, $args{rel_type} ) ) {
+        $doc = PONAPI::Builder::Document->new(
+            is_collection => $rel->{has_many} ? 1 : 0
         );
-        1;
-    } or do {
-        return _error( "$@" );
-    };    
+        eval {
+            $self->repository->retrieve_by_relationship(
+                document => $doc,
+                rel_only => 0,
+                %args,
+            );
+            1;
+        } or do {
+            $doc->raise_error({ message => "$@" });
+        };
+    }
+    else {
+        $doc = PONAPI::Builder::Document->new;
+        $doc->raise_error({
+            message => 'Relationship (' . $args{rel_type} . ') not found for type(' . $args{type} . ')'
+        })
+    }
+
     return $doc->build;
 }
 
@@ -116,15 +120,18 @@ sub create {
     eval {
         $self->repository->create(
             document => $doc,
-            type     => $args{type},
-            id       => $args{id}, # optional ...
-            data     => $args{data},
+            %args
+        );
+        $doc->add_meta( 
+            message => "successfully created the resource: " 
+                     . $args{type}
+                     . " => "
+                     . encode_json($args{data})
         );
         1;
     } or do {
-        return _error( "$@" );
+        $doc->raise_error({ message => "$@" });
     };
-    $doc->add_meta( message => "successfully created the resource: " . $args{type} . " => " . encode_json($args{data}) );
     return $doc->build;
 }
 
@@ -135,15 +142,20 @@ sub update {
     eval {
         $self->repository->update(
             document => $doc,
-            type     => $args{type},
-            id       => $args{id},
-            data     => $args{data},
+            %args
+        );
+        $doc->add_meta( 
+            message => "successfully updated the resource /"
+                     . $args{type}
+                     . "/"
+                     . $args{id}
+                     . " => "
+                     . encode_json( $args{data} )
         );
         1;
     } or do {
-        return _error( "$@" );
-    };        
-    $doc->add_meta( message => "successfully updated the resource /" . $args{type} . "/" . $args{id} . " => " . encode_json($args{data}) );
+        $doc->raise_error({ message => "$@" });
+    };
     return $doc->build;
 }
 
@@ -154,21 +166,20 @@ sub delete : method {
     eval {
         $self->repository->delete(
             document => $doc,
-            type     => $args{type},
-            id       => $args{id},
+            %args
+        );
+        $doc->add_meta( 
+            message => "successfully deleted the resource /"
+                     . $args{type}
+                     . "/"
+                     . $args{id}
         );
         1;
     } or do {
-        return _error( "$@" );
+        $doc->raise_error({ message => "$@" });
     };
-    $doc->add_meta( message => "successfully deleted the resource /" . $args{type} . "/" . $args{id} );
     return $doc->build;
 }
-
-sub _error {
-    PONAPI::Builder::Document->new()->raise_error({ message => shift })->build;
-}
-
 
 __PACKAGE__->meta->make_immutable;
 
