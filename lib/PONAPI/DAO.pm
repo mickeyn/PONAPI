@@ -13,6 +13,11 @@ has 'repository' => (
 sub retrieve_all {
     my ( $self, %args ) = @_;
 
+    # TODO:
+    # add some type checking using 
+    # has_type and has_relationship
+    # - SL
+
     my $doc = PONAPI::Builder::Document->new( is_collection => 1 );
     eval {
         $self->repository->retrieve_all( 
@@ -37,6 +42,11 @@ sub retrieve_all {
 sub retrieve {
     my ( $self, %args ) = @_;
 
+    # TODO:
+    # add some type checking using 
+    # has_type and has_relationship
+    # - SL    
+
     my $doc = PONAPI::Builder::Document->new();
     eval {
         $self->repository->retrieve( 
@@ -57,6 +67,11 @@ sub retrieve {
 
 sub retrieve_relationships   {
     my ($self, %args) = @_;
+
+    # TODO:
+    # add some (more) type checking using 
+    # has_type and has_relationship
+    # - SL
 
     my $doc;
     if ( my $rel = $self->has_relationship( $args{type}, $args{rel_type} ) ) {
@@ -87,6 +102,11 @@ sub retrieve_relationships   {
 sub retrieve_by_relationship { 
     my ($self, %args) = @_;
 
+    # TODO:
+    # add some (more) type checking using 
+    # has_type and has_relationship
+    # - SL
+
     my $doc;
     if ( my $rel = $self->has_relationship( $args{type}, $args{rel_type} ) ) {
         $doc = PONAPI::Builder::Document->new(
@@ -116,6 +136,11 @@ sub retrieve_by_relationship {
 sub create {
     my ( $self, %args ) = @_;
 
+    # TODO:
+    # add some type checking using 
+    # has_type and has_relationship
+    # - SL  
+
     my $doc = PONAPI::Builder::Document->new();
     eval {
         $self->repository->create(
@@ -137,6 +162,11 @@ sub create {
 
 sub update {
     my ( $self, %args ) = @_;
+
+    # TODO:
+    # add some type checking using 
+    # has_type and has_relationship
+    # - SL  
 
     my $doc = PONAPI::Builder::Document->new();
     eval {
@@ -161,6 +191,11 @@ sub update {
 
 sub delete : method {
     my ( $self, %args ) = @_;
+
+    # TODO:
+    # add some type checking using 
+    # has_type and has_relationship
+    # - SL      
 
     my $doc = PONAPI::Builder::Document->new();
     eval {
