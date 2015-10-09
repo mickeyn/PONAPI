@@ -82,15 +82,9 @@ sub retrieve_all {
 
     exists $data->{$type} or return die( "type $type doesn't exist" );
 
-    my $id_filter = exists $args{filter}{id} ? delete $args{filter}{id} : undef;
+    my $ids = $self->_get_ids_filtered( $type, $args{filter} );
 
-    my @ids = $id_filter
-        ? grep { exists $data->{$type}{$_} } @{ $id_filter }
-        : keys %{ $data->{$type} };
-
-    # TODO: apply other filters
-
-    $self->_add_resource( $doc, $type, $_, 0, $include ) foreach @ids;
+    $self->_add_resource( $doc, $type, $_, 0, $include ) foreach @$ids;
 }
 
 sub retrieve {
@@ -170,6 +164,31 @@ sub delete : method {
 }
 
 ## --------------------------------------------------------
+
+sub _get_ids_filtered {
+    my ( $self, $type, $filters ) = @_;
+
+    my $data = $self->data;
+
+    my @ids;
+
+    # id filter
+
+    my $id_filter = exists $filters->{id} ? delete $filters->{id} : undef;
+    @ids = $id_filter
+        ? grep { exists $data->{$type}{$_} } @{ $id_filter }
+        : keys %{ $data->{$type} };
+
+    # attribute filters
+    for my $f ( keys %{ $filters } ) {
+        @ids = grep {
+            my $att = $data->{$type}{$_}{attributes}{$f};
+            grep { $att eq $_ } @{ $filters->{$f} }
+        } @ids;
+    }
+
+    return \@ids;
+}
 
 sub _add_resource {
     my ( $self, $doc, $type, $id, $identifier_only, $include ) = @_;
