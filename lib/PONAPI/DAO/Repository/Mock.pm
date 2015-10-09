@@ -51,6 +51,13 @@ has 'data' => (
     },
 );
 
+# NOTE:
+# force the data to be built
+# instead of letting the lazy 
+# stuff build it later on. 
+# - SL
+sub BUILD { $_[0]->data }  
+
 sub has_type {
     my ($self, $type) = @_;
     !! exists $self->data->{ $type };
