@@ -1,18 +1,54 @@
 package PONAPI::DAO::Repository::Mock;
 use Moose;
 
+use YAML::XS    ();
+use Path::Class ();
+
+use MooseX::Types::Path::Class;
+
 with 'PONAPI::DAO::Repository';
+
+has 'data_dir' => (
+    is       => 'ro',
+    isa      => 'Path::Class::Dir',
+    coerce   => 1,
+    required => 1,
+);
 
 has 'rel_spec' => (
     is       => 'ro',
     isa      => 'HashRef',
-    default  => sub { _default_rel_spec() },
+    default  => sub {
+        return +{
+            comments => {
+                article => { has_one => 'articles' },
+            },
+            articles => { 
+                author   => { has_one  => 'people'   },
+                comments => { has_many => 'comments' },
+            }
+        }
+    },
 );
 
 has 'data' => (
     is       => 'ro',
     isa      => 'HashRef',
-    default  => sub { _default_data() },
+    lazy     => 1,
+    default  => sub {
+        my $self = shift;
+        my $dir  = $self->data_dir;
+
+        my $articles = YAML::XS::Load( scalar $dir->file('articles.yml')->slurp );
+        my $comments = YAML::XS::Load( scalar $dir->file('comments.yml')->slurp );
+        my $people   = YAML::XS::Load( scalar $dir->file('people.yml'  )->slurp );
+
+        return +{
+            articles => $articles,
+            comments => $comments,
+            people   => $people,  
+        }
+    },
 );
 
 sub has_type {
@@ -188,106 +224,6 @@ sub _retrieve_relationships_collection {
 
     my $doc = $args{document};
     $self->_add_resource( $doc, $_->{type}, $_->{id}, $args{rel_only} ) for @{$rel};
-}
-
-sub _default_rel_spec {
-    return +{};
-}
-
-sub _default_data {
-    return +{
-        books => {},
-
-        articles => {
-            1 => {
-                attributes => {
-                    title   => "JSON API paints my bikeshed!",
-                    body    => "The shortest article. Ever.",
-                    created => "2015-05-22T14:56:29.000Z",
-                    updated => "2015-05-22T14:56:28.000Z",
-                    status  => "ok",
-                },
-                relationships => {
-                    author => { type => "people", id => 42 },
-                },
-            },
-
-            2 => {
-                attributes => {
-                    title   => "A second title",
-                    body    => "The 2nd shortest article. Ever.",
-                    created => "2015-06-22T14:56:29.000Z",
-                    updated => "2015-06-22T14:56:28.000Z",
-                    status  => "ok",
-                },
-                relationships => {
-                    author   => { type => "people", id => 88 },
-                    comments => [
-                        { type => "comments", id => 5 },
-                        { type => "comments", id => 12 },
-                    ],
-                },
-            },
-
-            3 => {
-                attributes => {
-                    title   => "a third one",
-                    body    => "The 3rd shortest article. Ever.",
-                    created => "2015-07-22T14:56:29.000Z",
-                    updated => "2015-07-22T14:56:28.000Z",
-                    status  => "pending approval",
-                },
-                relationships => {
-                    author => { type => "people", id => 91 },
-                },
-            },
-        },
-
-        comments => {
-            5  => {
-                attributes => {
-                    body => "First!",
-                },
-                relationships => {
-                    articles => { type => "articles", id => 2 },
-                },
-            },
-            12 => {
-                attributes => {
-                    body => "I like XML better",
-                },
-                relationships => {
-                    articles => { type => "articles", id => 2 },
-                },
-            },
-        },
-
-        people => {
-            42 => {
-                attributes => {
-                    name   => "John",
-                    age    => 80,
-                    gender => "male",
-                },
-            },
-
-            88 => {
-                attributes => {
-                    name   => "Jimmy",
-                    age    => 18,
-                    gender => "male",
-                },
-            },
-
-            91 => {
-                attributes => {
-                    name   => "Diana",
-                    age    => 30,
-                    gender => "female",
-                },
-            },
-        },
-    };
 }
 
 __PACKAGE__->meta->make_immutable;

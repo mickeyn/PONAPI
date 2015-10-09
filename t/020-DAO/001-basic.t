@@ -4,8 +4,6 @@ use strict;
 use warnings;
 
 use Data::Dumper;
-use YAML::XS;
-use Path::Class;
 use Scalar::Util qw[ blessed ];
 
 use Test::More;
@@ -15,26 +13,7 @@ BEGIN {
     use_ok('PONAPI::DAO::Repository::Mock');
 }
 
-my $articles = Load( scalar file('share/fixtures/articles.yml')->slurp );
-my $comments = Load( scalar file('share/fixtures/comments.yml')->slurp );
-my $people   = Load( scalar file('share/fixtures/people.yml'  )->slurp );
-
-my $repository = PONAPI::DAO::Repository::Mock->new(
-    rel_spec => {
-        comments => {
-            article => { has_one => 'articles' },
-        },
-        articles => { 
-            author   => { has_one  => 'people'   },
-            comments => { has_many => 'comments' },
-        }
-    },
-    data => {
-        articles => $articles,
-        comments => $comments,
-        people   => $people,  
-    }
-);
+my $repository = PONAPI::DAO::Repository::Mock->new( data_dir => 'share/fixtures' );
 isa_ok($repository, 'PONAPI::DAO::Repository::Mock');
 
 ok($repository->has_type('people'),   '... we have the people type');
