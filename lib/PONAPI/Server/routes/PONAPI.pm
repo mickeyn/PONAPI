@@ -16,7 +16,8 @@ my $DAO;
 BEGIN {
     my $repository_class = config->{ponapi}{repository}{class}
         || die "[PONAPI Server] missing repository_class configuration\n";
-    my $repository = Module::Runtime::use_module($repository_class)->new();
+    my @repository_args = @{ config->{ponapi}{repository}{args} };
+    my $repository = Module::Runtime::use_module($repository_class)->new( @repository_args );
     $DAO = PONAPI::DAO->new( repository => $repository );
 };
 #############################################################################################
