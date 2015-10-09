@@ -7,6 +7,8 @@ use Dancer2::Plugin::JSONAPI::Params;
 
 use PONAPI::DAO;
 
+use Module::Runtime ();
+
 set serializer => 'JSON';
 
 #############################################################################################
@@ -14,8 +16,7 @@ my $DAO;
 BEGIN {
     my $repository_class = config->{ponapi}{repository_class}
         || die "[PONAPI Server] missing repository_class configuration\n";
-    eval "require $repository_class";
-    my $repository = $repository_class->new();
+    my $repository = Module::Runtime::use_module($repository_class)->new();
     $DAO = PONAPI::DAO->new( repository => $repository );
 };
 #############################################################################################
