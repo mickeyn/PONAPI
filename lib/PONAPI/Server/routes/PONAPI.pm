@@ -14,7 +14,7 @@ set serializer => 'JSON';
 #############################################################################################
 my $DAO;
 BEGIN {
-    my $repository_class = config->{ponapi}{repository_class}
+    my $repository_class = config->{ponapi}{repository}{class}
         || die "[PONAPI Server] missing repository_class configuration\n";
     my $repository = Module::Runtime::use_module($repository_class)->new();
     $DAO = PONAPI::DAO->new( repository => $repository );
