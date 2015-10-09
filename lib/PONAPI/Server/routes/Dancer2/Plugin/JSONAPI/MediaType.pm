@@ -12,7 +12,8 @@ on_plugin_import {
             name => 'before',
             code => sub {
                 # Content-Type is $jsonapi_mediatype
-                my $ct = $dsl->request->headers->{'content-type'};
+                my $ct = $dsl->request->headers->{'content-type'}
+                    || $dsl->send_error("[JSON-API] missing Content-Type header", 415);
                 $ct eq $jsonapi_mediatype and return;
 
                 # if it contains params --> error 415
