@@ -10,16 +10,24 @@ on_plugin_import {
             code => sub {
                 my %params = ( fields => {}, filter => {}, page => {}, include => {} );
 
-                for my $p ( keys %{ $dsl->query_parameters } ) { # unique keys
-                    my @values = map { split /,/ } $dsl->query_parameters->get_all($p);
-                    $dsl->query_parameters->remove($p);
+                for my $k ( keys %{ $dsl->query_parameters } ) { # unique keys
+                    my ( $p, $f ) = $k =~ /^ (\w+?) (?:\[(\w+)\])? $/x;
+                    grep { $p eq $_ } qw< fields filter page include sort >
+                        or $dsl->send_error("[JSON-API] Bad request (unsupported parameters)", 400);
 
-                    for my $k ( qw< fields filter page > ) {
-                        $p =~ /^$k\[(.+)\]$/ or next;
-                        $params{$k}{$1} = \@values;
-                    }
+                    # TODO: this is implementation specific
+                    # take from conf?
+                    $p eq 'sort'
+                        and $dsl->send_error("[JSON-API] Server-side sorting not supported", 400);
 
-                    $p eq 'include' and $params{include}{$_} = 1 for @values;
+                    my @values = map { split /,/ } $dsl->query_parameters->get_all($k);
+                    $dsl->query_parameters->remove($k);
+
+                    grep { $p eq $_ } qw< fields filter page >
+                        and $params{$p}{$f} = \@values;
+
+                    $p eq 'include'
+                        and $params{include}{$_} = 1 for @values;
                 }
 
                 $dsl->query_parameters->add( $_, $params{$_} ) for keys %params;
