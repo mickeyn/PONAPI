@@ -23,7 +23,7 @@ has 'rel_spec' => (
             comments => {
                 article => { has_one => 'articles' },
             },
-            articles => { 
+            articles => {
                 author   => { has_one  => 'people'   },
                 comments => { has_many => 'comments' },
             }
@@ -46,17 +46,17 @@ has 'data' => (
         return +{
             articles => $articles,
             comments => $comments,
-            people   => $people,  
+            people   => $people,
         }
     },
 );
 
 # NOTE:
 # force the data to be built
-# instead of letting the lazy 
-# stuff build it later on. 
+# instead of letting the lazy
+# stuff build it later on.
 # - SL
-sub BUILD { $_[0]->data }  
+sub BUILD { $_[0]->data }
 
 sub has_type {
     my ($self, $type) = @_;
@@ -205,14 +205,19 @@ sub _add_resource {
 
     my %relationships = %{ $data->{$type}{$id}{relationships} };
     for my $k ( keys %relationships ) {
-        $resource->add_relationship( $k => $relationships{$k} );
+        my $v = $relationships{$k};
+        $resource->add_relationship( $k => $v );
 
-        my ( $t, $i ) = @{ $relationships{$k} }{qw< type id >};
+        my @rels = ref $v eq 'ARRAY' ? @{$v} : $v;
+        for ( @rels ) {
+            my ( $t, $i ) = @{$_}{qw< type id >};
 
-        if ( $include and exists $include->{$k} and exists $data->{$t}{$i} ) {
+            my $rec = $data->{$t}{$i};
+            next unless $include and exists $include->{$k} and $rec;
+
             my $included = $doc->add_included( type => $t, id => $i );
-            $included->add_attributes( %{ $data->{$t}{$i}{attributes} } )
-                if exists $data->{$t}{$i}{attributes};
+            $included->add_attributes( %{ $rec->{attributes} } )
+                if exists $rec->{attributes};
         }
     }
 }
