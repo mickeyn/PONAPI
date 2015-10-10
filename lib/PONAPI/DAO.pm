@@ -14,13 +14,13 @@ sub retrieve_all {
     my ( $self, %args ) = @_;
 
     # TODO:
-    # add some type checking using 
+    # add some type checking using
     # has_type and has_relationship
     # - SL
 
     my $doc = PONAPI::Builder::Document->new( is_collection => 1 );
     eval {
-        $self->repository->retrieve_all( 
+        $self->repository->retrieve_all(
             document => $doc,
             %args
         );
@@ -31,8 +31,8 @@ sub retrieve_all {
 
     # XXX:
     # this also gets passed to the repository
-    # and we add it here, we might want to 
-    # think about this a bit. It is fine for 
+    # and we add it here, we might want to
+    # think about this a bit. It is fine for
     # now, but should be revisited.
     # - SL
     my @fields = exists $args{fields} ? ( fields => $args{fields} ) : ();
@@ -43,13 +43,13 @@ sub retrieve {
     my ( $self, %args ) = @_;
 
     # TODO:
-    # add some type checking using 
+    # add some type checking using
     # has_type and has_relationship
-    # - SL    
+    # - SL
 
     my $doc = PONAPI::Builder::Document->new();
     eval {
-        $self->repository->retrieve( 
+        $self->repository->retrieve(
             document => $doc,
             %args
         );
@@ -59,8 +59,8 @@ sub retrieve {
     };
 
     # XXX:
-    # see comment in &retrieve_all 
-    # - SL 
+    # see comment in &retrieve_all
+    # - SL
     my @fields = exists $args{fields} ? ( fields => $args{fields} ) : ();
     return $doc->build( @fields );
 }
@@ -69,7 +69,7 @@ sub retrieve_relationships   {
     my ($self, %args) = @_;
 
     # TODO:
-    # add some (more) type checking using 
+    # add some (more) type checking using
     # has_type and has_relationship
     # - SL
 
@@ -82,7 +82,7 @@ sub retrieve_relationships   {
             $self->repository->retrieve_relationships(
                 document => $doc,
                 rel_only => 1,
-                %args 
+                %args
             );
             1;
         } or do {
@@ -99,11 +99,11 @@ sub retrieve_relationships   {
     return $doc->build;
 }
 
-sub retrieve_by_relationship { 
+sub retrieve_by_relationship {
     my ($self, %args) = @_;
 
     # TODO:
-    # add some (more) type checking using 
+    # add some (more) type checking using
     # has_type and has_relationship
     # - SL
 
@@ -137,9 +137,9 @@ sub create {
     my ( $self, %args ) = @_;
 
     # TODO:
-    # add some type checking using 
+    # add some type checking using
     # has_type and has_relationship
-    # - SL  
+    # - SL
 
     my $doc = PONAPI::Builder::Document->new();
     eval {
@@ -147,8 +147,8 @@ sub create {
             document => $doc,
             %args
         );
-        $doc->add_meta( 
-            message => "successfully created the resource: " 
+        $doc->add_meta(
+            message => "successfully created the resource: "
                      . $args{type}
                      . " => "
                      . encode_json($args{data})
@@ -164,9 +164,9 @@ sub update {
     my ( $self, %args ) = @_;
 
     # TODO:
-    # add some type checking using 
+    # add some type checking using
     # has_type and has_relationship
-    # - SL  
+    # - SL
 
     my $doc = PONAPI::Builder::Document->new();
     eval {
@@ -174,7 +174,7 @@ sub update {
             document => $doc,
             %args
         );
-        $doc->add_meta( 
+        $doc->add_meta(
             message => "successfully updated the resource /"
                      . $args{type}
                      . "/"
@@ -193,9 +193,9 @@ sub delete : method {
     my ( $self, %args ) = @_;
 
     # TODO:
-    # add some type checking using 
+    # add some type checking using
     # has_type and has_relationship
-    # - SL      
+    # - SL
 
     my $doc = PONAPI::Builder::Document->new();
     eval {
@@ -203,7 +203,7 @@ sub delete : method {
             document => $doc,
             %args
         );
-        $doc->add_meta( 
+        $doc->add_meta(
             message => "successfully deleted the resource /"
                      . $args{type}
                      . "/"

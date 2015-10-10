@@ -50,7 +50,7 @@ paths:
 definitions:
     ResourceID:
         type: object
-        required: 
+        required:
             - type
             - id
         properties:
@@ -98,15 +98,13 @@ definitions:
         allOf:
             - $ref: '#/definitions/AbstractDocument'
             - properties:
-                data: 
+                data:
                     $ref: '#/definitions/Resource'
     DocumentCollection:
         allOf:
             - $ref: '#/definitions/AbstractDocument'
             - properties:
-                data: 
+                data:
                     type: array
                     items:
                         $ref: '#/definitions/Resource'
-
-
