@@ -6,7 +6,7 @@ on_plugin_import {
     my $dsl = shift;
 
     # force required jsonapi configuration
-    my $supports_sort = config->{jsonapi}{supports_sort};
+    my $supports_sort = $dsl->config->{jsonapi}{supports_sort};
     defined $supports_sort and ( $supports_sort == 0 or $supports_sort == 1 )
         or die "[JSONAPI] configuration missing: {jsonapi}{supports_sort}";
 
