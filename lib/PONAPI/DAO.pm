@@ -77,7 +77,7 @@ sub retrieve_relationships   {
     # - SL
 
     my $doc;
-    if ( my $rel = $self->has_relationship( $args{type}, $args{rel_type} ) ) {
+    if ( my $rel = $self->repository->has_relationship( $args{type}, $args{rel_type} ) ) {
         $doc = PONAPI::Builder::Document->new(
             is_collection => $rel->{has_many} ? 1 : 0
         );
@@ -112,7 +112,7 @@ sub retrieve_by_relationship {
     # - SL
 
     my $doc;
-    if ( my $rel = $self->has_relationship( $args{type}, $args{rel_type} ) ) {
+    if ( my $rel = $self->repository->has_relationship( $args{type}, $args{rel_type} ) ) {
         $doc = PONAPI::Builder::Document->new(
             is_collection => $rel->{has_many} ? 1 : 0
         );
