@@ -18,7 +18,7 @@ prefix '/:resource_type' => sub {
             fields   => query_parameters->get('fields'),
             filter   => query_parameters->get('filter'),
             page     => query_parameters->get('page'),
-            include  => query_parameters->get_all('include'),
+            include  => query_parameters->get('include'),
         );
     };
 
@@ -41,7 +41,7 @@ prefix '/:resource_type/:resource_id' => sub {
             type     => route_parameters->get('resource_type'),
             id       => route_parameters->get('resource_id'),
             fields   => query_parameters->get('fields'),
-            include  => query_parameters->get_all('include'),
+            include  => query_parameters->get('include'),
             page     => query_parameters->get('page'),
         );
     };
@@ -54,7 +54,7 @@ prefix '/:resource_type/:resource_id' => sub {
             rel_type => route_parameters->get('relationship_type'),
             fields   => query_parameters->get('fields'),
             filter   => query_parameters->get('filter'),
-            include  => query_parameters->get_all('include'),
+            include  => query_parameters->get('include'),
             page     => query_parameters->get('page'),
         );
     };
