@@ -11,7 +11,8 @@ has 'repository' => (
 );
 
 sub retrieve_all {
-    my ( $self, %args ) = @_;
+    my $self = shift;
+    my %args = scalar @_ == 1 && ref $_[0] eq 'HASH' ? %{ $_[0] } : @_;
 
     # TODO:
     # add some type checking using
@@ -40,7 +41,8 @@ sub retrieve_all {
 }
 
 sub retrieve {
-    my ( $self, %args ) = @_;
+    my $self = shift;
+    my %args = scalar @_ == 1 && ref $_[0] eq 'HASH' ? %{ $_[0] } : @_;
 
     # TODO:
     # add some type checking using
@@ -66,7 +68,8 @@ sub retrieve {
 }
 
 sub retrieve_relationships   {
-    my ($self, %args) = @_;
+    my $self = shift;
+    my %args = scalar @_ == 1 && ref $_[0] eq 'HASH' ? %{ $_[0] } : @_;
 
     # TODO:
     # add some (more) type checking using
@@ -100,7 +103,8 @@ sub retrieve_relationships   {
 }
 
 sub retrieve_by_relationship {
-    my ($self, %args) = @_;
+    my $self = shift;
+    my %args = scalar @_ == 1 && ref $_[0] eq 'HASH' ? %{ $_[0] } : @_;
 
     # TODO:
     # add some (more) type checking using
@@ -134,7 +138,8 @@ sub retrieve_by_relationship {
 }
 
 sub create {
-    my ( $self, %args ) = @_;
+    my $self = shift;
+    my %args = scalar @_ == 1 && ref $_[0] eq 'HASH' ? %{ $_[0] } : @_;
 
     # TODO:
     # add some type checking using
@@ -161,7 +166,8 @@ sub create {
 }
 
 sub update {
-    my ( $self, %args ) = @_;
+    my $self = shift;
+    my %args = scalar @_ == 1 && ref $_[0] eq 'HASH' ? %{ $_[0] } : @_;
 
     # TODO:
     # add some type checking using
@@ -190,7 +196,8 @@ sub update {
 }
 
 sub delete : method {
-    my ( $self, %args ) = @_;
+    my $self = shift;
+    my %args = scalar @_ == 1 && ref $_[0] eq 'HASH' ? %{ $_[0] } : @_;
 
     # TODO:
     # add some type checking using
