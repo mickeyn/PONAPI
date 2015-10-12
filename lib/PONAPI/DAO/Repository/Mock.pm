@@ -106,7 +106,7 @@ sub retrieve {
     $self->_add_resource( $doc, $type, $id, 0, $include );
 }
 
-sub retrieve_relationship {
+sub retrieve_relationships {
     my ($self, %args) = @_;
 
     my $doc      = $args{document};

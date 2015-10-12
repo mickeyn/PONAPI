@@ -67,7 +67,7 @@ sub retrieve {
     return $doc->build( @fields );
 }
 
-sub retrieve_relationships   {
+sub retrieve_relationships {
     my $self = shift;
     my %args = scalar @_ == 1 && ref $_[0] eq 'HASH' ? %{ $_[0] } : @_;
 

@@ -6,7 +6,7 @@ requires 'has_relationship';
 
 requires 'retrieve';
 requires 'retrieve_all';
-requires 'retrieve_relationship';
+requires 'retrieve_relationships';
 requires 'retrieve_by_relationship';
 requires 'create';
 requires 'update';
