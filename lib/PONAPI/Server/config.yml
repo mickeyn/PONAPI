@@ -27,19 +27,19 @@ template: "simple"
 #       start_tag: '<%'
 #       end_tag:   '%>'
 
+
 ######################################################################
 # JSONAPI
 
-jsonapi: {
-    supports_sort: 0
-}
+jsonapi:
+  supports_sort: 0
 
 ######################################################################
 # PONAPI
-ponapi: {
-  repository: {
-      class: "PONAPI::DAO::Repository::Mock",
-      args: [ 'data_dir', 'share/fixtures' ],
-  }
-}
+
+ponapi:
+  repository:
+    class: "PONAPI::DAO::Repository::Mock"
+    args:  [ 'data_dir', 'share/fixtures' ]
+
 ######################################################################
