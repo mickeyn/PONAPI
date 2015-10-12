@@ -11,91 +11,40 @@ set serializer => 'JSON';
 
 # no ID
 prefix '/:resource_type' => sub {
-    # Retrieve all resources for type
-    get '' => sub {
-        DAO->retrieve_all(
-            type     => route_parameters->get('resource_type'),
-            fields   => jsonapi_parameters->{fields},
-            filter   => jsonapi_parameters->{filter},
-            page     => jsonapi_parameters->{page},
-            include  => jsonapi_parameters->{include},
-        );
-    };
 
     # Create new resource(s)
-    post '' => sub {
-        DAO->create(
-            type     => route_parameters->get('resource_type'),
-            data     => jsonapi_parameters->{resource_type},
-        );
-    };
+    post '' => sub { DAO->create( jsonapi_parameters ) };
 
+    # Retrieve all resources for type
+    get ''  => sub { DAO->retrieve_all( jsonapi_parameters ) };
 };
 
 # required ID
 prefix '/:resource_type/:resource_id' => sub {
 
     # Retrieve a single resource
-    get '' => sub {
-        DAO->retrieve(
-            type     => route_parameters->get('resource_type'),
-            id       => route_parameters->get('resource_id'),
-            fields   => jsonapi_parameters->{fields},
-            include  => jsonapi_parameters->{include},
-            page     => jsonapi_parameters->{page},
-        );
-    };
+    get '' => sub { DAO->retrieve( jsonapi_parameters ) };
 
     # Retrieve related resources indirectly
     get '/:relationship_type' => sub {
-        DAO->retrieve_by_relationship(
-            type     => route_parameters->get('resource_type'),
-            id       => route_parameters->get('resource_id'),
-            rel_type => route_parameters->get('relationship_type'),
-            fields   => jsonapi_parameters->{fields},
-            filter   => jsonapi_parameters->{filter},
-            include  => jsonapi_parameters->{include},
-            page     => jsonapi_parameters->{page},
-        );
+        DAO->retrieve_by_relationship( jsonapi_parameters )
     };
 
     # Retrieve relationships for a single resource by type
     get '/relationships/:relationship_type' => sub {
-        DAO->retrieve_relationships(
-            type     => route_parameters->get('resource_type'),
-            id       => route_parameters->get('resource_id'),
-            rel_type => route_parameters->get('relationship_type'),
-#            filter   => jsonapi_parameters->{filter},
-            page     => jsonapi_parameters->{page},
-        );
+        DAO->retrieve_relationships( jsonapi_parameters );
     };
 
     # Update a single resource
-    patch '' => sub {
-        DAO->update(
-            type     => route_parameters->get('resource_type'),
-            id       => route_parameters->get('resource_id'),
-            data     => jsonapi_parameters->{data},
-        );
-    };
+    patch '' => sub { DAO->update( jsonapi_parameters ) };
 
     # Delete a single resource
-    del '' => sub {
-        DAO->delete(
-            type     => route_parameters->get('resource_type'),
-            id       => route_parameters->get('resource_id'),
-        );
-    };
+    del '' => sub { DAO->delete( jsonapi_parameters ) };
 
     # Delete a relationship for a single resource
     del '/relationships/:relationship_type' => sub {
-        DAO->delete(
-            type     => route_parameters->get('resource_type'),
-            id       => route_parameters->get('resource_id'),
-            rel_type => route_parameters->get('relationship_type'),
-        );
+        DAO->delete( jsonapi_parameters );
     };
-
 };
 
 

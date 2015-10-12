@@ -17,7 +17,10 @@ register jsonapi_parameters => sub {
     my $dsl = shift;
 
     my %params = (
-        data   => $dsl->body_parameters->get('data'),
+        type     => $dsl->route_parameters->get('resource_type'),
+        id       => $dsl->route_parameters->get('resource_id'),
+        rel_type => $dsl->route_parameters->get('relationship_type'),
+        data     => $dsl->body_parameters->get('data'),
         fields => {}, filter => {}, page => {}, include => {},
     );
 
@@ -50,10 +53,11 @@ register jsonapi_parameters => sub {
             and $params{include}{$_} = 1 for @values;
     }
 
-    # add to jsonapi_parameters
     return \%params;
 };
 
 register_plugin;
+
+
 
 1;
