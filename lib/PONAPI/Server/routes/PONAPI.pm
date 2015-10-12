@@ -15,10 +15,10 @@ prefix '/:resource_type' => sub {
     get '' => sub {
         DAO->retrieve_all(
             type     => route_parameters->get('resource_type'),
-            fields   => query_parameters->get('fields'),
-            filter   => query_parameters->get('filter'),
-            page     => query_parameters->get('page'),
-            include  => query_parameters->get('include'),
+            fields   => jsonapi_parameters->{fields},
+            filter   => jsonapi_parameters->{filter},
+            page     => jsonapi_parameters->{page},
+            include  => jsonapi_parameters->{include},
         );
     };
 
@@ -26,7 +26,7 @@ prefix '/:resource_type' => sub {
     post '' => sub {
         DAO->create(
             type     => route_parameters->get('resource_type'),
-            data     => body_parameters->get('data'),
+            data     => jsonapi_parameters->{resource_type},
         );
     };
 
@@ -40,9 +40,9 @@ prefix '/:resource_type/:resource_id' => sub {
         DAO->retrieve(
             type     => route_parameters->get('resource_type'),
             id       => route_parameters->get('resource_id'),
-            fields   => query_parameters->get('fields'),
-            include  => query_parameters->get('include'),
-            page     => query_parameters->get('page'),
+            fields   => jsonapi_parameters->{fields},
+            include  => jsonapi_parameters->{include},
+            page     => jsonapi_parameters->{page},
         );
     };
 
@@ -52,10 +52,10 @@ prefix '/:resource_type/:resource_id' => sub {
             type     => route_parameters->get('resource_type'),
             id       => route_parameters->get('resource_id'),
             rel_type => route_parameters->get('relationship_type'),
-            fields   => query_parameters->get('fields'),
-            filter   => query_parameters->get('filter'),
-            include  => query_parameters->get('include'),
-            page     => query_parameters->get('page'),
+            fields   => jsonapi_parameters->{fields},
+            filter   => jsonapi_parameters->{filter},
+            include  => jsonapi_parameters->{include},
+            page     => jsonapi_parameters->{page},
         );
     };
 
@@ -65,8 +65,8 @@ prefix '/:resource_type/:resource_id' => sub {
             type     => route_parameters->get('resource_type'),
             id       => route_parameters->get('resource_id'),
             rel_type => route_parameters->get('relationship_type'),
-#            filter   => query_parameters->get('filter'),
-            page     => query_parameters->get('page'),
+#            filter   => jsonapi_parameters->{filter},
+            page     => jsonapi_parameters->{page},
         );
     };
 
@@ -75,7 +75,7 @@ prefix '/:resource_type/:resource_id' => sub {
         DAO->update(
             type     => route_parameters->get('resource_type'),
             id       => route_parameters->get('resource_id'),
-            data     => body_parameters->get('data'),
+            data     => jsonapi_parameters->{data},
         );
     };
 
