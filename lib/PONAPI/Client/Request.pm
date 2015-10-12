@@ -48,7 +48,7 @@ sub _build_query_string {
     }
 
     if ( $self->does('PONAPI::Client::Request::Role::HasInclude') and $self->has_include ) {
-        $u->query_param( include => $self->include );
+        $u->query_param( include => join ',' => @{ $self->include } );
     }
 
     return $u->query;

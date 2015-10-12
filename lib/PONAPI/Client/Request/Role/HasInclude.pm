@@ -4,7 +4,7 @@ use Moose::Role;
 
 has include => (
     is        => 'ro',
-    isa       => 'HashRef',
+    isa       => 'ArrayRef',
     predicate => 'has_include',
 );
 
