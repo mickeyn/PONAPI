@@ -4,29 +4,16 @@ use Dancer2;
 
 use Dancer2::Plugin::JSONAPI::MediaType;
 use Dancer2::Plugin::JSONAPI::Params;
-
-use PONAPI::DAO;
-
-use Module::Runtime ();
+use Dancer2::Plugin::PONAPI::Repository;
 
 set serializer => 'JSON';
 
-#############################################################################################
-my $DAO;
-BEGIN {
-    my $repository_class = config->{ponapi}{repository}{class}
-        || die "[PONAPI Server] missing repository_class configuration\n";
-    my @repository_args = @{ config->{ponapi}{repository}{args} };
-    my $repository = Module::Runtime::use_module($repository_class)->new( @repository_args );
-    $DAO = PONAPI::DAO->new( repository => $repository );
-};
-#############################################################################################
 
 # no ID
 prefix '/:resource_type' => sub {
     # Retrieve all resources for type
     get '' => sub {
-        return $DAO->retrieve_all(
+        DAO->retrieve_all(
             type     => route_parameters->get('resource_type'),
             fields   => query_parameters->get('fields'),
             filter   => query_parameters->get('filter'),
@@ -37,7 +24,7 @@ prefix '/:resource_type' => sub {
 
     # Create new resource(s)
     post '' => sub {
-        return $DAO->create(
+        DAO->create(
             type     => route_parameters->get('resource_type'),
             data     => body_parameters->get('data'),
         );
@@ -50,7 +37,7 @@ prefix '/:resource_type/:resource_id' => sub {
 
     # Retrieve a single resource
     get '' => sub {
-        return $DAO->retrieve(
+        DAO->retrieve(
             type     => route_parameters->get('resource_type'),
             id       => route_parameters->get('resource_id'),
             fields   => query_parameters->get('fields'),
@@ -61,7 +48,7 @@ prefix '/:resource_type/:resource_id' => sub {
 
     # Retrieve related resources indirectly
     get '/:relationship_type' => sub {
-        return $DAO->retrieve_by_relationship(
+        DAO->retrieve_by_relationship(
             type     => route_parameters->get('resource_type'),
             id       => route_parameters->get('resource_id'),
             rel_type => route_parameters->get('relationship_type'),
@@ -74,7 +61,7 @@ prefix '/:resource_type/:resource_id' => sub {
 
     # Retrieve relationships for a single resource by type
     get '/relationships/:relationship_type' => sub {
-        return $DAO->retrieve_relationships(
+        DAO->retrieve_relationships(
             type     => route_parameters->get('resource_type'),
             id       => route_parameters->get('resource_id'),
             rel_type => route_parameters->get('relationship_type'),
@@ -85,7 +72,7 @@ prefix '/:resource_type/:resource_id' => sub {
 
     # Update a single resource
     patch '' => sub {
-        return $DAO->update(
+        DAO->update(
             type     => route_parameters->get('resource_type'),
             id       => route_parameters->get('resource_id'),
             data     => body_parameters->get('data'),
@@ -94,7 +81,7 @@ prefix '/:resource_type/:resource_id' => sub {
 
     # Delete a single resource
     del '' => sub {
-        return $DAO->delete(
+        DAO->delete(
             type     => route_parameters->get('resource_type'),
             id       => route_parameters->get('resource_id'),
         );
@@ -102,7 +89,7 @@ prefix '/:resource_type/:resource_id' => sub {
 
     # Delete a relationship for a single resource
     del '/relationships/:relationship_type' => sub {
-        return $DAO->delete(
+        DAO->delete(
             type     => route_parameters->get('resource_type'),
             id       => route_parameters->get('resource_id'),
             rel_type => route_parameters->get('relationship_type'),
