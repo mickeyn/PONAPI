@@ -27,7 +27,8 @@ sub retrieve_all {
         );
         1;
     } or do {
-        $doc->raise_error({ message => "$@" });
+        warn "$@";
+        $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
     };
 
     # XXX:
@@ -57,7 +58,8 @@ sub retrieve {
         );
         1;
     } or do {
-        $doc->raise_error({ message => "$@" });
+        warn "$@";
+        $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
     };
 
     # XXX:
@@ -89,7 +91,8 @@ sub retrieve_relationships {
             );
             1;
         } or do {
-            $doc->raise_error({ message => "$@" });
+            warn "$@";
+            $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
     }
     else {
@@ -124,7 +127,8 @@ sub retrieve_by_relationship {
             );
             1;
         } or do {
-            $doc->raise_error({ message => "$@" });
+            warn "$@";
+            $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
     }
     else {
@@ -160,7 +164,8 @@ sub create {
         );
         1;
     } or do {
-        $doc->raise_error({ message => "$@" });
+        warn "$@";
+        $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
     };
     return $doc->build;
 }
@@ -190,7 +195,8 @@ sub update {
         );
         1;
     } or do {
-        $doc->raise_error({ message => "$@" });
+        warn "$@";
+        $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
     };
     return $doc->build;
 }
@@ -218,7 +224,8 @@ sub delete : method {
         );
         1;
     } or do {
-        $doc->raise_error({ message => "$@" });
+        warn "$@";
+        $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
     };
     return $doc->build;
 }
