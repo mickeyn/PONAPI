@@ -3,9 +3,15 @@ package PONAPI::Client;
 use Moose;
 
 use Hijk;
-use URI;
-use URI::QueryParam;
-use JSON::XS qw( decode_json encode_json );
+use JSON::XS qw( decode_json );
+
+use PONAPI::Client::Request::Create;
+use PONAPI::Client::Request::Retrieve;
+use PONAPI::Client::Request::RetrieveAll;
+use PONAPI::Client::Request::RetrieveRelationships;
+use PONAPI::Client::Request::RetrieveByRelationship;
+use PONAPI::Client::Request::Update;
+use PONAPI::Client::Request::Delete;
 
 has host => (
     is      => 'ro',
@@ -22,153 +28,50 @@ has port => (
 
 ### public methods
 
+sub create {
+    my ( $self, %args ) = @_;
+    my $request = PONAPI::Client::Request::Create->new( %args );
+    return $self->_send_ponapi_request( $request->request_params );
+}
+
 sub retrieve_all {
     my ( $self, %args ) = @_;
-    $args{method} = 'retrieve_all';
-
-    my $type  = $self->_validate_param( 'type', \%args );
-    my $query = $self->_get_query( \%args );
-
-    return $self->_send_ponapi_request(
-        method       => "GET",
-        path         => "/$type",
-        query_string => $query,
-    );
+    my $request = PONAPI::Client::Request::RetrieveAll->new( %args );
+    return $self->_send_ponapi_request( $request->request_params );
 }
 
 sub retrieve {
     my ( $self, %args ) = @_;
-    $args{method} = 'retrieve';
-
-    my $type  = $self->_validate_param( 'type', \%args );
-    my $id    = $self->_validate_param( 'id',   \%args );
-    my $query = $self->_get_query( \%args );
-
-    return $self->_send_ponapi_request(
-        method       => "GET",
-        path         => "/$type/$id",
-        query_string => $query,
-    );
+    my $request = PONAPI::Client::Request::Retrieve->new( %args );
+    return $self->_send_ponapi_request( $request->request_params );
 }
 
 sub retrieve_relationships {
     my ( $self, %args ) = @_;
-    $args{method} = 'retrieve_relationships';
-
-    my $type         = $self->_validate_param( 'type',     \%args );
-    my $id           = $self->_validate_param( 'id',       \%args );
-    my $rel_type     = $self->_validate_param( 'rel_type', \%args );
-    my $query_string = $self->_get_query( \%args );
-
-    return $self->_send_ponapi_request(
-        method       => "GET",
-        path         => "/$type/$id/relationships/$rel_type",
-        query_string => $query_string,
-    );
+    my $request = PONAPI::Client::Request::RetrieveRelationships->new( %args );
+    return $self->_send_ponapi_request( $request->request_params );
 }
 
 sub retrieve_by_relationship {
     my ( $self, %args ) = @_;
-    $args{method} = 'retrieve_by_relationship';
-
-    my $type         = $self->_validate_param( 'type',     \%args );
-    my $id           = $self->_validate_param( 'id',       \%args );
-    my $rel_type     = $self->_validate_param( 'rel_type', \%args );
-    my $query_string = $self->_get_query( \%args );
-
-    return $self->_send_ponapi_request(
-        method       => "GET",
-        path         => "/$type/$id/$rel_type",
-        query_string => $query_string,
-    );
-}
-
-sub create {
-    my ( $self, %args ) = @_;
-    $args{method} = 'create';
-
-    my $type = $self->_validate_param( 'type', \%args );
-    my $data = $self->_validate_param( 'data', \%args );
-
-    # in case of client-generated id
-    if ( exists $args{id} ) {
-        my $id = $self->_validate_param( 'id', \%args );
-        $data->{id} = $id;
-    }
-
-    return $self->_send_ponapi_request(
-        method => "POST",
-        path   => "/$type",
-        body   => encode_json( { data => $data } ),
-    );
+    my $request = PONAPI::Client::Request::RetrieveByRelationship->new( %args );
+    return $self->_send_ponapi_request( $request->request_params );
 }
 
 sub update {
     my ( $self, %args ) = @_;
-    $args{method} = 'update';
-
-    my $type = $self->_validate_param( 'type', \%args );
-    my $id   = $self->_validate_param( 'id',   \%args );
-    my $data = $self->_validate_param( 'data', \%args );
-
-    return $self->_send_ponapi_request(
-        method => "PATCH",
-        path   => "/$type/$id",
-        body   => encode_json( { data => $data } ),
-    );
+    my $request = PONAPI::Client::Request::Update->new( %args );
+    return $self->_send_ponapi_request( $request->request_params );
 }
 
-sub del {
+sub delete : method {
     my ( $self, %args ) = @_;
-    $args{method} = 'del';
-
-    my $type = $self->_validate_param( 'type', \%args );
-    my $id   = $self->_validate_param( 'id',   \%args );
-
-    return $self->_send_ponapi_request(
-        method => "DELETE",
-        path   => "/$type/$id",
-    );
+    my $request = PONAPI::Client::Request::Delete->new( %args );
+    return $self->_send_ponapi_request( $request->request_params );
 }
 
 
 ### private methods
-
-sub _validate_param {
-    my ( $self, $key, $args ) = @_;
-    my $method = ( $args->{method} ||= "anon" );
-
-    my $val = $args->{$key} || die "[PONAPI::Client] $method: missing '$key' param\n";
-
-    if ( $key eq 'data' ) {
-        ref($val) eq 'HASH' or die "[PONAPI::Client] $method: $key must be a hashref\n";
-    }
-    else {
-        !ref($val) or die "[PONAPI::Client] $method: $key must be a scalar\n";
-    }
-
-    return $val;
-}
-
-sub _get_query {
-    my ( $self, $args ) = @_;
-    my $method = ( $args->{method} ||= "anon" );
-
-    my $u = URI->new("", "http");
-
-# TODO: global valid params per $method???
-
-    for my $k ( qw< filter fields page > ) {
-        next unless $args->{$k};
-        ref $args->{$k} eq 'HASH' or die "[PONAPI::Client] $method: '$k' must be a hash";
-        $u->query_param( $k.'['.$_.']' => join ',' => @{ $args->{$k}{$_} } )
-            for keys %{ $args->{$k} };
-    }
-
-    $u->query_param( include => $args->{include} ) if exists $args->{include};
-
-    return $u->query;
-}
 
 sub _send_ponapi_request {
     my $self = shift;
