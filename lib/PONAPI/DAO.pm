@@ -93,8 +93,7 @@ sub retrieve_relationships {
             );
             1;
         } or do {
-            # NOTE:
- this probably needs to be more sophisticated - SL
+            # NOTE:  this probably needs to be more sophisticated - SL
             warn "$@";
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
@@ -131,8 +130,7 @@ sub retrieve_by_relationship {
             );
             1;
         } or do {
-            # NOTE:
- this probably needs to be more sophisticated - SL
+            # NOTE:  this probably needs to be more sophisticated - SL
             warn "$@";
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
