@@ -27,6 +27,7 @@ sub retrieve_all {
         );
         1;
     } or do {
+        # NOTE: this probably needs to be more sophisticated - SL
         warn "$@";
         $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
     };
@@ -58,6 +59,7 @@ sub retrieve {
         );
         1;
     } or do {
+        # NOTE: this probably needs to be more sophisticated - SL
         warn "$@";
         $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
     };
@@ -91,6 +93,8 @@ sub retrieve_relationships {
             );
             1;
         } or do {
+            # NOTE:
+ this probably needs to be more sophisticated - SL
             warn "$@";
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
@@ -127,6 +131,8 @@ sub retrieve_by_relationship {
             );
             1;
         } or do {
+            # NOTE:
+ this probably needs to be more sophisticated - SL
             warn "$@";
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
@@ -164,6 +170,7 @@ sub create {
         );
         1;
     } or do {
+        # NOTE: this probably needs to be more sophisticated - SL
         warn "$@";
         $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
     };
@@ -195,6 +202,7 @@ sub update {
         );
         1;
     } or do {
+        # NOTE: this probably needs to be more sophisticated - SL
         warn "$@";
         $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
     };
@@ -224,6 +232,7 @@ sub delete : method {
         );
         1;
     } or do {
+        # NOTE: this probably needs to be more sophisticated - SL
         warn "$@";
         $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
     };
