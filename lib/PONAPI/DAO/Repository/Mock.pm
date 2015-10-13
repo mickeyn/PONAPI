@@ -59,12 +59,12 @@ has 'data' => (
 sub BUILD { $_[0]->data }
 
 sub has_type {
-    my ($self, $type) = @_;
+    my ( $self, $type ) = @_;
     !! exists $self->data->{ $type };
 }
 
 sub has_relationship {
-    my ($self, $type, $rel_name) = @_;
+    my ( $self, $type, $rel_name ) = @_;
 
     my $spec = $self->rel_spec;
     return 0 unless exists $spec->{ $type };
@@ -73,94 +73,125 @@ sub has_relationship {
 }
 
 sub retrieve_all {
-    my ($self, %args) = @_;
+    my ( $self, %args ) = @_;
 
-    my $doc     = $args{document};
-    my $type    = $args{type};
-    my $include = $args{include};
-    my $data    = $self->data;
+    my ( $doc, $type, $filter, $include ) = @args{qw< document type filter include >};
 
-    exists $data->{$type} or return die( "type $type doesn't exist" );
+    exists $self->data->{$type} or return $self->_error( $doc, "type $type doesn't exist" );
 
-    my $ids = $self->_get_ids_filtered( $type, $args{filter} );
+    my $ids = $self->_get_ids_filtered( $type, $filter );
 
-    $self->_add_resource( $doc, $type, $_, 0, $include ) foreach @$ids;
+    for ( @{$ids} ) {
+        $self->_add_resource({
+            type     => $type,
+            id       => $_,
+            document => $doc,
+            include  => $include,
+        });
+    }
 }
 
 sub retrieve {
-    my ($self, %args) = @_;
+    my ( $self, %args ) = @_;
 
-    my $doc     = $args{document};
-    my $type    = $args{type};
-    my $id      = $args{id};
-    my $include = $args{include};
-    my $data    = $self->data;
+    my ( $doc, $type, $id, $include ) = @args{qw< document type id include >};
 
-    exists $data->{$type} or return die( "type $type doesn't exist" );
+    exists $self->data->{$type} or return $self->_error( $doc, "type $type doesn't exist" );
 
-    unless ( exists $data->{$type}{$id} ) {
-        $doc->add_null_resource(undef);
+    unless ( exists $self->data->{$type}{$id} ) {
+        $doc->add_null_resource();
         return;
     }
 
-    $self->_add_resource( $doc, $type, $id, 0, $include );
+    $self->_add_resource({
+        document => $doc,
+        type     => $type,
+        id       => $id,
+        include  => $include,
+    });
 }
 
 sub retrieve_relationships {
-    my ($self, %args) = @_;
+    my ( $self, %args ) = @_;
 
-    my $doc      = $args{document};
-    my $type     = $args{type};
-    my $id       = $args{id};
-    my $rel_type = $args{rel_type};
-    my $rel_only = $args{rel_only};
+    my $data = $self->data;
+    my ( $doc, $type, $id, $rel_type ) = @args{qw< document type id rel_type >};
 
-    $self->_retrieve_relationships( %args );
+    exists $data->{$type}      or return $self->_error( $doc, "type $type doesn't exist" );
+    exists $data->{$type}{$id} or return $self->_error( $doc, "id $id doesn't exist" );
+    exists $data->{$type}{$id}{relationships} or return $self->_error( $doc, "resource has no relationships" );
+
+    my $relationships = $data->{$type}{$id}{relationships}{$rel_type};
+    $relationships or return $self->_error( $doc, "relationships type $rel_type doesn't exist" );
+
+    my @rels = ref $relationships eq 'ARRAY' ? @{$relationships} : $relationships;
+    for ( @rels ) {
+        $self->_add_resource({
+            type            => $_->{type},
+            id              => $_->{id},
+            document        => $doc,
+            identifier_only => 1,
+        });
+    }
 }
 
 sub retrieve_by_relationship {
-    my ($self, %args) = @_;
+    my ( $self, %args ) = @_;
 
-    my $doc      = $args{document};
-    my $type     = $args{type};
-    my $id       = $args{id};
-    my $rel_type = $args{rel_type};
-    my $rel_only = $args{rel_only};
+    my $data = $self->data;
+    my $doc = $args{document};
 
-    $self->_retrieve_relationships( %args );
+    # these need to be removed from %args:
+    my $id       = delete $args{id};
+    my $type     = delete $args{type};
+    my $rel_type = delete $args{rel_type};
+
+    exists $data->{$type}      or return $self->_error( $doc, "type $type doesn't exist" );
+    exists $data->{$type}{$id} or return $self->_error( $doc, "id $id doesn't exist" );
+    exists $data->{$type}{$id}{relationships}
+        or return $self->_error( $doc, "resource has no relationships" );
+
+    my $rels = $data->{$type}{$id}{relationships}{$rel_type};
+    ref $rels or return $self->_error( $doc, "resource doesn't have the requested relationship" );
+
+    my @rels = ref $rels eq 'ARRAY' ? @{$rels} : $rels;
+    for ( @rels ) {
+        $self->retrieve( type => $_->{type}, id => $_->{id}, %args );
+    }
 }
 
 sub create {
-    my ($self, %args) = @_;
+    my ( $self, %args ) = @_;
 
-    my ( $type, $data ) = @args{qw< type data >};
-    $type or die( "type $type doesn't exist" );
-    $data and ref($data) eq 'HASH' or die( "can't create a resource without data" );
+    my ( $doc, $type, $data ) = @args{qw< document type data >};
+
+    $type or return $self->_error( $doc, "type $type doesn't exist" );
+    $data and ref $data eq 'HASH' or return $self->_error( $doc, "can't create a resource without data" );
 
     # TODO: create the resource
 }
 
 sub update {
-    my ($self, %args) = @_;
+    my ( $self, %args ) = @_;
 
-    my ( $type, $id, $data ) = @args{qw< type id data >};
-    $type or die( "can't update a resource without a 'type'" );
-    $id   or die( "can't update a resource without an 'id'"  );
-    $data or die( "can't update a resource without data"     );
+    my ( $doc, $type, $id, $data ) = @args{qw< document type id data >};
+
+    $type or return $self->_error( $doc, "can't update a resource without a 'type'" );
+    $id   or return $self->_error( $doc, "can't update a resource without an 'id'"  );
+    $data or return $self->_error( $doc, "can't update a resource without data"     );
 
     # TODO: update the resource
-
 }
 
 sub delete : method {
-    my ($self, %args) = @_;
+    my ( $self, %args ) = @_;
 
-    my ( $type, $id ) = @args{qw< type id >};
-    $type or die( "can't delete a resource without a 'type'" );
-    $id   or die( "can't delete a resource without an 'id'"  );
+    my ( $doc, $type, $id ) = @args{qw< document type id >};
+
+    $type or return $self->_error( $doc, "can't delete a resource without a 'type'" );
+    $id   or return $self->_error( $doc, "can't delete a resource without an 'id'"  );
 
     # TODO: delte the resource
-
 }
 
 ## --------------------------------------------------------
@@ -191,72 +222,52 @@ sub _get_ids_filtered {
 }
 
 sub _add_resource {
-    my ( $self, $doc, $type, $id, $identifier_only, $include ) = @_;
+    my ( $self, $args ) = @_;
+    ref $args eq 'HASH' or die "_add_resource: args must be a hashref";
 
-    my $data     = $self->data;
+    my ( $doc, $type, $id, $identifier_only, $include ) =
+        @{$args}{qw< document type id identifier_only include >};
+
     my $resource = $doc->add_resource( type => $type, id => $id );
-
     return if $identifier_only;
 
-    $resource->add_attributes( %{ $data->{$type}{$id}{attributes} } )
-        if keys %{ $data->{$type}{$id}{attributes} };
+    my $rec_info = $self->data->{$type}{$id};
+    my $has_attributes    = exists $rec_info->{attributes};
+    my $has_relationships = exists $rec_info->{relationships};
+    my $has_include       = ref $include eq 'ARRAY';
 
-    return unless exists $data->{$type}{$id}{relationships};
+    $resource->add_attributes( %{ $rec_info->{attributes} } ) if $has_attributes;
 
-    my %relationships = %{ $data->{$type}{$id}{relationships} };
-    for my $k ( keys %relationships ) {
-        my $v = $relationships{$k};
+    return unless $has_relationships;
+
+    # add relationship resource identifiers
+    for my $k ( keys %{ $rec_info->{relationships} } ) {
+        my $v = $rec_info->{relationships}{$k};
+
         $resource->add_relationship( $k => $v );
 
+        next unless $has_include and grep { $_ eq $k } @{$include};
+
+        # add related resources to 'included'
         my @rels = ref $v eq 'ARRAY' ? @{$v} : $v;
         for ( @rels ) {
             my ( $t, $i ) = @{$_}{qw< type id >};
 
-            my $rec = $data->{$t}{$i};
-            next unless $include and exists $include->{$k} and $rec;
-
-            my $included = $doc->add_included( type => $t, id => $i );
-            $included->add_attributes( %{ $rec->{attributes} } )
-                if exists $rec->{attributes};
+            if ( my $rec = $self->data->{$t}{$i} ) {
+                my $included = $doc->add_included( type => $t, id => $i );
+                $included->add_attributes( %{ $rec->{attributes} } )
+                    if exists $rec->{attributes};
+            }
         }
     }
 }
 
-sub _retrieve_relationships {
-    my ($self, %args) = @_;
-
-    my $data = $self->data;
-
-    my ( $type, $id, $rel_type ) = @args{qw< type id rel_type >};
-    exists $data->{$type}      or die( "type $type doesn't exist" );
-    exists $data->{$type}{$id} or die( "id $id doesn't exist" );
-    exists $data->{$type}{$id}{relationships} or die( "resource has no relationships" );
-
-    my $relationships = $data->{$type}{$id}{relationships}{$rel_type};
-    $relationships or die( "relationships type $rel_type doesn't exist" );
-
-    ref($relationships) eq 'ARRAY'
-        and return $self->_retrieve_relationships_collection( %args, relationships => $relationships );
-
-    return $self->_retrieve_relationships_single_resource( %args, relationships => $relationships );
+sub _error {
+    my ( $self, $doc, $message ) = @_;
+    $doc->raise_error({ message => $message });
 }
 
-sub _retrieve_relationships_single_resource {
-    my ($self, %args) = @_;
-    my $rel = $args{relationships};
-
-    my $doc = $args{document};
-    $self->_add_resource( $doc, $rel->{type}, $rel->{id}, $args{rel_only} );
-}
-
-sub _retrieve_relationships_collection {
-    my ($self, %args) = @_;
-    my $rel = $args{relationships};
-
-    my $doc = $args{document};
-    $self->_add_resource( $doc, $_->{type}, $_->{id}, $args{rel_only} ) for @{$rel};
-}
 
 __PACKAGE__->meta->make_immutable;
-
 no Moose; 1;
+__END__

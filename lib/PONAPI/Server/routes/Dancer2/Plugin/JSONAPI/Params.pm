@@ -21,7 +21,7 @@ register jsonapi_parameters => sub {
         id       => $dsl->route_parameters->get('resource_id'),
         rel_type => $dsl->route_parameters->get('relationship_type'),
         data     => $dsl->body_parameters->get('data'),
-        fields => {}, filter => {}, page => {}, include => {},
+        fields => {}, filter => {}, page => {}, include => [],
     );
 
     # loop over query parameters (unique keys)
@@ -49,8 +49,7 @@ register jsonapi_parameters => sub {
             and $params{$p}{$f} = \@values;
 
         # values passed on in hash-ref
-        $p eq 'include'
-            and $params{include}{$_} = 1 for @values;
+        $p eq 'include' and $params{include} = \@values;
     }
 
     return \%params;

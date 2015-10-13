@@ -88,7 +88,6 @@ sub retrieve_relationships {
         eval {
             $self->repository->retrieve_relationships(
                 document => $doc,
-                rel_only => 1,
                 %args
             );
             1;
@@ -125,7 +124,6 @@ sub retrieve_by_relationship {
         eval {
             $self->repository->retrieve_by_relationship(
                 document => $doc,
-                rel_only => 0,
                 %args,
             );
             1;
@@ -142,7 +140,8 @@ sub retrieve_by_relationship {
         })
     }
 
-    return $doc->build;
+    my @fields = exists $args{fields} ? ( fields => $args{fields} ) : ();
+    return $doc->build( @fields );
 }
 
 sub create {
