@@ -25,19 +25,17 @@ on_plugin_import {
                 # if json-api is sent in Accept headers,
                 # at least one instance must not contain any params
 
-                my @accept = grep { /$match_jsonapi_mt/ }
-                    split /,/ => $dsl->request->headers->{'accept'};
+                my @accept = $dsl->request->headers->{'accept'};
+                @accept > 0 or return;
 
-                if ( @accept > 0 ) {
-                    grep { $_ eq $jsonapi_mediatype } @accept
-                        or $dsl->send_error(
-                            "[JSON-API] Accept header contains only parameterized instances of json-api",
-                            406
-                        );
-                }
+                my @jsonapi_accept = grep { /$match_jsonapi_mt/ } split /,/ => @accept;
+                @jsonapi_accept > 0 or return;
 
-                # all good
-                return;
+                grep { $_ eq $jsonapi_mediatype } @jsonapi_accept
+                    or $dsl->send_error(
+                        "[JSON-API] Accept header contains only parameterized instances of json-api",
+                        406
+                    );
             },
         )
     );
