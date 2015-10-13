@@ -16,12 +16,16 @@ TODO:
 
 =cut
 
+my %TEST_DATA = (
+    type    => 'articles',
+    id      => 2,
+    fields  => { articles => [qw< title body >] },
+    include => [qw< comments author >],
+);
+
 subtest '... testing object' => sub {
 
-    my $req = PONAPI::Client::Request::Retrieve->new(
-        type => 'articles',
-        id   => 2,
-    );
+    my $req = PONAPI::Client::Request::Retrieve->new( %TEST_DATA );
 
     isa_ok( $req, 'PONAPI::Client::Request::Retrieve');
     does_ok($req, 'PONAPI::Client::Request');
@@ -39,12 +43,7 @@ subtest '... testing object' => sub {
 
 subtest '... testing request parameters' => sub {
 
-    my $req = PONAPI::Client::Request::Retrieve->new(
-        type    => 'articles',
-        id      => 2,
-        fields  => { articles => [qw< title body >] },
-        include => [qw< comments author >],
-    );
+    my $req = PONAPI::Client::Request::Retrieve->new( %TEST_DATA );
 
     my $EXPECTED = +{
         method       => 'GET',
