@@ -1,3 +1,4 @@
+# ABSTRACT: PONAPI::DAO
 package PONAPI::DAO;
 use Moose;
 
