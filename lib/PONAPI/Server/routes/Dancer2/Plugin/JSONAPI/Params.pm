@@ -45,8 +45,11 @@ register jsonapi_parameters => sub {
         my @values = map { split /,/ } $dsl->query_parameters->get_all($k);
 
         # values passed on in array-ref
-        grep { $p eq $_ } qw< fields filter page >
+        grep { $p eq $_ } qw< fields filter >
             and $params{$p}{$f} = \@values;
+
+        # page info has one value per request
+        $p eq 'page' and $params{$p}{$f} = $values[0];
 
         # values passed on in hash-ref
         $p eq 'include' and $params{include} = \@values;

@@ -43,8 +43,7 @@ sub _build_query_string {
     }
 
     if ( $self->does('PONAPI::Client::Request::Role::HasPage') and $self->has_page ) {
-        $u->query_param( 'page['.$_.']', join ',' => @{ $self->page->{$_} } )
-            for keys %{ $self->page };
+        $u->query_param( 'page['.$_.']', $self->page->{$_} ) for keys %{ $self->page };
     }
 
     if ( $self->does('PONAPI::Client::Request::Role::HasInclude') and $self->has_include ) {
