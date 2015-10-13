@@ -35,6 +35,8 @@ subtest '... testing object' => sub {
     does_ok($req, 'PONAPI::Client::Request::Role::HasInclude');
     does_ok($req, 'PONAPI::Client::Request::Role::HasPage');
 
+    can_ok( $req, 'method' );
+    can_ok( $req, 'path' );
     can_ok( $req, 'request_params' );
 
 };
