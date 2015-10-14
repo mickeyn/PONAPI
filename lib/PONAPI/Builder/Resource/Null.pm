@@ -4,9 +4,7 @@ use Moose;
 
 with 'PONAPI::Builder';
 
-sub build {
-    return undef;
-}
+sub build { undef }
 
 __PACKAGE__->meta->make_immutable;
 
