@@ -58,4 +58,25 @@ subtest '... testing constructor errors' => sub {
 
 };
 
+subtest '... testing an object with meta-info' => sub {
+
+    my $builder = PONAPI::Builder::Resource::Identifier->new(
+        id   => '1',
+        type => 'articles',
+    );
+
+    $builder->add_meta( info => "a meta info" );
+
+    my $EXPECTED = {
+        type => 'articles',
+        id   => 1,
+        meta => { info => "a meta info" },
+    };
+
+    my $GOT = $builder->build;
+
+    is_deeply( $GOT, $EXPECTED, '... got the expected result' );
+
+};
+
 done_testing;
