@@ -33,4 +33,27 @@ subtest '... testing constructor' => sub {
 
 };
 
+subtest '... testing build' => sub {
+
+    my $builder = PONAPI::Builder::Links->new;
+    $builder->add_link('self', 'https://www.ponapi.org');
+
+    ok($builder->has_link('self'), "... builder has 'self' link");
+    ok($builder->has_links==1,     "... builder doesn't have multiple links");
+
+    $builder->add_meta( 'info', 'meta inside links' );
+
+    my $EXPECTED = {
+        self => 'https://www.ponapi.org',
+        meta => {
+            info => 'meta inside links',
+        },
+    };
+
+    my $GOT = $builder->build;
+
+    is_deeply( $GOT, $EXPECTED, '... got the expected result' );
+
+};
+
 done_testing;
