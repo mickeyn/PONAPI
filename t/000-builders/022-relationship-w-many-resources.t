@@ -19,22 +19,22 @@ TODO:
 
 
 subtest '... testing relationship with multiple data' => sub {
-    my $b = PONAPI::Builder::Relationship->new(
+    my $builder = PONAPI::Builder::Relationship->new(
         resources => [
             { id => "1", type => "articles" },
             { id => "1", type => "nouns" }
         ]
     );
-    isa_ok($b, 'PONAPI::Builder::Relationship');
-    does_ok($b, 'PONAPI::Builder');
-    does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
-    does_ok($b, 'PONAPI::Builder::Role::HasMeta');
+    isa_ok( $builder, 'PONAPI::Builder::Relationship');
+    does_ok($builder, 'PONAPI::Builder');
+    does_ok($builder, 'PONAPI::Builder::Role::HasLinksBuilder');
+    does_ok($builder, 'PONAPI::Builder::Role::HasMeta');
 
-    ok($b->has_resource, '... we have a resource');
-    ok($b->has_resources, '... we have many resources');
+    ok($builder->has_resource, '... we have a resource');
+    ok($builder->has_resources, '... we have many resources');
 
     is_deeply(
-        $b->build,
+        $builder->build,
         {
             data => [
                 { id => "1", type => "articles" },

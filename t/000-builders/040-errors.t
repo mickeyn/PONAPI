@@ -19,11 +19,11 @@ TODO:
 
 subtest '... testing constructor' => sub {
 
-    my $b = PONAPI::Builder::Errors->new;
-    isa_ok( $b, 'PONAPI::Builder::Errors');
-    does_ok($b, 'PONAPI::Builder');
+    my $builder = PONAPI::Builder::Errors->new;
+    isa_ok( $builder, 'PONAPI::Builder::Errors');
+    does_ok($builder, 'PONAPI::Builder');
 
-    can_ok( $b, $_ ) foreach qw[
+    can_ok( $builder, $_ ) foreach qw[
         add_error
         has_errors
 

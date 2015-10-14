@@ -13,12 +13,12 @@ BEGIN {
 
 subtest '... testing constructor' => sub {
 
-    my $b = PONAPI::Builder::Links->new;
-    isa_ok( $b, 'PONAPI::Builder::Links');
-    does_ok($b, 'PONAPI::Builder');
-    does_ok($b, 'PONAPI::Builder::Role::HasMeta');
+    my $builder = PONAPI::Builder::Links->new;
+    isa_ok( $builder, 'PONAPI::Builder::Links');
+    does_ok($builder, 'PONAPI::Builder');
+    does_ok($builder, 'PONAPI::Builder::Role::HasMeta');
 
-    can_ok( $b, $_ ) foreach qw[
+    can_ok( $builder, $_ ) foreach qw[
         has_links
         has_link
 

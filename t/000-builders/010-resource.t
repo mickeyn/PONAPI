@@ -19,19 +19,19 @@ TODO:
 
 subtest '... testing constructor' => sub {
 
-    my $b = PONAPI::Builder::Resource->new(
+    my $builder = PONAPI::Builder::Resource->new(
         id   => '1',
         type => 'articles',
     );
-    isa_ok( $b, 'PONAPI::Builder::Resource');
-    does_ok($b, 'PONAPI::Builder');
-    does_ok($b, 'PONAPI::Builder::Role::HasLinksBuilder');
-    does_ok($b, 'PONAPI::Builder::Role::HasMeta');
+    isa_ok( $builder, 'PONAPI::Builder::Resource');
+    does_ok($builder, 'PONAPI::Builder');
+    does_ok($builder, 'PONAPI::Builder::Role::HasLinksBuilder');
+    does_ok($builder, 'PONAPI::Builder::Role::HasMeta');
 
-    is($b->id, '1', '... got the expected id');
-    is($b->type, 'articles', '... got the expected type');
+    is($builder->id, '1', '... got the expected id');
+    is($builder->type, 'articles', '... got the expected type');
 
-    can_ok( $b, $_ ) foreach qw[
+    can_ok( $builder, $_ ) foreach qw[
         add_attribute
         add_attributes
         has_attributes
