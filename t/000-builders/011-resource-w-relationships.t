@@ -11,13 +11,24 @@ BEGIN {
     use_ok('PONAPI::Builder::Resource');
 }
 
+my $builder = PONAPI::Builder::Resource->new(
+    id   => '1',
+    type => 'articles',
+);
+
+
+subtest '... adding relationship errors' => sub {
+
+    like (
+        exception { $builder->add_relationship("this should fail") },
+        qr/^Relationship resource information must be a reference \(HASH or ARRAY\)/,
+        '... got the error we expected'
+    );
+
+};
 
 subtest '... adding relationship to resource' => sub {
 
-    my $builder = PONAPI::Builder::Resource->new(
-        id   => '1',
-        type => 'articles',
-    );
     isa_ok($builder, 'PONAPI::Builder::Resource');
     does_ok($builder, 'PONAPI::Builder');
     does_ok($builder, 'PONAPI::Builder::Role::HasLinksBuilder');
