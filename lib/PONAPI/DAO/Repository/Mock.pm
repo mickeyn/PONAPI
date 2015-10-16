@@ -75,7 +75,7 @@ sub has_relationship {
 sub retrieve_all {
     my ( $self, %args ) = @_;
 
-    my ( $doc, $type, $filter, $include ) = @args{qw< document type filter include >};
+    my ( $doc, $type, $filter, $include, $fields ) = @args{qw< document type filter include fields >};
 
     exists $self->data->{$type} or return $self->_error( $doc, "type $type doesn't exist" );
 
@@ -87,6 +87,7 @@ sub retrieve_all {
             id       => $_,
             document => $doc,
             include  => $include,
+            fields   => $fields,
         });
     }
 }
@@ -94,7 +95,7 @@ sub retrieve_all {
 sub retrieve {
     my ( $self, %args ) = @_;
 
-    my ( $doc, $type, $id, $include ) = @args{qw< document type id include >};
+    my ( $doc, $type, $id, $include, $fields ) = @args{qw< document type id include fields >};
 
     exists $self->data->{$type} or return $self->_error( $doc, "type $type doesn't exist" );
 
@@ -108,6 +109,7 @@ sub retrieve {
         type     => $type,
         id       => $id,
         include  => $include,
+        fields   => $fields,
     });
 }
 
@@ -225,38 +227,65 @@ sub _add_resource {
     my ( $self, $args ) = @_;
     ref $args eq 'HASH' or die "_add_resource: args must be a hashref";
 
-    my ( $doc, $type, $id, $identifier_only, $include ) =
-        @{$args}{qw< document type id identifier_only include >};
+    my ( $doc, $type, $id, $identifier_only, $include, $fields ) =
+        @{$args}{qw< document type id identifier_only include fields >};
 
     my $resource = $doc->add_resource( type => $type, id => $id );
+
     return if $identifier_only;
 
-    my $rec_info = $self->data->{$type}{$id};
-    my $has_attributes    = exists $rec_info->{attributes};
-    my $has_relationships = exists $rec_info->{relationships};
-    my $has_include       = ref $include eq 'ARRAY';
 
-    $resource->add_attributes( %{ $rec_info->{attributes} } ) if $has_attributes;
+    my $rec_info   = $self->data->{$type}{$id};
+    my $has_fields = ref $fields  eq 'HASH';
 
-    return unless $has_relationships;
 
-    # add relationship resource identifiers
+    ### attributes
+
+    if ( exists $rec_info->{attributes} ) {
+        if ( $has_fields and exists $fields->{$type} ) {
+            map {
+                exists $rec_info->{attributes}{$_}
+                and $resource->add_attribute( $_ => $rec_info->{attributes}{$_} )
+            } @{ $fields->{$type} };
+        }
+        else {
+            $resource->add_attributes( %{ $rec_info->{attributes} } );
+        }
+    }
+
+
+    ### relationships + included
+
+    return unless exists $rec_info->{relationships};
+
+    my $has_include = ref $include eq 'ARRAY';
+
     for my $k ( keys %{ $rec_info->{relationships} } ) {
+        next if $has_fields and !grep { $_ eq $k } @{ $fields->{$type} };
+
         my $v = $rec_info->{relationships}{$k};
 
         $resource->add_relationship( $k => $v );
 
         next unless $has_include and grep { $_ eq $k } @{$include};
 
-        # add related resources to 'included'
         my @rels = ref $v eq 'ARRAY' ? @{$v} : $v;
         for ( @rels ) {
             my ( $t, $i ) = @{$_}{qw< type id >};
 
             if ( my $rec = $self->data->{$t}{$i} ) {
                 my $included = $doc->add_included( type => $t, id => $i );
-                $included->add_attributes( %{ $rec->{attributes} } )
-                    if exists $rec->{attributes};
+                if ( exists $rec->{attributes} ) {
+                    if ( $has_fields and exists $fields->{$t} ) {
+                        map {
+                            exists $rec->{attributes}{$_}
+                            and $included->add_attribute( $_ => $rec->{attributes}{$_} )
+                        } @{ $fields->{$t} }
+                    }
+                    else {
+                        $included->add_attributes( %{ $rec->{attributes} } );
+                    }
+                }
             }
         }
     }
