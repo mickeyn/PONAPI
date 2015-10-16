@@ -33,14 +33,7 @@ sub retrieve_all {
         $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
     };
 
-    # XXX:
-    # this also gets passed to the repository
-    # and we add it here, we might want to
-    # think about this a bit. It is fine for
-    # now, but should be revisited.
-    # - SL
-    my @fields = exists $args{fields} ? ( fields => $args{fields} ) : ();
-    return $doc->build( @fields );
+    return $doc->build;
 }
 
 sub retrieve {
@@ -65,11 +58,7 @@ sub retrieve {
         $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
     };
 
-    # XXX:
-    # see comment in &retrieve_all
-    # - SL
-    my @fields = exists $args{fields} ? ( fields => $args{fields} ) : ();
-    return $doc->build( @fields );
+    return $doc->build;
 }
 
 sub retrieve_relationships {
@@ -141,8 +130,7 @@ sub retrieve_by_relationship {
         })
     }
 
-    my @fields = exists $args{fields} ? ( fields => $args{fields} ) : ();
-    return $doc->build( @fields );
+    return $doc->build;
 }
 
 sub create {
