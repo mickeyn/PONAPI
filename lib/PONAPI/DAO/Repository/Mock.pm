@@ -236,7 +236,7 @@ sub _add_resource {
 
 
     my $rec_info   = $self->data->{$type}{$id};
-    my $has_fields = ref $fields  eq 'HASH';
+    my $has_fields = ref $fields eq 'HASH';
 
 
     ### attributes
@@ -253,7 +253,6 @@ sub _add_resource {
         }
     }
 
-
     ### relationships + included
 
     return unless exists $rec_info->{relationships};
@@ -261,7 +260,9 @@ sub _add_resource {
     my $has_include = ref $include eq 'ARRAY';
 
     for my $k ( keys %{ $rec_info->{relationships} } ) {
-        next if $has_fields and !grep { $_ eq $k } @{ $fields->{$type} };
+        if ( $has_fields and exists $fields->{$type} ) {
+            next unless grep { $_ eq $k } @{ $fields->{$type} };
+        }
 
         my $v = $rec_info->{relationships}{$k};
 
