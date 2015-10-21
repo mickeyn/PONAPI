@@ -21,7 +21,7 @@ register jsonapi_parameters => sub {
         id       => $dsl->route_parameters->get('resource_id'),
         rel_type => $dsl->route_parameters->get('relationship_type'),
         data     => $dsl->body_parameters->get('data'),
-        fields => {}, filter => {}, page => {}, include => [],
+        fields => {}, filter => {}, page => {}, include => [], 'sort' => [],
     );
 
     # loop over query parameters (unique keys)
@@ -53,6 +53,12 @@ register jsonapi_parameters => sub {
 
         # values passed on in hash-ref
         $p eq 'include' and $params{include} = \@values;
+
+        # sort values: indicate direction
+        $p eq 'sort' and $params{'sort'} = +[
+            map { /^(\-?)(.+)$/; +[ $2, ( $1 ? 'DESC' : 'ASC' ) ] }
+            @values
+        ];
     }
 
     return \%params;
