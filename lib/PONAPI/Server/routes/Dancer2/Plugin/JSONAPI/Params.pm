@@ -2,6 +2,8 @@ package Dancer2::Plugin::JSONAPI::Params;
 
 use Dancer2::Plugin;
 
+with 'Dancer2::Plugin::JSONAPI::Role::Error';
+
 my $supports_sort;
 
 on_plugin_import {
@@ -69,18 +71,5 @@ register jsonapi_parameters => sub {
 };
 
 register_plugin;
-
-
-sub jsonapi_error {
-    my ( $dsl, $error, $status ) = @_;
-    $dsl->response->status( $status || 500 );
-    $dsl->response->content({
-        jsonapi => { version => "1.0" },
-        errors  => [ $error || "unkown" ],
-    });
-    $dsl->header( "Content-Type" => "application/vnd.api+json" );
-    $dsl->halt;
-}
-
 
 1;
