@@ -32,7 +32,7 @@ template: "simple"
 # JSONAPI
 
 jsonapi:
-  supports_sort: 0
+  supports_sort: "false"
 
 ######################################################################
 # PONAPI

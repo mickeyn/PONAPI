@@ -4,15 +4,18 @@ use Dancer2::Plugin;
 
 with 'Dancer2::Plugin::JSONAPI::Role::Error';
 
-my $supports_sort;
+my $supports_sort = 0;
 
 on_plugin_import {
     my $dsl = shift;
 
     # force explicit setting of 'sort' support configuration
-    $supports_sort = $dsl->config->{jsonapi}{supports_sort};
-    defined $supports_sort and ( $supports_sort == 0 or $supports_sort == 1 )
-        or die "[JSON-API] configuration missing: {jsonapi}{supports_sort}";
+    my $config_sort = $dsl->config->{jsonapi}{supports_sort};
+    if ( defined $config_sort and grep { lc($config_sort) eq $_ } qw< 1 true yes > ) {
+        $supports_sort = 1;
+    } elsif ( defined $config_sort and ! grep { lc($config_sort) eq $_ } qw< 0 false no > ) {
+        die "[JSON-API] configuration missing: {jsonapi}{supports_sort}";
+    }
 };
 
 register jsonapi_parameters => sub {
