@@ -31,7 +31,17 @@ sub add_included {
     return $builder;
 }
 
-has 'is_collection' => ( is => 'ro', isa => 'Bool', default => 0 );
+has 'is_collection' => ( 
+    is      => 'ro', 
+    writer  => '_set_is_collection',
+    isa     => 'Bool', 
+    default => 0 
+);
+
+sub convert_to_collection {
+    my $self = $_[0];
+    $self->_set_is_collection( 1 );
+}
 
 has '_resource_builders' => (
     init_arg  => undef,
