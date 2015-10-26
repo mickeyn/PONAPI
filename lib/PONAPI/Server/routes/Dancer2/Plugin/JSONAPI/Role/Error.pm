@@ -3,7 +3,7 @@ package Dancer2::Plugin::JSONAPI::Role::Error;
 use Moo::Role;
 
 sub jsonapi_error {
-    my ( $dsl, $error, $status ) = @_;
+    my ( $dsl, $status, $error ) = @_;
     $dsl->response->status( $status || 500 );
     $dsl->response->content({
         jsonapi => { version => "1.0" },
