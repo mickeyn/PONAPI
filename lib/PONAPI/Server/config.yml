@@ -32,7 +32,8 @@ template: "simple"
 # JSONAPI
 
 jsonapi:
-  supports_sort: 0
+  sort:
+    enabled: "false"
 
 ######################################################################
 # PONAPI
