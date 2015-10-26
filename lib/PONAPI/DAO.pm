@@ -70,29 +70,18 @@ sub retrieve_relationships {
     # has_type and has_relationship
     # - SL
 
-    my $doc;
-    if ( my $rel = $self->repository->has_relationship( $args{type}, $args{rel_type} ) ) {
-        $doc = PONAPI::Builder::Document->new(
-            is_collection => $rel->{has_many} ? 1 : 0
+    my $doc = PONAPI::Builder::Document->new();
+    eval {
+        $self->repository->retrieve_relationships(
+            document => $doc,
+            %args
         );
-        eval {
-            $self->repository->retrieve_relationships(
-                document => $doc,
-                %args
-            );
-            1;
-        } or do {
-            # NOTE:  this probably needs to be more sophisticated - SL
-            warn "$@";
-            $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
-        };
-    }
-    else {
-        $doc = PONAPI::Builder::Document->new;
-        $doc->raise_error({
-            message => 'Relationship (' . $args{rel_type} . ') not found for type(' . $args{type} . ')'
-        })
-    }
+        1;
+    } or do {
+        # NOTE:  this probably needs to be more sophisticated - SL
+        warn "$@";
+        $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
+    };
 
     return $doc->build;
 }
@@ -106,30 +95,19 @@ sub retrieve_by_relationship {
     # has_type and has_relationship
     # - SL
 
-    my $doc;
-    if ( my $rel = $self->repository->has_relationship( $args{type}, $args{rel_type} ) ) {
-        $doc = PONAPI::Builder::Document->new(
-            is_collection => $rel->{has_many} ? 1 : 0
+    my $doc = PONAPI::Builder::Document->new();
+    eval {
+        $self->repository->retrieve_by_relationship(
+            document => $doc,
+            %args,
         );
-        eval {
-            $self->repository->retrieve_by_relationship(
-                document => $doc,
-                %args,
-            );
-            1;
-        } or do {
-            # NOTE:  this probably needs to be more sophisticated - SL
-            warn "$@";
-            $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
-        };
-    }
-    else {
-        $doc = PONAPI::Builder::Document->new;
-        $doc->raise_error({
-            message => 'Relationship (' . $args{rel_type} . ') not found for type(' . $args{type} . ')'
-        })
-    }
-
+        1;
+    } or do {
+        # NOTE:  this probably needs to be more sophisticated - SL
+        warn "$@";
+        $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
+    };
+    
     return $doc->build;
 }
 

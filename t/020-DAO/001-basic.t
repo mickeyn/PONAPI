@@ -22,9 +22,9 @@ ok($repository->has_type('comments'), '... we have the comments type');
 
 ok(!$repository->has_type('widgets'), '... we do not have the widgets type');
 
-is_deeply($repository->has_relationship(articles => 'author'   ), { has_one  => 'people'   }, '... we have the expected relationship');
-is_deeply($repository->has_relationship(articles => 'comments' ), { has_many => 'comments' }, '... we have the expected relationship');
-is_deeply($repository->has_relationship(comments => 'article'  ), { has_one  => 'articles' }, '... we have the expected relationship');
+ok($repository->has_relationship(articles => 'author'   ), '... we have the expected relationship');
+ok($repository->has_relationship(articles => 'comments' ), '... we have the expected relationship');
+ok($repository->has_relationship(comments => 'article'  ), '... we have the expected relationship');
 
 ok(!$repository->has_relationship(people   => 'articles' ), '... we do not have the relationship (as expected)');
 ok(!$repository->has_relationship(comments => 'author' ), '... we do not have the relationship (as expected)');

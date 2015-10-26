@@ -69,7 +69,7 @@ sub has_relationship {
     my $spec = $self->rel_spec;
     return 0 unless exists $spec->{ $type };
     return 0 unless exists $spec->{ $type }->{ $rel_name };
-    return $spec->{ $type }->{ $rel_name };
+    return !! exists $spec->{ $type }->{ $rel_name };
 }
 
 sub retrieve_all {
@@ -123,6 +123,9 @@ sub retrieve_relationships {
     exists $data->{$type}{$id} or return $self->_error( $doc, "id $id doesn't exist" );
     exists $data->{$type}{$id}{relationships} or return $self->_error( $doc, "resource has no relationships" );
 
+    $doc->convert_to_collection 
+        if $self->rel_spec->{ $type }->{ $rel_type }->{has_many};
+
     my $relationships = $data->{$type}{$id}{relationships}{$rel_type};
     $relationships or return $self->_error( $doc, "relationships type $rel_type doesn't exist" );
 
@@ -152,6 +155,9 @@ sub retrieve_by_relationship {
     exists $data->{$type}{$id} or return $self->_error( $doc, "id $id doesn't exist" );
     exists $data->{$type}{$id}{relationships}
         or return $self->_error( $doc, "resource has no relationships" );
+
+    $doc->convert_to_collection 
+        if $self->rel_spec->{ $type }->{ $rel_type }->{has_many};
 
     my $rels = $data->{$type}{$id}{relationships}{$rel_type};
     ref $rels or return $self->_error( $doc, "resource doesn't have the requested relationship" );
