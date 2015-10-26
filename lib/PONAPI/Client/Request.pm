@@ -50,6 +50,10 @@ sub _build_query_string {
         $u->query_param( include => join ',' => @{ $self->include } );
     }
 
+    if ( $self->does('PONAPI::Client::Request::Role::HasSort') and $self->has_sort ) {
+        $u->query_param( sort => join ',' => @{ $self->sort } );
+    }
+
     return $u->query;
 }
 
