@@ -2,9 +2,9 @@ package PONAPI;
 
 use Dancer2;
 
-use Dancer2::Plugin::JSONAPI::MediaType;
-use Dancer2::Plugin::JSONAPI::Params;
-use Dancer2::Plugin::PONAPI::Repository;
+use PONAPI::Plugin::MediaType;
+use PONAPI::Plugin::Params;
+use PONAPI::Plugin::Repository;
 
 set serializer => 'JSON';
 

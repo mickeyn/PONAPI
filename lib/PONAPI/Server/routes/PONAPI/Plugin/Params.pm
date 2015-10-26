@@ -1,8 +1,8 @@
-package Dancer2::Plugin::JSONAPI::Params;
+package PONAPI::Plugin::Params;
 
 use Dancer2::Plugin;
 
-with 'Dancer2::Plugin::JSONAPI::Role::Error';
+with 'PONAPI::Plugin::Role::Error';
 
 my $supports_sort = 0;
 

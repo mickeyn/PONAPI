@@ -1,4 +1,4 @@
-package Dancer2::Plugin::JSONAPI::Role::Error;
+package PONAPI::Plugin::Role::Error;
 
 use Moo::Role;
 

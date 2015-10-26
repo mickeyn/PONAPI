@@ -1,4 +1,4 @@
-package Dancer2::Plugin::PONAPI::Repository;
+package PONAPI::Plugin::Repository;
 
 use Dancer2::Plugin;
 

@@ -1,4 +1,4 @@
-package Dancer2::Plugin::JSONAPI::MediaType;
+package PONAPI::Plugin::MediaType;
 
 use Dancer2::Plugin;
 
