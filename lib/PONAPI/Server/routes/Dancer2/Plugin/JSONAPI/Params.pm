@@ -30,14 +30,18 @@ register jsonapi_parameters => sub {
 
         # valid parameter names
         grep { $p eq $_ } qw< fields filter page include sort >
-            or $dsl->send_error(
-                "[JSON-API] Bad request (unsupported parameters)", 400
+            or jsonapi_error(
+                $dsl,
+                { message => "[JSON-API] Bad request (unsupported parameters)" },
+                400
             );
 
         # 'sort' requested but not supported
         if ( $p eq 'sort' and !$supports_sort ) {
-            $dsl->send_error(
-                "[JSON-API] Server-side sorting not supported", 400
+            jsonapi_error(
+                $dsl,
+                { message => "[JSON-API] Server-side sorting not supported" },
+                400
             );
         }
 
@@ -66,6 +70,17 @@ register jsonapi_parameters => sub {
 
 register_plugin;
 
+
+sub jsonapi_error {
+    my ( $dsl, $error, $status ) = @_;
+    $dsl->response->status( $status || 500 );
+    $dsl->response->content({
+        jsonapi => { version => "1.0" },
+        errors  => [ $error || "unkown" ],
+    });
+    $dsl->header( "Content-Type" => "application/vnd.api+json" );
+    $dsl->halt;
+}
 
 
 1;
