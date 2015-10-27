@@ -5,6 +5,8 @@ use Moose;
 use PONAPI::DAO::Repository;
 use PONAPI::Builder::Document;
 
+use JSON::XS qw< encode_json >;
+
 has 'repository' => (
     is       => 'ro',
     does     => 'PONAPI::DAO::Repository',
