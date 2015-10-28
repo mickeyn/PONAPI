@@ -124,7 +124,6 @@ sub has_relationship {
 
 sub retrieve_all {
     my ( $self, %args ) = @_;
-    $self->_validate_args(\%args) or return;
 
     # TODO: include <-- $args{include}
     # TODO: filter  <-- $args{filter}
@@ -139,7 +138,6 @@ sub retrieve_all {
 
 sub retrieve {
     my ( $self, %args ) = @_;
-    $self->_validate_args(\%args) or return;
 
     # TODO: include <-- $args{include}
 
@@ -154,21 +152,18 @@ sub retrieve {
 
 sub retrieve_relationships {
     my ( $self, %args ) = @_;
-    $self->_validate_args(\%args) or return;
 
     # TODO
 }
 
 sub retrieve_by_relationship {
     my ( $self, %args ) = @_;
-    $self->_validate_args(\%args) or return;
 
     # TODO
 }
 
 sub create {
     my ( $self, %args ) = @_;
-    $self->_validate_args(\%args) or return;
 
     my ( $doc, $type, $data ) = @args{qw< document type data >};
     $data and ref $data eq 'HASH'
@@ -189,7 +184,6 @@ sub create {
 
 sub update {
     my ( $self, %args ) = @_;
-    $self->_validate_args(\%args) or return;
 
     my ( $doc, $type, $id, $data ) = @args{qw< document type id data >};
     $data and ref $data eq 'HASH'
@@ -211,7 +205,6 @@ sub update {
 
 sub delete : method {
     my ( $self, %args ) = @_;
-    $self->_validate_args(\%args) or return;
 
     my ( $doc, $type, $id ) = @args{qw< document type id >};
 
@@ -230,32 +223,6 @@ sub delete : method {
 
 
 ## --------------------------------------------------------
-
-# this is probably BS and need to be replaced with methods
-# receiveing a request object that include validation
-# rather than the raw hash
-# -- mickey
-sub _validate_args {
-    my ( $self, $args ) = @_;
-    my $doc = $args->{document};
-
-    $self->_validate_type($doc, $args->{type}) or return 0;
-
-    if ( $args->{rel_type} ) {
-        $self->_validate_type($doc, $args->{rel_type}) or return 0;
-    }
-
-    # ...
-
-    return 1;
-}
-
-sub _validate_type {
-    my ( $self, $doc, $type ) = @_;
-    $self->has_type($type) and return 1;
-    $doc->raise_error({ message => "table $type doesnt exist" });
-    return 0;
-}
 
 sub _stmt_columns {
     my $args = shift;
