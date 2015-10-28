@@ -153,10 +153,10 @@ sub retrieve {
 sub retrieve_relationships {
     my ( $self, %args ) = @_;
 
-    my ( $doc, $type, $id, $rel_type ) = @args{qw< document type id rel_type >};
+    my ( $doc, $rel_type ) = @args{qw< document rel_type >};
 
     my ( $rels, $errors ) =
-        $self->_fetchall_resource_relationships( $type, $id );
+        $self->_fetchall_resource_relationships( @args{qw< type id >} );
 
     if ( @$errors ) {
         $doc->raise_error({ message => $_ }) for @$errors;
@@ -175,7 +175,37 @@ sub retrieve_relationships {
 sub retrieve_by_relationship {
     my ( $self, %args ) = @_;
 
-    # TODO
+    my ( $doc, $rel_type ) = @args{qw< document rel_type >};
+
+    my ( $rels, $errors ) =
+        $self->_fetchall_resource_relationships( @args{qw< type id >} );
+
+    if ( @$errors ) {
+        $doc->raise_error({ message => $_ }) for @$errors;
+        return;
+    }
+
+    exists $rels->{$rel_type} or return $doc->add_null_resource();
+
+    my $q_type = $rels->{$rel_type}[0]{type};
+    my $q_ids  = [ map { $_->{id} } @{ $rels->{$rel_type} } ];
+
+    my $stmt = SQL::Composer::Select->new(
+        from    => $q_type,
+        columns => _stmt_columns({ type => $q_type }),
+        where   => [ id => $q_ids ],
+    );
+
+    my ( $sth, $errstr ) = $self->_db_execute( $stmt );
+    $errstr and return $doc->raise_error({ message => $errstr });
+
+    my @resources = @{ $sth->fetchall_arrayref() };
+    @resources or return $doc->raise_error({
+        message => "data inconsistency, relationship points to a missing resource"
+    });
+    @resources > 1 and $doc->_set_is_collection(1);
+
+    $doc->add_resource( type => $_->[1], id => $_->[0] ) for @resources;
 }
 
 sub create {
@@ -190,12 +220,10 @@ sub create {
         values => [ %{ $data->{attributes} } ],
     );
 
-    my $sth = $self->dbh->prepare($stmt->to_sql);
-    my $ret = $sth->execute($stmt->to_bind);
+    my ( $sth, $errstr ) = $self->_db_execute( $stmt );
+    $errstr and return $doc->raise_error({ message => $errstr });
 
-    $ret < 0 and return $doc->raise_error({ message => $DBI::errstr });
-
-    return $ret;
+    return 1;
 }
 
 sub update {
@@ -211,12 +239,10 @@ sub update {
         where  => [ id => $id ],
     );
 
-    my $sth = $self->dbh->prepare($stmt->to_sql);
-    my $ret = $sth->execute($stmt->to_bind);
+    my ( $sth, $errstr ) = $self->_db_execute( $stmt );
+    $errstr and return $doc->raise_error({ message => $errstr });
 
-    $ret < 0 and return $doc->raise_error({ message => $DBI::errstr });
-
-    return $ret;
+    return 1;
 }
 
 sub delete : method {
@@ -229,12 +255,10 @@ sub delete : method {
         where => [ id => $id ],
     );
 
-    my $sth = $self->dbh->prepare($stmt->to_sql);
-    my $ret = $sth->execute($stmt->to_bind);
+    my ( $sth, $errstr ) = $self->_db_execute( $stmt );
+    $errstr and return $doc->raise_error({ message => $errstr });
 
-    $ret < 0 and return $doc->raise_error({ message => $DBI::errstr });
-
-    return $ret;
+    return 1;
 }
 
 
@@ -253,10 +277,8 @@ sub _stmt_columns {
 sub _retrieve_data {
     my ( $self, $stmt, $doc, $type ) = @_;
 
-    my $sth = $self->dbh->prepare($stmt->to_sql);
-    my $ret = $sth->execute($stmt->to_bind);
-
-    $ret or return $doc->raise_error({ message => $DBI::errstr });
+    my ( $sth, $errstr ) = $self->_db_execute( $stmt );
+    $errstr and return $doc->raise_error({ message => $errstr });
 
     while ( my $row = $sth->fetchrow_hashref() ) {
         my $id = delete $row->{id};
@@ -300,10 +322,11 @@ sub _fetchall_resource_relationships {
             where   => [ 'id_' . $type => $id ],
         );
 
-        my $sth = $self->dbh->prepare($stmt->to_sql);
-        my $ret = $sth->execute($stmt->to_bind);
-
-        $ret < 0 and push @errors => $DBI::errstr;
+        my ( $sth, $errstr ) = $self->_db_execute( $stmt );
+        if ( $errstr ) {
+            push @errors => $errstr;
+            next;
+        }
 
         $ret{$name} = +[
             map +{ type => $rel_type, id => @$_ },
@@ -312,6 +335,15 @@ sub _fetchall_resource_relationships {
     }
 
     return ( \%ret, \@errors );
+}
+
+sub _db_execute {
+    my ( $self, $stmt ) = @_;
+
+    my $sth = $self->dbh->prepare($stmt->to_sql);
+    my $ret = $sth->execute($stmt->to_bind);
+
+    return ( $sth, ( $ret < 0 ? $DBI::errstr : () ) );
 }
 
 sub _get_ids_filtered {
