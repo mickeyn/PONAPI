@@ -212,8 +212,6 @@ sub create {
     my ( $self, %args ) = @_;
 
     my ( $doc, $type, $data ) = @args{qw< document type data >};
-    $data and ref $data eq 'HASH'
-        or return $doc->raise_error({ message => "can't create a resource without data" });
 
     my $stmt = SQL::Composer::Insert->new(
         into   => $type,
@@ -230,8 +228,6 @@ sub update {
     my ( $self, %args ) = @_;
 
     my ( $doc, $type, $id, $data ) = @args{qw< document type id data >};
-    $data and ref $data eq 'HASH'
-        or return $doc->raise_error({ message => "can't update a resource without data" });
 
     my $stmt = SQL::Composer::Update->new(
         table  => $type,
@@ -251,7 +247,7 @@ sub delete : method {
     my ( $doc, $type, $id ) = @args{qw< document type id >};
 
     my $stmt = SQL::Composer::Delete->new(
-        from  => $args{type},
+        from  => $type,
         where => [ id => $id ],
     );
 
@@ -346,6 +342,7 @@ sub _db_execute {
     return ( $sth, ( $ret < 0 ? $DBI::errstr : () ) );
 }
 
+=begin REMOVE?
 sub _get_ids_filtered {
     my ( $self, $type, $filters ) = @_;
 
@@ -370,6 +367,7 @@ sub _get_ids_filtered {
 
     return \@ids;
 }
+=end REMOVE
 
 
 __PACKAGE__->meta->make_immutable;
