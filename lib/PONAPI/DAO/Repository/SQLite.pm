@@ -153,7 +153,23 @@ sub retrieve {
 sub retrieve_relationships {
     my ( $self, %args ) = @_;
 
-    # TODO
+    my ( $doc, $type, $id, $rel_type ) = @args{qw< document type id rel_type >};
+
+    my ( $rels, $errors ) =
+        $self->_fetchall_resource_relationships( $type, $id );
+
+    if ( @$errors ) {
+        $doc->raise_error({ message => $_ }) for @$errors;
+        return;
+    }
+
+    exists $rels->{$rel_type} or return $doc->add_null_resource();
+
+    @{ $rels->{$rel_type} } == 1
+        and return $doc->add_resource( %{ $rels->{$rel_type}[0] } );
+
+    $doc->_set_is_collection(1);
+    $doc->add_resource( %$_ ) for @{ $rels->{$rel_type} };
 }
 
 sub retrieve_by_relationship {
