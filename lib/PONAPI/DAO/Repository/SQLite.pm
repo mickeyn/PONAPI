@@ -172,7 +172,7 @@ sub create {
 
     my ( $doc, $type, $data ) = @args{qw< document type data >};
     $data and ref $data eq 'HASH'
-        or return $self->_error( $doc, "can't create a resource without data" );
+        or return $doc->raise_error({ message => "can't create a resource without data" });
 
     my $stmt = SQL::Composer::Insert->new(
         into   => $type,
@@ -182,7 +182,7 @@ sub create {
     my $sth = $self->dbh->prepare($stmt->to_sql);
     my $ret = $sth->execute($stmt->to_bind);
 
-    $ret < 0 and return $self->_error( $doc, $DBI::errstr );
+    $ret < 0 and return $doc->raise_error({ message => $DBI::errstr });
 
     return $ret;
 }
@@ -193,7 +193,7 @@ sub update {
 
     my ( $doc, $type, $id, $data ) = @args{qw< document type id data >};
     $data and ref $data eq 'HASH'
-        or return $self->_error( $doc, "can't update a resource without data" );
+        or return $doc->raise_error({ message => "can't update a resource without data" });
 
     my $stmt = SQL::Composer::Update->new(
         table  => $type,
@@ -204,7 +204,7 @@ sub update {
     my $sth = $self->dbh->prepare($stmt->to_sql);
     my $ret = $sth->execute($stmt->to_bind);
 
-    $ret < 0 and return $self->_error( $doc, $DBI::errstr );
+    $ret < 0 and return $doc->raise_error({ message => $DBI::errstr });
 
     return $ret;
 }
@@ -223,7 +223,7 @@ sub delete : method {
     my $sth = $self->dbh->prepare($stmt->to_sql);
     my $ret = $sth->execute($stmt->to_bind);
 
-    $ret < 0 and return $self->_error( $doc, $DBI::errstr );
+    $ret < 0 and return $doc->raise_error({ message => $DBI::errstr });
 
     return $ret;
 }
@@ -253,7 +253,7 @@ sub _validate_args {
 sub _validate_type {
     my ( $self, $doc, $type ) = @_;
     $self->has_type($type) and return 1;
-    $self->_error( $doc, "table $type doesnt exist" );
+    $doc->raise_error({ message => "table $type doesnt exist" });
     return 0;
 }
 
@@ -273,10 +273,7 @@ sub _retrieve_data {
     my $sth = $self->dbh->prepare($stmt->to_sql);
     my $ret = $sth->execute($stmt->to_bind);
 
-    if ( !$ret ) {
-        $self->_error( $doc, $DBI::errstr );
-        return;
-    }
+    $ret or return $doc->raise_error({ message => $DBI::errstr });
 
     while ( my $row = $sth->fetchrow_hashref() ) {
         my $id = delete $row->{id};
@@ -286,7 +283,7 @@ sub _retrieve_data {
         # add relationships
         my ( $rels, $errors ) = $self->_retrieve_relationships( $type, $id );
         if ( @$errors ) {
-            $self->_error( $doc, $_ ) for @$errors;
+            $doc->raise_error({ message => $_ }) for @$errors;
             return;
         }
         for my $r ( keys %{$rels} ) {
@@ -349,11 +346,6 @@ sub _get_ids_filtered {
     }
 
     return \@ids;
-}
-
-sub _error {
-    my ( $self, $doc, $message ) = @_;
-    $doc->raise_error({ message => $message });
 }
 
 
