@@ -280,21 +280,29 @@ sub _retrieve_data {
         my $rec = $doc->add_resource( type => $type, id => $id );
         $rec->add_attribute( $_ => $row->{$_} ) for keys %{$row};
 
-        # add relationships
-        my ( $rels, $errors ) = $self->_retrieve_relationships( $type, $id );
-        if ( @$errors ) {
-            $doc->raise_error({ message => $_ }) for @$errors;
-            return;
-        }
-        for my $r ( keys %{$rels} ) {
-            $rec->add_relationship( $r, $_ ) for @{ $rels->{$r} };
-        }
+        $self->_add_resource_relationships($rec);
 
         # links???
     }
 }
 
-sub _retrieve_relationships {
+sub _add_resource_relationships {
+    my ( $self, $rec ) = @_;
+
+    my ( $rels, $errors ) =
+        $self->_fetchall_resource_relationships( $rec->type, $rec->id );
+
+    if ( @$errors ) {
+        $rec->raise_error({ message => $_ }) for @$errors;
+        return;
+    }
+
+    for my $r ( keys %{$rels} ) {
+        $rec->add_relationship( $r, $_ ) for @{ $rels->{$r} };
+    }
+}
+
+sub _fetchall_resource_relationships {
     my ( $self, $type, $id ) = @_;
     my %ret;
     my @errors;
