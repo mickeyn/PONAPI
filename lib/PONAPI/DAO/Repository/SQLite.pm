@@ -278,14 +278,20 @@ sub _retrieve_data {
         return;
     }
 
-    while ( my $row = $sth->fetchrow_hashref() ){
+    while ( my $row = $sth->fetchrow_hashref() ) {
         my $id = delete $row->{id};
         my $rec = $doc->add_resource( type => $type, id => $id );
         $rec->add_attribute( $_ => $row->{$_} ) for keys %{$row};
 
-        # for my $rel ( @{ $self->_retrieve_relationships( $type, $id ) } ) {
-        #     $rec->add_relationship( ... );
-        # }
+        # add relationships
+        my ( $rels, $errors ) = $self->_retrieve_relationships( $type, $id );
+        if ( @$errors ) {
+            $self->_error( $doc, $_ ) for @$errors;
+            return;
+        }
+        for my $r ( keys %{$rels} ) {
+            $rec->add_relationship( $r, $_ ) for @{ $rels->{$r} };
+        }
 
         # links???
     }
@@ -293,13 +299,31 @@ sub _retrieve_data {
 
 sub _retrieve_relationships {
     my ( $self, $type, $id ) = @_;
-    my @relationships;
+    my %ret;
+    my @errors;
 
-    for my $rel_name ( keys %{ $TABLE_RELATIONS{$type} } ) {
+    for my $name ( keys %{ $TABLE_RELATIONS{$type} } ) {
         my ( $rel_type, $rel_table ) =
-            @{$TABLE_RELATIONS{$rel_name}}{qw< type rel_table >};
-        # ...
+            @{$TABLE_RELATIONS{$type}{$name}}{qw< type rel_table >};
+
+        my $stmt = SQL::Composer::Select->new(
+            from    => $rel_table,
+            columns => [ 'id_' . $rel_type ],
+            where   => [ 'id_' . $type => $id ],
+        );
+
+        my $sth = $self->dbh->prepare($stmt->to_sql);
+        my $ret = $sth->execute($stmt->to_bind);
+
+        $ret < 0 and push @errors => $DBI::errstr;
+
+        $ret{$name} = +[
+            map +{ type => $rel_type, id => @$_ },
+            @{ $sth->fetchall_arrayref() }
+        ];
     }
+
+    return ( \%ret, \@errors );
 }
 
 sub _get_ids_filtered {
