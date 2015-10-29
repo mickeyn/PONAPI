@@ -139,17 +139,8 @@ sub retrieve_all {
 
 sub retrieve {
     my ( $self, %args ) = @_;
-    my $type = $args{type};
-
-    my $filters = _stmt_filters($type, $args{filter});
-
-    my $stmt = SQL::Composer::Select->new(
-        from    => $type,
-        columns => _stmt_columns(\%args),
-        where   => [ id => $args{id}, %{ $filters} ],
-    );
-
-    $self->_retrieve_data( stmt => $stmt, %args );
+    $args{filter}{id} = delete $args{id};
+    return $self->retrieve_all(%args);
 }
 
 sub retrieve_relationships {
