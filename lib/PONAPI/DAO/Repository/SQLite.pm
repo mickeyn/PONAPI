@@ -163,7 +163,7 @@ sub retrieve_relationships {
     @{ $rels->{$rel_type} } == 1
         and return $doc->add_resource( %{ $rels->{$rel_type}[0] } );
 
-    $doc->convert_to_collection();
+    $doc->convert_to_collection;
     $doc->add_resource( %$_ ) for @{ $rels->{$rel_type} };
 }
 
@@ -191,7 +191,7 @@ sub retrieve_by_relationship {
     @resources or return $doc->raise_error({
         message => "data inconsistency, relationship points to a missing resource"
     });
-    @resources > 1 and $doc->convert_to_collection();
+    @resources > 1 and $doc->convert_to_collection;
 
     $doc->add_resource( type => $_->[1], id => $_->[0] ) for @resources;
 }
