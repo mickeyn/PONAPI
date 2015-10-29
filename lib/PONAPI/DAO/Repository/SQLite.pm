@@ -155,17 +155,10 @@ sub retrieve {
 sub retrieve_relationships {
     my ( $self, %args ) = @_;
 
+    my $rels = $self->_get_resource_relationships(%args)
+        or return;
+
     my ( $doc, $rel_type ) = @args{qw< document rel_type >};
-
-    my ( $rels, $errors ) =
-        $self->_fetchall_resource_relationships( @args{qw< type id >} );
-
-    if ( @$errors ) {
-        $doc->raise_error({ message => $_ }) for @$errors;
-        return;
-    }
-
-    exists $rels->{$rel_type} or return $doc->add_null_resource();
 
     @{ $rels->{$rel_type} } == 1
         and return $doc->add_resource( %{ $rels->{$rel_type}[0] } );
@@ -177,17 +170,10 @@ sub retrieve_relationships {
 sub retrieve_by_relationship {
     my ( $self, %args ) = @_;
 
+    my $rels = $self->_get_resource_relationships(%args)
+        or return;
+
     my ( $doc, $rel_type ) = @args{qw< document rel_type >};
-
-    my ( $rels, $errors ) =
-        $self->_fetchall_resource_relationships( @args{qw< type id >} );
-
-    if ( @$errors ) {
-        $doc->raise_error({ message => $_ }) for @$errors;
-        return;
-    }
-
-    exists $rels->{$rel_type} or return $doc->add_null_resource();
 
     my $q_type = $rels->{$rel_type}[0]{type};
     my $q_ids  = [ map { $_->{id} } @{ $rels->{$rel_type} } ];
@@ -347,6 +333,28 @@ sub _add_included {
         $doc->add_included( type => $type, id => $id )
             ->add_attributes( %{$inc} );
     }
+}
+
+sub _get_resource_relationships {
+    my $self = shift;
+    my %args = @_;
+
+    my ( $doc, $rel_type ) = @args{qw< document rel_type >};
+
+    my ( $rels, $errors ) =
+        $self->_fetchall_resource_relationships( @args{qw< type id >} );
+
+    if ( @$errors ) {
+        $doc->raise_error({ message => $_ }) for @$errors;
+        return;
+    }
+
+    if ( ! exists $rels->{$rel_type} ) {
+        $doc->add_null_resource();
+        return;
+    }
+
+    return $rels;
 }
 
 sub _fetchall_resource_relationships {
