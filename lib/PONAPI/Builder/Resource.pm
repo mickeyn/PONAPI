@@ -3,7 +3,6 @@ package PONAPI::Builder::Resource;
 use Moose;
 
 use PONAPI::Builder::Relationship;
-use PONAPI::Builder::Resource::Identifier;
 
 with 'PONAPI::Builder',
      'PONAPI::Builder::Role::HasLinksBuilder',
@@ -82,11 +81,7 @@ sub add_relationship {
         ? $self->_get_relationship($key)
         : PONAPI::Builder::Relationship->new();
 
-    for ( @resources ) {
-        my $b = PONAPI::Builder::Resource::Identifier->new( parent => $self, %$_ );
-        $b->add_meta( %{ $_->{meta} } ) if $_->{meta};
-        $builder->_add_resource_id_builder( $b );
-    }
+    $builder->add_resource( $_ ) foreach @resources;
 
     $self->_add_relationship( $key => $builder );
 }

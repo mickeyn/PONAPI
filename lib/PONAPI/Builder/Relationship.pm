@@ -34,6 +34,13 @@ sub has_resources {
     $self->_has_resource_id_builders && $self->_num_resource_id_builders > 1;
 }
 
+sub add_resource {
+    my ($self, $resource) = @_;
+    my $b = PONAPI::Builder::Resource::Identifier->new( parent => $self, %$resource );
+    $b->add_meta( %{ $resource->{meta} } ) if $resource->{meta};
+    $self->_add_resource_id_builder( $b );
+}
+
 sub build {
     my $self   = $_[0];
     my $result = {};
