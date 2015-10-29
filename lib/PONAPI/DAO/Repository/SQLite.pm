@@ -285,6 +285,8 @@ sub _retrieve_data {
 
         # links???
     }
+
+    $doc->has_resources or $doc->add_null_resource;
 }
 
 sub _add_resource_relationships {
