@@ -126,11 +126,13 @@ sub retrieve_all {
     my ( $self, %args ) = @_;
 
     # TODO: include <-- $args{include}
-    # TODO: filter  <-- $args{filter}
+
+    my $filters = $args{filter} || {};
 
     my $stmt = SQL::Composer::Select->new(
         from    => $args{type},
         columns => _stmt_columns(\%args),
+        where   => [ %{ $filters } ],
     );
 
     $self->_retrieve_data( $stmt, @args{qw< document type >} );
@@ -141,10 +143,12 @@ sub retrieve {
 
     # TODO: include <-- $args{include}
 
+    my $filters = $args{filter} || {};
+
     my $stmt = SQL::Composer::Select->new(
         from    => $args{type},
         columns => _stmt_columns(\%args),
-        where   => [ id => $args{id} ],
+        where   => [ id => $args{id}, %{ $filters} ],
     );
 
     $self->_retrieve_data( $stmt, @args{qw< document type >} );
@@ -343,33 +347,6 @@ sub _db_execute {
 
     return ( $sth, ( $ret < 0 ? $DBI::errstr : () ) );
 }
-
-=begin REMOVE?
-sub _get_ids_filtered {
-    my ( $self, $type, $filters ) = @_;
-
-    my $data = $self->data;
-
-    my @ids;
-
-    # id filter
-
-    my $id_filter = exists $filters->{id} ? delete $filters->{id} : undef;
-    @ids = $id_filter
-        ? grep { exists $data->{$type}{$_} } @{ $id_filter }
-        : keys %{ $data->{$type} };
-
-    # attribute filters
-    for my $f ( keys %{ $filters } ) {
-        @ids = grep {
-            my $att = $data->{$type}{$_}{attributes}{$f};
-            grep { $att eq $_ } @{ $filters->{$f} }
-        } @ids;
-    }
-
-    return \@ids;
-}
-=end REMOVE
 
 
 __PACKAGE__->meta->make_immutable;
