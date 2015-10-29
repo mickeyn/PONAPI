@@ -134,7 +134,7 @@ sub retrieve_all {
         where   => [ %{ $filters } ],
     );
 
-    $self->_retrieve_data( stmt => $stmt, %args );
+    $self->_add_resources( stmt => $stmt, %args );
 }
 
 sub retrieve {
@@ -146,13 +146,13 @@ sub retrieve {
 sub retrieve_relationships {
     my ( $self, %args ) = @_;
 
-    my $rels = $self->_get_resource_relationships(%args)
+    my $rels = $self->_find_resource_relationships(%args)
         or return;
 
     my ( $doc, $rel_type ) = @args{qw< document rel_type >};
 
-    @{ $rels->{$rel_type} } == 1
-        and return $doc->add_resource( %{ $rels->{$rel_type}[0] } );
+    return $doc->add_resource( %{ $rels->{$rel_type}[0] } )
+        if @{ $rels->{$rel_type} } == 1;
 
     $doc->convert_to_collection;
     $doc->add_resource( %$_ ) for @{ $rels->{$rel_type} };
@@ -161,7 +161,7 @@ sub retrieve_relationships {
 sub retrieve_by_relationship {
     my ( $self, %args ) = @_;
 
-    my $rels = $self->_get_resource_relationships(%args)
+    my $rels = $self->_find_resource_relationships(%args)
         or return;
 
     my ( $doc, $rel_type ) = @args{qw< document rel_type >};
@@ -182,6 +182,8 @@ sub retrieve_by_relationship {
     @resources or return $doc->raise_error({
         message => "data inconsistency, relationship points to a missing resource"
     });
+# shouldn't this method always assume collection request?
+# -- mickey
     @resources > 1 and $doc->convert_to_collection;
 
     $doc->add_resource( type => $_->[1], id => $_->[0] ) for @resources;
@@ -239,27 +241,7 @@ sub delete : method {
 
 ## --------------------------------------------------------
 
-sub _stmt_columns {
-    my $args = shift;
-    my ( $fields, $type ) = @{$args}{qw< fields type >};
-
-    ref $fields eq 'HASH' and exists $fields->{$type}
-        or return $TABLE_COLUMNS{$type};
-
-    return +[ 'id', @{ $fields->{$type} } ];
-}
-
-sub _stmt_filters {
-    my ( $type, $filter ) = @_;
-
-    return +{
-        map   { $_ => $filter->{$_} }
-        grep  { exists $filter->{$_} }
-        @{ $TABLE_COLUMNS{$type} }
-    };
-}
-
-sub _retrieve_data {
+sub _add_resources {
     my $self = shift;
     my %args = @_;
 
@@ -281,15 +263,11 @@ sub _retrieve_data {
 
 sub _add_resource_relationships {
     my ( $self, $rec, %args ) = @_;
+    my $doc = $rec->find_root;
     my %include = map { $_ => 1 } @{ $args{include} };
 
-    my ( $rels, $errors ) =
-        $self->_fetchall_resource_relationships( $rec->type, $rec->id );
-
-    if ( @$errors ) {
-        $rec->raise_error({ message => $_ }) for @$errors;
-        return;
-    }
+    my $rels = $self->_fetchall_relationships( $rec->type, $rec->id, $doc )
+        or return;
 
     for my $r ( keys %{$rels} ) {
         @{ $rels->{$r} } > 0 or next;
@@ -297,7 +275,7 @@ sub _add_resource_relationships {
         $rec->add_relationship( $r, $_ ) for @{ $rels->{$r} };
 
         $self->_add_included(
-            $rec->find_root,                        # document
+            $doc,
             $rels->{$r}[0]{type},                   # included type
             +[ map { $_->{id} } @{ $rels->{$r} } ], # included ids
             %args                                   # filters / fields / etc.
@@ -326,30 +304,23 @@ sub _add_included {
     }
 }
 
-sub _get_resource_relationships {
+sub _find_resource_relationships {
     my $self = shift;
     my %args = @_;
 
-    my ( $doc, $rel_type ) = @args{qw< document rel_type >};
+    my ( $doc, $type, $id, $rel_type ) = @args{qw< document type id rel_type >};
 
-    my ( $rels, $errors ) =
-        $self->_fetchall_resource_relationships( @args{qw< type id >} );
+    my $rels = $self->_fetchall_relationships( $type, $id, $doc )
+        or return;
 
-    if ( @$errors ) {
-        $doc->raise_error({ message => $_ }) for @$errors;
-        return;
-    }
+    return $rels if exists $rels->{$rel_type};
 
-    if ( ! exists $rels->{$rel_type} ) {
-        $doc->add_null_resource();
-        return;
-    }
-
-    return $rels;
+    $doc->add_null_resource();
+    return;
 }
 
-sub _fetchall_resource_relationships {
-    my ( $self, $type, $id ) = @_;
+sub _fetchall_relationships {
+    my ( $self, $type, $id, $doc ) = @_;
     my %ret;
     my @errors;
 
@@ -375,7 +346,32 @@ sub _fetchall_resource_relationships {
         ];
     }
 
-    return ( \%ret, \@errors );
+    if ( @errors ) {
+        $doc->raise_error({ message => $_ }) for @errors;
+        return;
+    }
+
+    return \%ret;
+}
+
+sub _stmt_columns {
+    my $args = shift;
+    my ( $fields, $type ) = @{$args}{qw< fields type >};
+
+    ref $fields eq 'HASH' and exists $fields->{$type}
+        or return $TABLE_COLUMNS{$type};
+
+    return +[ 'id', @{ $fields->{$type} } ];
+}
+
+sub _stmt_filters {
+    my ( $type, $filter ) = @_;
+
+    return +{
+        map   { $_ => $filter->{$_} }
+        grep  { exists $filter->{$_} }
+        @{ $TABLE_COLUMNS{$type} }
+    };
 }
 
 sub _db_execute {
