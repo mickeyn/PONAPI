@@ -18,7 +18,7 @@ TODO:
 =cut
 
 subtest '... testing links sub-building' => sub {
-    my $builder = PONAPI::Builder::Relationship->new( resource => { id => 10, type => 'foo' } );
+    my $builder = PONAPI::Builder::Relationship->new();
     isa_ok( $builder, 'PONAPI::Builder::Relationship');
     does_ok($builder, 'PONAPI::Builder');
     does_ok($builder, 'PONAPI::Builder::Role::HasLinksBuilder');
@@ -32,6 +32,8 @@ subtest '... testing links sub-building' => sub {
     );
 
     ok($builder->has_links, "relationship should now have links");
+
+    $builder->add_resource({ id => 10, type => 'foo' });
 
     is_deeply(
         $builder->build,

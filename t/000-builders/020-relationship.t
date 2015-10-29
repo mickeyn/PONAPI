@@ -39,26 +39,4 @@ subtest '... testing constructor' => sub {
 
 };
 
-subtest '... testing constructor errors' => sub {
-
-    like(
-        exception { PONAPI::Builder::Relationship->new( resource => {} ) },
-        qr/^Attribute \(.+\) is required /,
-        '... got the error we expected'
-    );
-
-    like(
-        exception { PONAPI::Builder::Relationship->new( resource => { id => '1' } ) },
-        qr/^Attribute \(type\) is required /,
-        '... got the error we expected'
-    );
-
-    like(
-        exception { PONAPI::Builder::Relationship->new( resource => { type => 'articles' } ) },
-        qr/^Attribute \(id\) is required /,
-        '... got the error we expected'
-    );
-
-};
-
 done_testing;
