@@ -149,13 +149,13 @@ sub retrieve_relationships {
     my $rels = $self->_find_resource_relationships(%args)
         or return;
 
-    my ( $doc, $rel_type ) = @args{qw< document rel_type >};
+    my $doc = $args{document};
 
-    return $doc->add_resource( %{ $rels->{$rel_type}[0] } )
-        if @{ $rels->{$rel_type} } == 1;
+    return $doc->add_resource( %{ $rels->[0] } )
+        if @{$rels} == 1;
 
     $doc->convert_to_collection;
-    $doc->add_resource( %$_ ) for @{ $rels->{$rel_type} };
+    $doc->add_resource( %$_ ) for @{$rels};
 }
 
 sub retrieve_by_relationship {
@@ -164,10 +164,10 @@ sub retrieve_by_relationship {
     my $rels = $self->_find_resource_relationships(%args)
         or return;
 
-    my ( $doc, $rel_type ) = @args{qw< document rel_type >};
+    my $doc = $args{document};
 
-    my $q_type = $rels->{$rel_type}[0]{type};
-    my $q_ids  = [ map { $_->{id} } @{ $rels->{$rel_type} } ];
+    my $q_type = $rels->[0]{type};
+    my $q_ids  = [ map { $_->{id} } @{$rels} ];
 
     my $stmt = SQL::Composer::Select->new(
         from    => $q_type,
@@ -266,7 +266,7 @@ sub _add_resource_relationships {
     my $doc = $rec->find_root;
     my %include = map { $_ => 1 } @{ $args{include} };
 
-    my $rels = $self->_fetchall_relationships( $rec->type, $rec->id, $doc )
+    my $relgs = $self->_fetchall_relationships( $rec->type, $rec->id, $doc )
         or return;
 
     for my $r ( keys %{$rels} ) {
@@ -313,7 +313,7 @@ sub _find_resource_relationships {
     my $rels = $self->_fetchall_relationships( $type, $id, $doc )
         or return;
 
-    return $rels if exists $rels->{$rel_type};
+    return $rels->{$rel_type} if exists $rels->{$rel_type};
 
     $doc->add_null_resource();
     return;
