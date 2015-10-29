@@ -124,34 +124,32 @@ sub has_relationship {
 
 sub retrieve_all {
     my ( $self, %args ) = @_;
+    my $type = $args{type};
 
-    # TODO: include <-- $args{include}
-
-    my $filters = $args{filter} || {};
+    my $filters = _stmt_filters($type, $args{filter});
 
     my $stmt = SQL::Composer::Select->new(
-        from    => $args{type},
+        from    => $type,
         columns => _stmt_columns(\%args),
         where   => [ %{ $filters } ],
     );
 
-    $self->_retrieve_data( $stmt, @args{qw< document type >} );
+    $self->_retrieve_data( stmt => $stmt, %args );
 }
 
 sub retrieve {
     my ( $self, %args ) = @_;
+    my $type = $args{type};
 
-    # TODO: include <-- $args{include}
-
-    my $filters = $args{filter} || {};
+    my $filters = _stmt_filters($type, $args{filter});
 
     my $stmt = SQL::Composer::Select->new(
-        from    => $args{type},
+        from    => $type,
         columns => _stmt_columns(\%args),
         where   => [ id => $args{id}, %{ $filters} ],
     );
 
-    $self->_retrieve_data( $stmt, @args{qw< document type >} );
+    $self->_retrieve_data( stmt => $stmt, %args );
 }
 
 sub retrieve_relationships {
@@ -274,27 +272,39 @@ sub _stmt_columns {
     return +[ 'id', @{ $fields->{$type} } ];
 }
 
-sub _retrieve_data {
-    my ( $self, $stmt, $doc, $type ) = @_;
+sub _stmt_filters {
+    my ( $type, $filter ) = @_;
 
-    my ( $sth, $errstr ) = $self->_db_execute( $stmt );
+    return +{
+        map   { $_ => $filter->{$_} }
+        grep  { exists $filter->{$_} }
+        @{ $TABLE_COLUMNS{$type} }
+    };
+}
+
+sub _retrieve_data {
+    my $self = shift;
+    my %args = @_;
+
+    my $doc = $args{document};
+
+    my ( $sth, $errstr ) = $self->_db_execute( $args{stmt} );
     $errstr and return $doc->raise_error({ message => $errstr });
 
     while ( my $row = $sth->fetchrow_hashref() ) {
         my $id = delete $row->{id};
-        my $rec = $doc->add_resource( type => $type, id => $id );
+        my $rec = $doc->add_resource( type => $args{type}, id => $id );
         $rec->add_attribute( $_ => $row->{$_} ) for keys %{$row};
 
-        $self->_add_resource_relationships($rec);
-
-        # links???
+        $self->_add_resource_relationships($rec, %args);
     }
 
     $doc->has_resources or $doc->add_null_resource;
 }
 
 sub _add_resource_relationships {
-    my ( $self, $rec ) = @_;
+    my ( $self, $rec, %args ) = @_;
+    my %include = map { $_ => 1 } @{ $args{include} };
 
     my ( $rels, $errors ) =
         $self->_fetchall_resource_relationships( $rec->type, $rec->id );
@@ -305,7 +315,31 @@ sub _add_resource_relationships {
     }
 
     for my $r ( keys %{$rels} ) {
+        @{ $rels->{$r} } > 0 or next;
+
         $rec->add_relationship( $r, $_ ) for @{ $rels->{$r} };
+
+        if ( exists $include{$r} ) {
+            my $q_type = $rels->{$r}[0]{type};
+            my $q_ids  = [ map { $_->{id} } @{ $rels->{$r} } ];
+
+            my $filters = $self->_stmt_filters($q_type, $args{filter});
+
+            my $stmt = SQL::Composer::Select->new(
+                from    => $q_type,
+                columns => _stmt_columns({ type => $q_type, fields => $args{fields} }),
+                where   => [ id => $q_ids, %{ $filters } ],
+            );
+
+            my ( $sth, $errstr ) = $self->_db_execute( $stmt );
+            $errstr and return $rec->raise_error({ message => $errstr });
+
+            while ( my $inc = $sth->fetchrow_hashref() ) {
+                my $id = delete $inc->{id};
+                $rec->find_root->add_included( type => $q_type, id => $id )
+                    ->add_attributes( %{$inc} );
+            }
+        }
     }
 }
 
