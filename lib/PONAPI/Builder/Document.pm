@@ -48,7 +48,7 @@ has 'is_collection' => (
 
 sub convert_to_collection {
     my $self = $_[0];
-    $self->_set_is_collection( 1 );
+    $self->_set_is_collection(1);
 }
 
 has '_resource_builders' => (
