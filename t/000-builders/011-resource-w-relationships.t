@@ -76,15 +76,26 @@ subtest '... adding multiple relationship of same type to resource' => sub {
     does_ok($builder, 'PONAPI::Builder::Role::HasLinksBuilder');
     does_ok($builder, 'PONAPI::Builder::Role::HasMeta');
 
-    my $relationship_builder = $builder->add_relationship(
+    my $relationship_builder1 = $builder->add_relationship(
         'comments' => { id => 5, type => 'comment' }
     );
-    my $relationship_builder = $builder->add_relationship(
-        'comments' => { id => 12, type => 'comment' }
+    isa_ok($relationship_builder1, 'PONAPI::Builder::Relationship');
+    does_ok($relationship_builder1, 'PONAPI::Builder');
+    does_ok($relationship_builder1, 'PONAPI::Builder::Role::HasLinksBuilder');
+
+    my $relationship_builder2 = $builder->add_relationship(
+        'comments' => { id => 12, type => 'comment', meta => { some => 'info' } }
     );
-    isa_ok($relationship_builder, 'PONAPI::Builder::Relationship');
-    does_ok($relationship_builder, 'PONAPI::Builder');
-    does_ok($relationship_builder, 'PONAPI::Builder::Role::HasLinksBuilder');
+    isa_ok($relationship_builder2, 'PONAPI::Builder::Relationship');
+    does_ok($relationship_builder2, 'PONAPI::Builder');
+    does_ok($relationship_builder2, 'PONAPI::Builder::Role::HasLinksBuilder');
+
+    my $relationship_builder3 = $builder->add_relationship(
+        'author' => { id => 2, type => 'people'}
+    );
+    isa_ok($relationship_builder3, 'PONAPI::Builder::Relationship');
+    does_ok($relationship_builder3, 'PONAPI::Builder');
+    does_ok($relationship_builder3, 'PONAPI::Builder::Role::HasLinksBuilder');
 
     is_deeply(
         $builder->build,
@@ -95,9 +106,12 @@ subtest '... adding multiple relationship of same type to resource' => sub {
                 comments => {
                     data => [
                         { id => 5, type => 'comment' },
-                        { id => 12, type => 'comment' },
+                        { id => 12, type => 'comment', meta => { some => 'info' } },
                     ],
-                }
+                },
+                author => {
+                    data => { id => 2, type => 'people' },
+                },
             }
         },
         '... built as expected'

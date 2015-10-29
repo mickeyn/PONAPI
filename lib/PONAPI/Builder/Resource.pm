@@ -3,6 +3,7 @@ package PONAPI::Builder::Resource;
 use Moose;
 
 use PONAPI::Builder::Relationship;
+use PONAPI::Builder::Resource::Identifier;
 
 with 'PONAPI::Builder',
      'PONAPI::Builder::Role::HasLinksBuilder',
@@ -72,18 +73,22 @@ sub add_relationship {
         title => 'Relationship key conflict, an attribute already exists for key: ' . $key
     ) if $self->has_attribute_for( $key );
 
-    die 'Relationship resource information must be a reference (HASH or ARRAY)'
-        unless ref $resource
-            && (ref $resource eq 'HASH' || ref $resource eq 'ARRAY');
+    my @resources =
+        ( ref $resource eq 'ARRAY' ) ? @$resource :
+        ( ref $resource eq 'HASH'  ) ? $resource  :
+        die 'Relationship resource information must be a reference (HASH or ARRAY)';
 
-    my $builder = PONAPI::Builder::Relationship->new(
-        parent => $self,
-        (ref $resource eq 'HASH')
-            ? (resource  => $resource) # if we know it is a HASH ...
-            : (resources => $resource) # ... and we can assume it is an ARRAY ref if not
-    );
+    my $builder = $self->has_relationship_for($key)
+        ? $self->_get_relationship($key)
+        : PONAPI::Builder::Relationship->new();
+
+    for ( @resources ) {
+        my $b = PONAPI::Builder::Resource::Identifier->new( parent => $self, %$_ );
+        $b->add_meta( %{ $_->{meta} } ) if $_->{meta};
+        $builder->_add_resource_id_builder( $b );
+    }
+
     $self->_add_relationship( $key => $builder );
-    return $builder
 }
 
 sub build {
