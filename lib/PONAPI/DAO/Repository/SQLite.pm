@@ -145,11 +145,10 @@ sub retrieve {
 
 sub retrieve_relationships {
     my ( $self, %args ) = @_;
+    my $doc = $args{document};
 
     my $rels = $self->_find_resource_relationships(%args)
         or return;
-
-    my $doc = $args{document};
 
     return $doc->add_resource( %{ $rels->[0] } )
         if @{$rels} == 1;
@@ -160,11 +159,10 @@ sub retrieve_relationships {
 
 sub retrieve_by_relationship {
     my ( $self, %args ) = @_;
+    my $doc = $args{document};
 
     my $rels = $self->_find_resource_relationships(%args)
         or return;
-
-    my $doc = $args{document};
 
     my $q_type = $rels->[0]{type};
     my $q_ids  = [ map { $_->{id} } @{$rels} ];
@@ -191,7 +189,6 @@ sub retrieve_by_relationship {
 
 sub create {
     my ( $self, %args ) = @_;
-
     my ( $doc, $type, $data ) = @args{qw< document type data >};
 
     my $stmt = SQL::Composer::Insert->new(
@@ -207,7 +204,6 @@ sub create {
 
 sub update {
     my ( $self, %args ) = @_;
-
     my ( $doc, $type, $id, $data ) = @args{qw< document type id data >};
 
     my $stmt = SQL::Composer::Update->new(
@@ -224,7 +220,6 @@ sub update {
 
 sub delete : method {
     my ( $self, %args ) = @_;
-
     my ( $doc, $type, $id ) = @args{qw< document type id >};
 
     my $stmt = SQL::Composer::Delete->new(
@@ -242,17 +237,15 @@ sub delete : method {
 ## --------------------------------------------------------
 
 sub _add_resources {
-    my $self = shift;
-    my %args = @_;
+    my ( $self, %args ) = @_;
+    my ( $doc, $stmt, $type ) = @args{qw< document stmt type >};
 
-    my $doc = $args{document};
-
-    my ( $sth, $errstr ) = $self->_db_execute( $args{stmt} );
+    my ( $sth, $errstr ) = $self->_db_execute( $stmt );
     $errstr and return $doc->raise_error({ message => $errstr });
 
     while ( my $row = $sth->fetchrow_hashref() ) {
         my $id = delete $row->{id};
-        my $rec = $doc->add_resource( type => $args{type}, id => $id );
+        my $rec = $doc->add_resource( type => $type, id => $id );
         $rec->add_attribute( $_ => $row->{$_} ) for keys %{$row};
 
         $self->_add_resource_relationships($rec, %args);
@@ -266,7 +259,7 @@ sub _add_resource_relationships {
     my $doc = $rec->find_root;
     my %include = map { $_ => 1 } @{ $args{include} };
 
-    my $relgs = $self->_fetchall_relationships( $rec->type, $rec->id, $doc )
+    my $rels = $self->_fetchall_relationships( $rec->type, $rec->id, $doc )
         or return;
 
     for my $r ( keys %{$rels} ) {
@@ -275,7 +268,6 @@ sub _add_resource_relationships {
         $rec->add_relationship( $r, $_ ) for @{ $rels->{$r} };
 
         $self->_add_included(
-            $doc,
             $rels->{$r}[0]{type},                   # included type
             +[ map { $_->{id} } @{ $rels->{$r} } ], # included ids
             %args                                   # filters / fields / etc.
@@ -284,13 +276,14 @@ sub _add_resource_relationships {
 }
 
 sub _add_included {
-    my ( $self, $doc, $type, $ids, %args ) = @_;
+    my ( $self, $type, $ids, %args ) = @_;
+    my ( $doc, $filter, $fields ) = @args{qw< document filter fields >};
 
-    my $filters = $self->_stmt_filters($type, $args{filter});
+    my $filters = $self->_stmt_filters($type, $filter);
 
     my $stmt = SQL::Composer::Select->new(
         from    => $type,
-        columns => _stmt_columns({ type => $type, fields => $args{fields} }),
+        columns => _stmt_columns({ type => $type, fields => $fields }),
         where   => [ id => $ids, %{ $filters } ],
     );
 
@@ -305,9 +298,7 @@ sub _add_included {
 }
 
 sub _find_resource_relationships {
-    my $self = shift;
-    my %args = @_;
-
+    my ( $self, %args ) = @_;
     my ( $doc, $type, $id, $rel_type ) = @args{qw< document type id rel_type >};
 
     my $rels = $self->_fetchall_relationships( $type, $id, $doc )
@@ -354,6 +345,15 @@ sub _fetchall_relationships {
     return \%ret;
 }
 
+sub _db_execute {
+    my ( $self, $stmt ) = @_;
+
+    my $sth = $self->dbh->prepare($stmt->to_sql);
+    my $ret = $sth->execute($stmt->to_bind);
+
+    return ( $sth, ( $ret < 0 ? $DBI::errstr : () ) );
+}
+
 sub _stmt_columns {
     my $args = shift;
     my ( $fields, $type ) = @{$args}{qw< fields type >};
@@ -372,15 +372,6 @@ sub _stmt_filters {
         grep  { exists $filter->{$_} }
         @{ $TABLE_COLUMNS{$type} }
     };
-}
-
-sub _db_execute {
-    my ( $self, $stmt ) = @_;
-
-    my $sth = $self->dbh->prepare($stmt->to_sql);
-    my $ret = $sth->execute($stmt->to_bind);
-
-    return ( $sth, ( $ret < 0 ? $DBI::errstr : () ) );
 }
 
 
