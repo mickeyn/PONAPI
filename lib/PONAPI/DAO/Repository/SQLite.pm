@@ -319,27 +319,33 @@ sub _add_resource_relationships {
 
         $rec->add_relationship( $r, $_ ) for @{ $rels->{$r} };
 
-        if ( exists $include{$r} ) {
-            my $q_type = $rels->{$r}[0]{type};
-            my $q_ids  = [ map { $_->{id} } @{ $rels->{$r} } ];
+        $self->_add_included(
+            $rec->find_root,                        # document
+            $rels->{$r}[0]{type},                   # included type
+            +[ map { $_->{id} } @{ $rels->{$r} } ], # included ids
+            %args                                   # filters / fields / etc.
+        ) if exists $include{$r};
+    }
+}
 
-            my $filters = $self->_stmt_filters($q_type, $args{filter});
+sub _add_included {
+    my ( $self, $doc, $type, $ids, %args ) = @_;
 
-            my $stmt = SQL::Composer::Select->new(
-                from    => $q_type,
-                columns => _stmt_columns({ type => $q_type, fields => $args{fields} }),
-                where   => [ id => $q_ids, %{ $filters } ],
-            );
+    my $filters = $self->_stmt_filters($type, $args{filter});
 
-            my ( $sth, $errstr ) = $self->_db_execute( $stmt );
-            $errstr and return $rec->raise_error({ message => $errstr });
+    my $stmt = SQL::Composer::Select->new(
+        from    => $type,
+        columns => _stmt_columns({ type => $type, fields => $args{fields} }),
+        where   => [ id => $ids, %{ $filters } ],
+    );
 
-            while ( my $inc = $sth->fetchrow_hashref() ) {
-                my $id = delete $inc->{id};
-                $rec->find_root->add_included( type => $q_type, id => $id )
-                    ->add_attributes( %{$inc} );
-            }
-        }
+    my ( $sth, $errstr ) = $self->_db_execute( $stmt );
+    $errstr and return $doc->raise_error({ message => $errstr });
+
+    while ( my $inc = $sth->fetchrow_hashref() ) {
+        my $id = delete $inc->{id};
+        $doc->add_included( type => $type, id => $id )
+            ->add_attributes( %{$inc} );
     }
 }
 
