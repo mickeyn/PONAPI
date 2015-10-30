@@ -21,6 +21,7 @@ my %TEST_DATA = (
     fields  => { articles => [qw< title body >] },
     filter  => { id => [ 2, 3 ] },
     include => [qw< comments author >],
+    sort    => [ '-name' ],
 );
 
 subtest '... testing object' => sub {
@@ -35,6 +36,7 @@ subtest '... testing object' => sub {
     does_ok($req, 'PONAPI::Client::Request::Role::HasFilter');
     does_ok($req, 'PONAPI::Client::Request::Role::HasInclude');
     does_ok($req, 'PONAPI::Client::Request::Role::HasPage');
+    does_ok($req, 'PONAPI::Client::Request::Role::HasSort');
 
     can_ok( $req, 'method' );
     can_ok( $req, 'path' );
@@ -49,7 +51,7 @@ subtest '... testing request parameters' => sub {
     my $EXPECTED = +{
         method       => 'GET',
         path         => '/articles',
-        query_string => 'filter%5Bid%5D=2%2C3&fields%5Barticles%5D=title%2Cbody&include=comments%2Cauthor',
+        query_string => 'filter%5Bid%5D=2%2C3&fields%5Barticles%5D=title%2Cbody&include=comments%2Cauthor&sort=-name',
     };
 
     my $GOT = +{ $req->request_params };
