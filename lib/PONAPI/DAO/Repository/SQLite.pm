@@ -180,8 +180,6 @@ sub retrieve_by_relationship {
     @resources or return $doc->raise_error({
         message => "data inconsistency, relationship points to a missing resource"
     });
-# shouldn't this method always assume collection request?
-# -- mickey
     @resources > 1 and $doc->convert_to_collection;
 
     $doc->add_resource( type => $_->[1], id => $_->[0] ) for @resources;
@@ -259,8 +257,13 @@ sub _add_resource_relationships {
     my $doc = $rec->find_root;
     my %include = map { $_ => 1 } @{ $args{include} };
 
-    my $rels = $self->_fetchall_relationships( $rec->type, $rec->id, $doc )
-        or return;
+    my $rels = $self->_fetchall_relationships(
+        type     => $rec->type,
+        id       => $rec->id,
+        document => $doc,
+        fields   => $args{fields},
+    );
+    $rels or return;
 
     for my $r ( keys %{$rels} ) {
         @{ $rels->{$r} } > 0 or next;
@@ -299,9 +302,9 @@ sub _add_included {
 
 sub _find_resource_relationships {
     my ( $self, %args ) = @_;
-    my ( $doc, $type, $id, $rel_type ) = @args{qw< document type id rel_type >};
+    my ( $doc, $rel_type ) = @args{qw< document rel_type >};
 
-    my $rels = $self->_fetchall_relationships( $type, $id, $doc )
+    my $rels = $self->_fetchall_relationships(%args)
         or return;
 
     return $rels->{$rel_type} if exists $rels->{$rel_type};
@@ -311,11 +314,15 @@ sub _find_resource_relationships {
 }
 
 sub _fetchall_relationships {
-    my ( $self, $type, $id, $doc ) = @_;
+    my ( $self, %args ) = @_;
+    my ( $type, $id, $doc ) = @args{qw< type id doc >};
+    my %type_fields = map { $_ => 1 } @{ $args{fields}{$type} };
     my %ret;
     my @errors;
 
     for my $name ( keys %{ $TABLE_RELATIONS{$type} } ) {
+        next if keys %type_fields > 0 and !exists $type_fields{$name};
+
         my ( $rel_type, $rel_table ) =
             @{$TABLE_RELATIONS{$type}{$name}}{qw< type rel_table >};
 
@@ -361,7 +368,11 @@ sub _stmt_columns {
     ref $fields eq 'HASH' and exists $fields->{$type}
         or return $TABLE_COLUMNS{$type};
 
-    return +[ 'id', @{ $fields->{$type} } ];
+    my @fields_minus_relationship_keys =
+        grep { !exists $TABLE_RELATIONS{$type}{$_} }
+        @{ $fields->{$type} };
+
+    return +[ 'id', @fields_minus_relationship_keys ];
 }
 
 sub _stmt_filters {
