@@ -48,10 +48,13 @@ subtest '... testing request parameters' => sub {
 
     my $req = PONAPI::Client::Request::RetrieveAll->new( %TEST_DATA );
 
+    my $expected_query_string =
+        'fields%5Barticles%5D=title%2Cbody&filter%5Bid%5D=2%2C3&include=comments%2Cauthor&sort=-name';
+
     my $EXPECTED = +{
         method       => 'GET',
         path         => '/articles',
-        query_string => 'filter%5Bid%5D=2%2C3&fields%5Barticles%5D=title%2Cbody&include=comments%2Cauthor&sort=-name',
+        query_string => $expected_query_string,
     };
 
     my $GOT = +{ $req->request_params };
