@@ -19,7 +19,7 @@ on_plugin_import {
                 my $ct = $dsl->request->headers->{'content-type'};
                 $ct and $ct eq $jsonapi_mediatype
                     or $dsl->send_error(
-                        "[JSON-API] missing Content-Type header", 415
+                        "{JSON:API} missing Content-Type header", 415
                     );
 
                 # if json-api is sent in Accept headers,
@@ -33,7 +33,7 @@ on_plugin_import {
 
                 grep { $_ eq $jsonapi_mediatype } @jsonapi_accept
                     or $dsl->send_error(
-                        "[JSON-API] Accept header contains only parameterized instances of json-api",
+                        "{JSON:API} Accept header contains only parameterized instances of json-api",
                         406
                     );
             },

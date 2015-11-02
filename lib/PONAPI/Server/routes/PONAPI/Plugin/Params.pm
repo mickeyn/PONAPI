@@ -3,22 +3,16 @@ package PONAPI::Plugin::Params;
 use Dancer2::Plugin;
 
 with 'PONAPI::Plugin::Role::Error';
+with 'PONAPI::Plugin::Role::Config';
 
 my $supports_sort = 0;
 
 on_plugin_import {
     my $dsl = shift;
-
-    # force explicit setting of 'sort' support configuration
-    my $config_sort = $dsl->config->{jsonapi}{supports_sort};
-    if ( defined $config_sort and grep { lc($config_sort) eq $_ } qw< 1 true yes > ) {
-        $supports_sort = 1;
-    } elsif ( defined $config_sort and ! grep { lc($config_sort) eq $_ } qw< 0 false no > ) {
-        die "[JSON-API] configuration missing: {jsonapi}{supports_sort}";
-    }
+    $supports_sort = ponapi_config_get_server_sort($dsl);
 };
 
-register jsonapi_parameters => sub {
+register ponapi_parameters => sub {
     my $dsl = shift;
 
     my %params = (
@@ -35,17 +29,17 @@ register jsonapi_parameters => sub {
 
         # valid parameter names
         grep { $p eq $_ } qw< fields filter page include sort >
-            or jsonapi_error(
+            or ponapi_error(
                 $dsl,
-                { message => "[JSON-API] Bad request (unsupported parameters)" },
+                { message => "{JSON:API} Bad request (unsupported parameters)" },
                 400
             );
 
         # 'sort' requested but not supported
         if ( $p eq 'sort' and !$supports_sort ) {
-            jsonapi_error(
+            ponapi_error(
                 $dsl,
-                { message => "[JSON-API] Server-side sorting not supported" },
+                { message => "{JSON:API} Server-side sorting not supported" },
                 400
             );
         }

@@ -29,15 +29,11 @@ template: "simple"
 
 
 ######################################################################
-# JSONAPI
-
-jsonapi:
-  supports_sort: "false"
-
-######################################################################
 # PONAPI
 
 ponapi:
+  server:
+    supports_sort: "false"
   repository:
     class: "PONAPI::DAO::Repository::Mock"
     args:  [ 'data_dir', 'share/fixtures' ]

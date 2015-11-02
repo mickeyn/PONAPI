@@ -2,7 +2,7 @@ package PONAPI::Plugin::Role::Error;
 
 use Moo::Role;
 
-sub jsonapi_error {
+sub ponapi_error {
     my ( $dsl, $error, $status ) = @_;
     $dsl->response->status( $status || 500 );
     $dsl->response->content({
@@ -13,4 +13,5 @@ sub jsonapi_error {
     $dsl->halt;
 }
 
-no Moose::Role; 1;
+no Moo::Role; 1;
+__END__

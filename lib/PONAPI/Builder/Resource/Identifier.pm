@@ -1,4 +1,4 @@
-# ABSTRACT: PONAPI - Perl JSON-API implementation (http://jsonapi.org/) v1.0
+# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::Builder::Resource::Identifier;
 use Moose;
 
