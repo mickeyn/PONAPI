@@ -10,6 +10,14 @@ with 'PONAPI::Builder',
      'PONAPI::Builder::Role::HasLinksBuilder',
      'PONAPI::Builder::Role::HasMeta';
 
+has status => (
+    init_arg => undef,
+    is       => 'ro',
+    isa      => 'Num',
+    default  => sub { 200 },
+    writer   => 'set_status',
+);
+
 has '_included' => (
     init_arg => undef,
     traits   => [ 'Array' ],
@@ -31,11 +39,11 @@ sub add_included {
     return $builder;
 }
 
-has 'is_collection' => ( 
-    is      => 'ro', 
+has 'is_collection' => (
+    is      => 'ro',
     writer  => '_set_is_collection',
-    isa     => 'Bool', 
-    default => 0 
+    isa     => 'Bool',
+    default => 0
 );
 
 sub convert_to_collection {

@@ -35,7 +35,7 @@ sub retrieve_all {
         $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
     };
 
-    return $doc->build;
+    return ( $doc->status, $doc->build );
 }
 
 sub retrieve {
@@ -60,7 +60,7 @@ sub retrieve {
         $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
     };
 
-    return $doc->build;
+    return ( $doc->status, $doc->build );
 }
 
 sub retrieve_relationships {
@@ -85,7 +85,7 @@ sub retrieve_relationships {
         $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
     };
 
-    return $doc->build;
+    return ( $doc->status, $doc->build );
 }
 
 sub retrieve_by_relationship {
@@ -109,8 +109,8 @@ sub retrieve_by_relationship {
         warn "$@";
         $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
     };
-    
-    return $doc->build;
+
+    return ( $doc->status, $doc->build );
 }
 
 sub create {
@@ -140,7 +140,8 @@ sub create {
         warn "$@";
         $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
     };
-    return $doc->build;
+
+    return ( $doc->status, $doc->build );
 }
 
 sub update {
@@ -172,7 +173,8 @@ sub update {
         warn "$@";
         $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
     };
-    return $doc->build;
+
+    return ( $doc->status, $doc->build );
 }
 
 sub delete : method {
@@ -202,9 +204,11 @@ sub delete : method {
         warn "$@";
         $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
     };
-    return $doc->build;
+
+    return ( $doc->status, $doc->build );
 }
 
-__PACKAGE__->meta->make_immutable;
 
+__PACKAGE__->meta->make_immutable;
 no Moose; 1;
+__END__

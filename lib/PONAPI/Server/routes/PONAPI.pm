@@ -8,43 +8,45 @@ use PONAPI::Plugin::Repository;
 
 set serializer => 'JSON';
 
+sub dao_action {
+    my $action = shift;
+    return sub {
+        my ( $status, $content ) = DAO->$action( ponapi_parameters );
+        response->status($status);
+        return $content;
+    };
+}
 
 # no ID
 prefix '/:resource_type' => sub {
 
     # Create new resource(s)
-    post '' => sub { DAO->create( ponapi_parameters ) };
+    post '' => dao_action('create');
 
     # Retrieve all resources for type
-    get ''  => sub { DAO->retrieve_all( ponapi_parameters ) };
+    get ''  => dao_action('retrieve_all');
 };
 
 # required ID
 prefix '/:resource_type/:resource_id' => sub {
 
     # Retrieve a single resource
-    get '' => sub { DAO->retrieve( ponapi_parameters ) };
+    get '' => dao_action('retrieve');
 
     # Retrieve related resources indirectly
-    get '/:relationship_type' => sub {
-        DAO->retrieve_by_relationship( ponapi_parameters )
-    };
+    get '/:relationship_type' => dao_action('retrieve_by_relationship');
 
     # Retrieve relationships for a single resource by type
-    get '/relationships/:relationship_type' => sub {
-        DAO->retrieve_relationships( ponapi_parameters );
-    };
+    get '/relationships/:relationship_type' => dao_action('retrieve_relationships');
 
     # Update a single resource
-    patch '' => sub { DAO->update( ponapi_parameters ) };
+    patch '' => dao_action('update');
 
     # Delete a single resource
-    del '' => sub { DAO->delete( ponapi_parameters ) };
+    del '' => dao_action('delete');
 
     # Delete a relationship for a single resource
-    del '/relationships/:relationship_type' => sub {
-        DAO->delete( ponapi_parameters );
-    };
+    del '/relationships/:relationship_type' => dao_action('delete');
 };
 
 
