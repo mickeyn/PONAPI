@@ -1,4 +1,4 @@
-package PONAPI::Request::Body;
+package PONAPI::DAO::Request::Body;
 use Moose;
 
 has '_data' => (

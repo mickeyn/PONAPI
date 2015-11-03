@@ -9,7 +9,7 @@ use Test::Fatal;
 use JSON::XS;
 
 BEGIN {
-    use_ok('PONAPI::Request::Body');
+    use_ok('PONAPI::DAO::Request::Body');
 }
 
 my $payload = JSON::XS->new->utf8->decode(q[
@@ -25,8 +25,8 @@ my $payload = JSON::XS->new->utf8->decode(q[
 }
 ]);
 
-my $body = PONAPI::Request::Body->new( $payload );
-isa_ok($body, 'PONAPI::Request::Body');
+my $body = PONAPI::DAO::Request::Body->new( $payload );
+isa_ok($body, 'PONAPI::DAO::Request::Body');
 
 is($body->type, 'photos', '... got the type expected');
 is($body->id, '550e8400-e29b-41d4-a716-446655440000', '... got the ID expected');
