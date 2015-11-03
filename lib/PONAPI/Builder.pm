@@ -5,7 +5,7 @@ use Moose::Role;
 requires 'build';
 
 has 'parent' => (
-    is        => 'rw',
+    is        => 'ro',
     does      => 'PONAPI::Builder',
     predicate => 'has_parent',
     weak_ref  => 1,
