@@ -107,6 +107,12 @@ has 'errors_builder' => (
 
 sub _build_errors_builder { PONAPI::Builder::Errors->new( parent => $_[0] ) }
 
+sub has_errors {
+    my $self = shift;
+    return 1 if $self->has_errors_builder and $self->errors_builder->has_errors;
+    return 0;
+}
+
 sub build {
     my $self   = shift;
     my %args   = @_;

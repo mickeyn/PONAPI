@@ -17,9 +17,9 @@ register ponapi_parameters => sub {
 
     my %params = (
         type     => $dsl->route_parameters->get('resource_type'),
-        id       => $dsl->route_parameters->get('resource_id'),
-        rel_type => $dsl->route_parameters->get('relationship_type'),
-        data     => $dsl->body_parameters->get('data'),
+        id       => $dsl->route_parameters->get('resource_id')       || '',
+        rel_type => $dsl->route_parameters->get('relationship_type') || '',
+        data     => $dsl->body_parameters->get('data')               || {},
         fields => {}, filter => {}, page => {}, include => [], 'sort' => [],
     );
 
