@@ -46,7 +46,7 @@ prefix '/:resource_type/:resource_id' => sub {
     del '' => dao_action('delete');
 
     # Delete a relationship for a single resource
-    del '/relationships/:relationship_type' => dao_action('delete');
+    del '/relationships/:relationship_type' => dao_action('delete_relationship');
 };
 
 

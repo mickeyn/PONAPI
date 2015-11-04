@@ -123,7 +123,7 @@ sub retrieve_relationships {
     exists $data->{$type}{$id} or return $self->_error( $doc, "id $id doesn't exist" );
     exists $data->{$type}{$id}{relationships} or return $self->_error( $doc, "resource has no relationships" );
 
-    $doc->convert_to_collection 
+    $doc->convert_to_collection
         if $self->rel_spec->{ $type }->{ $rel_type }->{has_many};
 
     my $relationships = $data->{$type}{$id}{relationships}{$rel_type};
@@ -156,7 +156,7 @@ sub retrieve_by_relationship {
     exists $data->{$type}{$id}{relationships}
         or return $self->_error( $doc, "resource has no relationships" );
 
-    $doc->convert_to_collection 
+    $doc->convert_to_collection
         if $self->rel_spec->{ $type }->{ $rel_type }->{has_many};
 
     my $rels = $data->{$type}{$id}{relationships}{$rel_type};
@@ -200,6 +200,11 @@ sub delete : method {
     $id   or return $self->_error( $doc, "can't delete a resource without an 'id'"  );
 
     # TODO: delte the resource
+}
+
+
+sub delete_relationship {
+    # TODO
 }
 
 ## --------------------------------------------------------

@@ -208,6 +208,10 @@ sub delete : method {
     return ( $doc->status, $doc->build );
 }
 
+sub delete_relationship {
+    # TODO
+}
+
 
 __PACKAGE__->meta->make_immutable;
 no Moose; 1;
