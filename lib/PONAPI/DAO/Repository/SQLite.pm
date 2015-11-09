@@ -159,7 +159,7 @@ sub retrieve_relationships {
 
 sub retrieve_by_relationship {
     my ( $self, %args ) = @_;
-    my $doc = $args{document};
+    my ( $doc, $fields, $include ) = @args{qw< document fields include >};
 
     my $rels = $self->_find_resource_relationships(%args)
         or return;
@@ -169,7 +169,7 @@ sub retrieve_by_relationship {
 
     my $stmt = SQL::Composer::Select->new(
         from    => $q_type,
-        columns => _stmt_columns({ type => $q_type }),
+        columns => _stmt_columns({ type => $q_type, fields => $fields }),
         where   => [ id => $q_ids ],
     );
 
@@ -177,6 +177,8 @@ sub retrieve_by_relationship {
         document              => $doc,
         stmt                  => $stmt,
         type                  => $q_type,
+        fields                => $fields,
+        include               => $include,
         convert_to_collection => 1,
     );
 }
