@@ -10,11 +10,14 @@ use Test::More;
 
 BEGIN {
     use_ok('PONAPI::DAO');
-    use_ok('PONAPI::DAO::Repository::SQLite');
+    use_ok('Test::PONAPI::DAO::Repository::MockDB');
+    use_ok('Test::PONAPI::DAO::Repository::MockDB::Loader');
 }
 
-my $repository = PONAPI::DAO::Repository::SQLite->new;
-isa_ok($repository, 'PONAPI::DAO::Repository::SQLite');
+my $loader = Test::PONAPI::DAO::Repository::MockDB::Loader->new;
+
+my $repository = Test::PONAPI::DAO::Repository::MockDB->new( dbh => $loader->dbh );
+isa_ok($repository, 'Test::PONAPI::DAO::Repository::MockDB');
 
 ok($repository->has_type('people'),   '... we have the people type');
 ok($repository->has_type('articles'), '... we have the articles type');
