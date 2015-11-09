@@ -367,7 +367,7 @@ sub _db_execute {
     my $sth = $self->dbh->prepare($stmt->to_sql);
     my $ret = $sth->execute($stmt->to_bind);
 
-    return ( $sth, ( $ret < 0 ? $DBI::errstr : () ) );
+    return ( $sth, ( !$ret ? $DBI::errstr : () ) );
 }
 
 sub _stmt_columns {
