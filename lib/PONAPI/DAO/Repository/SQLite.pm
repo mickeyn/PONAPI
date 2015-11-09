@@ -241,7 +241,7 @@ sub delete_relationship {
 
 sub _add_resources {
     my ( $self, %args ) = @_;
-    my ( $doc, $stmt, $type, $convert_to_collection ) = @args{qw< document stmt type convert_to_collection; >};
+    my ( $doc, $stmt, $type, $convert_to_collection ) = @args{qw< document stmt type convert_to_collection >};
 
     my ( $sth, $errstr ) = $self->_db_execute( $stmt );
     $errstr and return $doc->raise_error({ message => $errstr });
