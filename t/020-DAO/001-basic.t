@@ -10,11 +10,11 @@ use Test::More;
 
 BEGIN {
     use_ok('PONAPI::DAO');
-    use_ok('PONAPI::DAO::Repository::Mock');
+    use_ok('PONAPI::DAO::Repository::SQLite');
 }
 
-my $repository = PONAPI::DAO::Repository::Mock->new( data_dir => 'share/fixtures' );
-isa_ok($repository, 'PONAPI::DAO::Repository::Mock');
+my $repository = PONAPI::DAO::Repository::SQLite->new;
+isa_ok($repository, 'PONAPI::DAO::Repository::SQLite');
 
 ok($repository->has_type('people'),   '... we have the people type');
 ok($repository->has_type('articles'), '... we have the articles type');
@@ -22,12 +22,12 @@ ok($repository->has_type('comments'), '... we have the comments type');
 
 ok(!$repository->has_type('widgets'), '... we do not have the widgets type');
 
-ok($repository->has_relationship(articles => 'author'   ), '... we have the expected relationship');
-ok($repository->has_relationship(articles => 'comments' ), '... we have the expected relationship');
-ok($repository->has_relationship(comments => 'article'  ), '... we have the expected relationship');
+ok($repository->has_relationship(articles => 'authors'),   '... we have the expected (articles => author) relationship');
+ok($repository->has_relationship(articles => 'comments'),  '... we have the expected (articles => comments) relationship');
+ok($repository->has_relationship(comments => 'articles'),  '... we have the expected (comments => article) relationship');
+ok($repository->has_relationship(people   => 'articles'),  '... we have the (people => articles) relationship');
 
-ok(!$repository->has_relationship(people   => 'articles' ), '... we do not have the relationship (as expected)');
-ok(!$repository->has_relationship(comments => 'author' ), '... we do not have the relationship (as expected)');
+ok(!$repository->has_relationship(comments => 'authors'),  '... we do not have the (comments => author) relationship (as expected)');
 
 my $dao = PONAPI::DAO->new( repository => $repository );
 isa_ok($dao, 'PONAPI::DAO');
@@ -90,8 +90,11 @@ subtest '... retrieve relationships' => sub {
 };
 
 subtest '... retrieve by relationship' => sub {
-    my $doc = $dao->retrieve_by_relationship( type => 'articles', id => 2,
-                                              rel_type => 'author' );
+    my $doc = $dao->retrieve_by_relationship(
+        type => 'articles',
+        id   => 2,
+        rel_type => 'authors'
+    );
 
     ok(!blessed($doc), '... the document we got is not blessed');
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');

@@ -173,16 +173,12 @@ sub retrieve_by_relationship {
         where   => [ id => $q_ids ],
     );
 
-    my ( $sth, $errstr ) = $self->_db_execute( $stmt );
-    $errstr and return $doc->raise_error({ message => $errstr });
-
-    my @resources = @{ $sth->fetchall_arrayref() };
-    @resources or return $doc->raise_error({
-        message => "data inconsistency, relationship points to a missing resource"
-    });
-    @resources > 1 and $doc->convert_to_collection;
-
-    $doc->add_resource( type => $_->[1], id => $_->[0] ) for @resources;
+    $self->_add_resources(
+        document              => $doc,
+        stmt                  => $stmt,
+        type                  => $q_type,
+        convert_to_collection => 1,
+    );
 }
 
 sub create {
@@ -245,17 +241,23 @@ sub delete_relationship {
 
 sub _add_resources {
     my ( $self, %args ) = @_;
-    my ( $doc, $stmt, $type ) = @args{qw< document stmt type >};
+    my ( $doc, $stmt, $type, $convert_to_collection ) = @args{qw< document stmt type convert_to_collection; >};
 
     my ( $sth, $errstr ) = $self->_db_execute( $stmt );
     $errstr and return $doc->raise_error({ message => $errstr });
 
+    my $counter = 0;
+
     while ( my $row = $sth->fetchrow_hashref() ) {
+        if ( $counter == 1 && $convert_to_collection ) {
+            $doc->convert_to_collection;
+        }
         my $id = delete $row->{id};
         my $rec = $doc->add_resource( type => $type, id => $id );
         $rec->add_attribute( $_ => $row->{$_} ) for keys %{$row};
 
         $self->_add_resource_relationships($rec, %args);
+        $counter++;
     }
 
     $doc->has_resources or $doc->add_null_resource;
