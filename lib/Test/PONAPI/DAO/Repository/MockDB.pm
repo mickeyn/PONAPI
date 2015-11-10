@@ -3,6 +3,7 @@ use Moose;
 
 use DBI;
 use SQL::Composer;
+use Test::PONAPI::DAO::Repository::MockDB::Loader;
 
 with 'PONAPI::DAO::Repository';
 
