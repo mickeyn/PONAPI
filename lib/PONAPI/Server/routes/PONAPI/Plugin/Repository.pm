@@ -13,13 +13,16 @@ on_plugin_import {
 
     ### read ponapi configuration
 
-    # force explicit setting of 'sort' support configuration
-    my $repository_class = $dsl->config->{ponapi}{repository}{class}
-        || die "[PONAPI Server] missing repository_class configuration\n";
+    my $repository_config = $dsl->config->{ponapi}{repository};
 
-    my @repository_args = @{ $dsl->config->{ponapi}{repository}{args} };
+    my $repository_class = $repository_config->{class}
+        || die "[PONAPI Server] missing repository class configuration\n";
 
-    my $repository = Module::Runtime::use_module($repository_class)->new( @repository_args );
+    my $loader_class = $repository_config->{loader}
+        || die "[PONAPI Server] missing repository loader configuration\n";
+
+    my $loader     = Module::Runtime::use_module($loader_class)->new;
+    my $repository = Module::Runtime::use_module($repository_class)->new( dbh => $loader->dbh );
 
     $DAO = PONAPI::DAO->new( repository => $repository );
 };

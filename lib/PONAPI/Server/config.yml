@@ -35,7 +35,7 @@ ponapi:
   server:
     supports_sort: "false"
   repository:
-    class: "PONAPI::DAO::Repository::SQLite"
-    args:  [ 'data_dir', 'share/fixtures' ]
+    class:  "Test::PONAPI::DAO::Repository::MockDB"
+    loader: "Test::PONAPI::DAO::Repository::MockDB::Loader"
 
 ######################################################################
