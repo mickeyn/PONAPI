@@ -6,8 +6,15 @@ use DBI;
 has dbd => (
     is      => 'ro',
     isa     => 'Str',
-    default => sub { 'DBI:SQLite:dbname=MockDB.db' },
+    builder => '_build_dbd',
 );
+
+use File::Temp qw/tempfile/;
+sub _build_dbd {
+    my ($fh, $path) = tempfile("MockDB.db.XXXXXXX", tmpdir => 1);
+    close $fh;
+    return "DBI:SQLite:dbname=$path";
+}
 
 has dbh => (
     is      => 'ro',
