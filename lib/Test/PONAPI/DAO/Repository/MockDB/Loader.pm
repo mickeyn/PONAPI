@@ -6,8 +6,15 @@ use DBI;
 has dbd => (
     is      => 'ro',
     isa     => 'Str',
-    default => sub { 'DBI:SQLite:dbname=MockDB.db' },
+    builder => '_build_dbd',
 );
+
+use File::Temp qw/tempfile/;
+sub _build_dbd {
+    my ($fh, $path) = tempfile("MockDB.db.XXXXXXX", tmpdir => 1);
+    close $fh;
+    return "DBI:SQLite:dbname=$path";
+}
 
 has dbh => (
     is      => 'ro',
@@ -35,13 +42,13 @@ sub load {
              updated       DATETIME    NOT NULL   DEFAULT CURRENT_TIMESTAMP,
              status        CHAR(10)    NOT NULL   DEFAULT "pending approval" ); >,
 
-        q< INSERT INTO articles (title, body, created, updated, status) VALUES
-             ("JSON API paints my bikeshed!", "The shortest article. Ever.",
-              "2015-05-22 14:56:29", "2015-05-22 14:56:29", "ok" ),
-             ("A second title", "The 2nd shortest article. Ever.",
-              "2015-06-22 14:56:29", "2015-06-22 14:56:29", "ok" ),
-             ("a third one", "The 3rd shortest article. Ever.",
-              "2015-07-22 14:56:29", "2015-07-22 14:56:29", "pending approval" ); >,
+        map(qq< INSERT INTO articles (title, body, created, updated, status) VALUES $_>,
+             q<("JSON API paints my bikeshed!", "The shortest article. Ever.",
+              "2015-05-22 14:56:29", "2015-05-22 14:56:29", "ok" )>,
+             q<("A second title", "The 2nd shortest article. Ever.",
+              "2015-06-22 14:56:29", "2015-06-22 14:56:29", "ok" )>,
+             q<("a third one", "The 3rd shortest article. Ever.",
+              "2015-07-22 14:56:29", "2015-07-22 14:56:29", "pending approval" ); >),
 
         q< DROP TABLE IF EXISTS people; >,
         q< CREATE TABLE IF NOT EXISTS people (
@@ -50,38 +57,38 @@ sub load {
              age           INTEGER     NOT NULL   DEFAULT "100",
              gender        CHAR(10)    NOT NULL   DEFAULT "unknown" ); >,
 
-        q< INSERT INTO people (id, name, age, gender) VALUES
-             (42, "John",  80, "male"),
-             (88, "Jimmy", 18, "male"),
-             (91, "Diana", 30, "female") >,
+        map(qq< INSERT INTO people (id, name, age, gender) VALUES $_>,
+             q<(42, "John",  80, "male")>,
+             q<(88, "Jimmy", 18, "male")>,
+             q<(91, "Diana", 30, "female")>),
 
         q< DROP TABLE IF EXISTS rel_articles_people; >,
         q< CREATE TABLE IF NOT EXISTS rel_articles_people (
              id_articles   INTEGER     UNIQUE     NOT NULL,
              id_people     INTEGER     UNIQUE     NOT NULL ); >,
 
-        q< INSERT INTO rel_articles_people (id_articles, id_people) VALUES
-             (1, 42),
-             (2, 88),
-             (3, 91) >,
+        map(qq< INSERT INTO rel_articles_people (id_articles, id_people) VALUES $_>,
+             q<(1, 42)>,
+             q<(2, 88)>,
+             q<(3, 91)>),
 
         q< DROP TABLE IF EXISTS comments; >,
         q< CREATE TABLE IF NOT EXISTS comments (
              id            INTEGER     PRIMARY KEY,
              body          TEXT        NOT NULL DEFAULT "" ); >,
 
-        q< INSERT INTO comments (id, body) VALUES
-             (5,  "First!"),
-             (12, "I like XML better") >,
+        map(qq< INSERT INTO comments (id, body) VALUES $_>,
+             q<(5,  "First!")>,
+             q<(12, "I like XML better")>),
 
         q< DROP TABLE IF EXISTS rel_articles_comments; >,
         q< CREATE TABLE IF NOT EXISTS rel_articles_comments (
              id_articles   INTEGER     NOT NULL,
              id_comments   INTEGER     UNIQUE     NOT NULL ); >,
 
-        q< INSERT INTO rel_articles_comments (id_articles, id_comments) VALUES
-             (2, 5),
-             (2, 12) >;
+        map(qq< INSERT INTO rel_articles_comments (id_articles, id_comments) VALUES $_>,
+             q<(2, 5)>,
+             q<(2, 12)>);
 }
 
 __PACKAGE__->meta->make_immutable;
