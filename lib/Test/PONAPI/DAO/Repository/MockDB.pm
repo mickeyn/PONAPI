@@ -7,9 +7,9 @@ use SQL::Composer;
 with 'PONAPI::DAO::Repository';
 
 has dbh => (
-    is       => 'ro',
-    isa      => 'DBI::db',
-    required => 1
+    is     => 'ro',
+    isa    => 'DBI::db',
+    writer => '_set_dbh'
 );
 
 my %TABLE_RELATIONS = (
@@ -30,6 +30,13 @@ my %TABLE_COLUMNS = (
     people   => [qw< id name age gender >],
     comments => [qw< id body >],
 );
+
+sub BUILD {
+    my ($self, $params) = @_;
+    my $loader = Test::PONAPI::DAO::Repository::MockDB::Loader->new;
+    $loader->load unless $params->{skip_data_load};
+    $self->_set_dbh( $loader->dbh );
+}
 
 sub has_type {
     my ( $self, $type ) = @_;

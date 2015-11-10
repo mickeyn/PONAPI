@@ -14,9 +14,7 @@ BEGIN {
     use_ok('Test::PONAPI::DAO::Repository::MockDB::Loader');
 }
 
-my $loader = Test::PONAPI::DAO::Repository::MockDB::Loader->new;
-
-my $repository = Test::PONAPI::DAO::Repository::MockDB->new( dbh => $loader->dbh );
+my $repository = Test::PONAPI::DAO::Repository::MockDB->new;
 isa_ok($repository, 'Test::PONAPI::DAO::Repository::MockDB');
 
 ok($repository->has_type('people'),   '... we have the people type');

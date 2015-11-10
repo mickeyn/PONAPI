@@ -36,6 +36,6 @@ ponapi:
     supports_sort: "false"
   repository:
     class:  "Test::PONAPI::DAO::Repository::MockDB"
-    loader: "Test::PONAPI::DAO::Repository::MockDB::Loader"
+    args: []
 
 ######################################################################

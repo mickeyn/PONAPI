@@ -22,7 +22,7 @@ sub _build_dbh {
         or die $DBI::errstr;
 }
 
-sub BUILD {
+sub load {
     my $self = shift;
 
     $self->dbh->do($_) for

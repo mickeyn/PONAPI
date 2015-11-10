@@ -18,13 +18,9 @@ on_plugin_import {
     my $repository_class = $repository_config->{class}
         || die "[PONAPI Server] missing repository class configuration\n";
 
-    my $loader_class = $repository_config->{loader}
-        || die "[PONAPI Server] missing repository loader configuration\n";
+    my @repository_args = $repository_config->{args} ? @{ $repository_config->{args} } : ();
 
-    my $loader = Module::Runtime::use_module($loader_class)->new
-        || die "[PONAPI Server] failed to create a repository loader object\n";
-
-    my $repository = Module::Runtime::use_module($repository_class)->new( dbh => $loader->dbh )
+    my $repository = Module::Runtime::use_module($repository_class)->new( @repository_args )
         || die "[PONAPI Server] failed to create a repository object\n";
 
     $DAO = PONAPI::DAO->new( repository => $repository );
