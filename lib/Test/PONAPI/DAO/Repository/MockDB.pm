@@ -125,6 +125,17 @@ sub create {
     return 1;
 }
 
+sub create_relationships {
+    my ( $self, %args ) = @_;
+    my ( $doc, $type, $id, $rel_type, $data ) = @args{qw< document type id rel_type data >};
+
+    # TODO: check type can have To-Many relationships or error
+
+    # TODO: add missing login
+
+    return 1;
+}
+
 sub update {
     my ( $self, %args ) = @_;
     my ( $doc, $type, $id, $data ) = @args{qw< document type id data >};
@@ -160,7 +171,9 @@ sub delete_relationships {
     my ( $self, %args ) = @_;
     my ( $doc, $type, $id, $rel_type, $data ) = @args{qw< document type id rel_type data >};
 
-    # TODO
+    # TODO: check type can have To-Many relationships or error
+
+    # TODO: add missing login
 
     return 1;
 }

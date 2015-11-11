@@ -30,6 +30,9 @@ prefix '/:resource_type' => sub {
 # required ID
 prefix '/:resource_type/:resource_id' => sub {
 
+    # Create relationship(s) for a single resource
+    post '/relationships/:relationship_type' => dao_action('create_relationships');
+
     # Retrieve a single resource
     get '' => dao_action('retrieve');
 

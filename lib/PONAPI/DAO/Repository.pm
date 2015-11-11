@@ -9,6 +9,7 @@ requires 'retrieve_all';
 requires 'retrieve_relationships';
 requires 'retrieve_by_relationship';
 requires 'create';
+requires 'create_relationships';
 requires 'update';
 requires 'delete';
 requires 'delete_relationships';

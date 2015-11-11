@@ -209,6 +209,51 @@ sub create {
     return ( $doc->status, $doc->build );
 }
 
+sub create_relationships {
+    my $self = shift;
+    my $req  = PONAPI::DAO::Request->new(@_);
+
+    my $doc = PONAPI::Builder::Document->new();
+
+    $req->id       or $doc->raise_error({ message => "create_relationships: 'id' param is missing" });
+    $req->rel_type or $doc->raise_error({ message => "create_relationships: 'rel_type' param is missing" });
+    $req->has_data or $doc->raise_error({ message => "create_relationships: request body is missing" });
+
+    # TODO:
+    # add some type checking using
+    # has_type and has_relationship
+    # - SL
+
+    if ( $doc->has_errors ) {
+        $doc->set_status(400); # bad request
+    }
+    else {
+        eval {
+            $self->repository->delete_relationships(
+                document => $doc,
+                %{ $req },
+            );
+            $doc->add_meta(
+                message => "successfully created the relationship /"
+                         . $req->type
+                         . "/"
+                         . $req->id
+                         . "/"
+                         . $req->rel_type
+                         . " => "
+                         . encode_json( $req->data )
+            );
+            1;
+        } or do {
+            # NOTE: this probably needs to be more sophisticated - SL
+            warn "$@";
+            $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
+        };
+    }
+
+    return ( $doc->status, $doc->build );
+}
+
 sub update {
     my $self = shift;
     my $req  = PONAPI::DAO::Request->new(@_);

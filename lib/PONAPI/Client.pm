@@ -6,6 +6,7 @@ use Hijk;
 use JSON::XS qw( decode_json );
 
 use PONAPI::Client::Request::Create;
+use PONAPI::Client::Request::CreateRelationships;
 use PONAPI::Client::Request::Retrieve;
 use PONAPI::Client::Request::RetrieveAll;
 use PONAPI::Client::Request::RetrieveRelationships;
@@ -32,6 +33,12 @@ has port => (
 sub create {
     my ( $self, %args ) = @_;
     my $request = PONAPI::Client::Request::Create->new( %args );
+    return $self->_send_ponapi_request( $request->request_params );
+}
+
+sub create_relationships {
+    my ( $self, %args ) = @_;
+    my $request = PONAPI::Client::Request::CreateRelationships->new( %args );
     return $self->_send_ponapi_request( $request->request_params );
 }
 
