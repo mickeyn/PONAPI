@@ -324,6 +324,8 @@ sub delete_relationships {
                          . $req->id
                          . "/"
                          . $req->rel_type
+                         . " => "
+                         . encode_json( $req->data )
             );
             1;
         } or do {
