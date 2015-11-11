@@ -11,6 +11,7 @@ requires 'retrieve_by_relationship';
 requires 'create';
 requires 'create_relationships';
 requires 'update';
+requires 'update_relationships';
 requires 'delete';
 requires 'delete_relationships';
 

@@ -45,6 +45,9 @@ prefix '/:resource_type/:resource_id' => sub {
     # Update a single resource
     patch '' => dao_action('update');
 
+    # Update relationships of a resource
+    patch '/relationships/:relationship_type' => dao_action('update_relationships');
+
     # Delete a single resource
     del '' => dao_action('delete');
 

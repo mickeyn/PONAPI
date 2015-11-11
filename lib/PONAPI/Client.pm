@@ -12,6 +12,7 @@ use PONAPI::Client::Request::RetrieveAll;
 use PONAPI::Client::Request::RetrieveRelationships;
 use PONAPI::Client::Request::RetrieveByRelationship;
 use PONAPI::Client::Request::Update;
+use PONAPI::Client::Request::UpdateRelationships;
 use PONAPI::Client::Request::Delete;
 use PONAPI::Client::Request::DeleteRelationships;
 
@@ -69,6 +70,12 @@ sub retrieve_by_relationship {
 sub update {
     my ( $self, %args ) = @_;
     my $request = PONAPI::Client::Request::Update->new( %args );
+    return $self->_send_ponapi_request( $request->request_params );
+}
+
+sub update_relationships {
+    my ( $self, %args ) = @_;
+    my $request = PONAPI::Client::Request::UpdateRelationships->new( %args );
     return $self->_send_ponapi_request( $request->request_params );
 }
 
