@@ -14,17 +14,14 @@ sub request_params {
 
     my $method = $self->method;
 
-    my @ret = ( method => $method, path => $self->path );
-
-    if ( $method eq 'GET' ) {
-        push @ret => ( query_string => $self->_build_query_string );
-    }
-
-    if ( $method eq 'POST' or $method eq 'PATCH' ) {
-        push @ret => ( body => encode_json( { data => $self->data } ) );
-    }
-
-    return @ret;
+    return (
+        method => $method,
+        path   => $self->path,
+        ( $method eq 'GET'
+              ? ( query_string => $self->_build_query_string )
+              : ( body => encode_json( { data => $self->data } ) )
+        )
+    );
 }
 
 sub _build_query_string {
