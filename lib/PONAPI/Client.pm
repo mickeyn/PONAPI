@@ -12,6 +12,7 @@ use PONAPI::Client::Request::RetrieveRelationships;
 use PONAPI::Client::Request::RetrieveByRelationship;
 use PONAPI::Client::Request::Update;
 use PONAPI::Client::Request::Delete;
+use PONAPI::Client::Request::DeleteRelationships;
 
 has host => (
     is      => 'ro',
@@ -67,6 +68,12 @@ sub update {
 sub delete : method {
     my ( $self, %args ) = @_;
     my $request = PONAPI::Client::Request::Delete->new( %args );
+    return $self->_send_ponapi_request( $request->request_params );
+}
+
+sub delete_relationships {
+    my ( $self, %args ) = @_;
+    my $request = PONAPI::Client::Request::DeleteRelationships->new( %args );
     return $self->_send_ponapi_request( $request->request_params );
 }
 

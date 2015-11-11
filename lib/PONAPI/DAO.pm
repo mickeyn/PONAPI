@@ -293,15 +293,15 @@ sub delete : method {
     return ( $doc->status, $doc->build );
 }
 
-sub delete_relationship {
+sub delete_relationships {
     my $self = shift;
     my $req  = PONAPI::DAO::Request->new(@_);
 
     my $doc = PONAPI::Builder::Document->new();
 
-    $req->id       or  $doc->raise_error({ message => "delete_relationship: 'id' param is missing" });
-    $req->rel_type or  $doc->raise_error({ message => "delete_relationship: 'rel_type' param is missing" });
-    $req->has_data and $doc->raise_error({ message => "delete_relationship: request body is not allowed" });
+    $req->id       or $doc->raise_error({ message => "delete_relationships: 'id' param is missing" });
+    $req->rel_type or $doc->raise_error({ message => "delete_relationships: 'rel_type' param is missing" });
+    $req->has_data or $doc->raise_error({ message => "delete_relationships: request body is missing" });
 
     # TODO:
     # add some type checking using
@@ -313,7 +313,7 @@ sub delete_relationship {
     }
     else {
         eval {
-            $self->repository->delete_relationship(
+            $self->repository->delete_relationships(
                 document => $doc,
                 %{ $req },
             );

@@ -156,9 +156,9 @@ sub delete : method {
     return 1;
 }
 
-sub delete_relationship {
+sub delete_relationships {
     my ( $self, %args ) = @_;
-    my ( $doc, $type, $id, $rel_type ) = @args{qw< document type id rel_type >};
+    my ( $doc, $type, $id, $rel_type, $data ) = @args{qw< document type id rel_type data >};
 
     # TODO
 

@@ -11,6 +11,6 @@ requires 'retrieve_by_relationship';
 requires 'create';
 requires 'update';
 requires 'delete';
-requires 'delete_relationship';
+requires 'delete_relationships';
 
 no Moose::Role; 1;
