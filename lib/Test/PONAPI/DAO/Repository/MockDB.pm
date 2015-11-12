@@ -3,7 +3,12 @@ use Moose;
 
 use DBI;
 use SQL::Composer;
+
 use Test::PONAPI::DAO::Repository::MockDB::Loader;
+
+use Test::PONAPI::DAO::Repository::MockDB::Table::Articles;
+use Test::PONAPI::DAO::Repository::MockDB::Table::People;
+use Test::PONAPI::DAO::Repository::MockDB::Table::Comments;
 
 with 'PONAPI::DAO::Repository';
 
@@ -13,23 +18,17 @@ has dbh => (
     writer => '_set_dbh'
 );
 
-my %TABLE_RELATIONS = (
-    articles => {
-        authors  => { type => 'people',   rel_table => 'rel_articles_people'   },
-        comments => { type => 'comments', rel_table => 'rel_articles_comments' },
-    },
-    people   => {
-        articles => { type => 'articles', rel_table => 'rel_articles_people'   },
-    },
-    comments => {
-        articles => { type => 'articles', rel_table => 'rel_articles_comments' },
-    },
-);
-
-my %TABLE_COLUMNS = (
-    articles => [qw< id title body created updated status >],
-    people   => [qw< id name age gender >],
-    comments => [qw< id body >],
+has tables => (
+    is      => 'ro',
+    isa     => 'HashRef',
+    lazy    => 1,
+    default => sub {
+        return +{
+            articles => Test::PONAPI::DAO::Repository::MockDB::Table::Articles->new,
+            people   => Test::PONAPI::DAO::Repository::MockDB::Table::People->new,
+            comments => Test::PONAPI::DAO::Repository::MockDB::Table::Comments->new,
+        }
+    }
 );
 
 sub BUILD {
@@ -41,23 +40,27 @@ sub BUILD {
 
 sub has_type {
     my ( $self, $type ) = @_;
-    !! exists $TABLE_RELATIONS{$type};
+    !! exists $self->tables->{$type};
 }
 
 sub has_relationship {
     my ( $self, $type, $rel_name ) = @_;
-    !! exists $TABLE_RELATIONS{$type}{$rel_name};
+    if ( my $table = $self->tables->{$type} ) {
+        my $relations = $table->RELATIONS;
+        return !! exists $relations->{ $rel_name };
+    }
+    return 0;
 }
 
 sub retrieve_all {
     my ( $self, %args ) = @_;
     my $type = $args{type};
 
-    my $filters = _stmt_filters($type, $args{filter});
+    my $filters = $self->_stmt_filters($type, $args{filter});
 
     my $stmt = SQL::Composer::Select->new(
         from    => $type,
-        columns => _stmt_columns(\%args),
+        columns => $self->_stmt_columns(\%args),
         where   => [ %{ $filters } ],
     );
 
@@ -96,7 +99,7 @@ sub retrieve_by_relationship {
 
     my $stmt = SQL::Composer::Select->new(
         from    => $q_type,
-        columns => _stmt_columns({ type => $q_type, fields => $fields }),
+        columns => $self->_stmt_columns({ type => $q_type, fields => $fields }),
         where   => [ id => $q_ids ],
     );
 
@@ -250,7 +253,7 @@ sub _add_included {
 
     my $stmt = SQL::Composer::Select->new(
         from    => $type,
-        columns => _stmt_columns({ type => $type, fields => $fields }),
+        columns => $self->_stmt_columns({ type => $type, fields => $fields }),
         where   => [ id => $ids, %{ $filters } ],
     );
 
@@ -284,11 +287,11 @@ sub _fetchall_relationships {
     my %ret;
     my @errors;
 
-    for my $name ( keys %{ $TABLE_RELATIONS{$type} } ) {
+    for my $name ( keys %{ $self->tables->{$type}->RELATIONS } ) {
         next if keys %type_fields > 0 and !exists $type_fields{$name};
 
         my ( $rel_type, $rel_table ) =
-            @{$TABLE_RELATIONS{$type}{$name}}{qw< type rel_table >};
+            @{ $self->tables->{$type}->RELATIONS->{$name} }{qw< type rel_table >};
 
         my $stmt = SQL::Composer::Select->new(
             from    => $rel_table,
@@ -326,26 +329,27 @@ sub _db_execute {
 }
 
 sub _stmt_columns {
+    my $self = shift;
     my $args = shift;
     my ( $fields, $type ) = @{$args}{qw< fields type >};
 
     ref $fields eq 'HASH' and exists $fields->{$type}
-        or return $TABLE_COLUMNS{$type};
+        or return $self->tables->{$type}->COLUMNS;
 
     my @fields_minus_relationship_keys =
-        grep { !exists $TABLE_RELATIONS{$type}{$_} }
+        grep { !exists $self->tables->{$type}->RELATIONS->{$_} }
         @{ $fields->{$type} };
 
     return +[ 'id', @fields_minus_relationship_keys ];
 }
 
 sub _stmt_filters {
-    my ( $type, $filter ) = @_;
+    my ( $self, $type, $filter ) = @_;
 
     return +{
         map   { $_ => $filter->{$_} }
         grep  { exists $filter->{$_} }
-        @{ $TABLE_COLUMNS{$type} }
+        @{ $self->tables->{$type}->COLUMNS }
     };
 }
 
