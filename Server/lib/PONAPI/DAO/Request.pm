@@ -18,7 +18,11 @@ has rel_type => (
     isa => 'Str',
 );
 
-for ( qw< data fields filter page > ) {
+has data => (
+    is        => 'ro',
+);
+
+for ( qw< fields filter page > ) {
     has $_ => (
         traits   => [ 'Hash' ],
         is       => 'ro',
