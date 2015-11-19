@@ -21,13 +21,13 @@ use constant {
     REPOSITORY_ARGS     => [],
 
     # errors
-    ERR_MISSING_CONTENT_TYPE => +[ 415, "{JSON:API} missing Content-Type header" ],
-    ERR_WRONG_CONTENT_TYPE   => +[ 415, "{JSON:API} Content-Type is not: 'application/vnd.api+json'" ],
-    ERR_WRONG_HEADER_ACCEPT  => +[ 406, "{JSON:API} Accept has only modified json-api media-types" ],
-    ERR_BAD_REQ              => +[ 400, "{JSON:API} Bad request" ],
-    ERR_BAD_REQ_PARAMS       => +[ 400, "{JSON:API} Bad request (unsupported parameters)" ],
-    ERR_SORT_NOT_ALLOWED     => +[ 400, "{JSON:API} Server-side sorting not allowed" ],
-    ERR_NO_MATCHING_ROUTE    => +[ 404, "{JSON:API} No matching route" ],
+    ERR_MISSING_CONTENT_TYPE => +{ __error__ => +[ 415, "{JSON:API} missing Content-Type header" ] },
+    ERR_WRONG_CONTENT_TYPE   => +{ __error__ => +[ 415, "{JSON:API} Content-Type is not: 'application/vnd.api+json'" ] },
+    ERR_WRONG_HEADER_ACCEPT  => +{ __error__ => +[ 406, "{JSON:API} Accept has only modified json-api media-types" ] },
+    ERR_BAD_REQ              => +{ __error__ => +[ 400, "{JSON:API} Bad request" ] },
+    ERR_BAD_REQ_PARAMS       => +{ __error__ => +[ 400, "{JSON:API} Bad request (unsupported parameters)" ] },
+    ERR_SORT_NOT_ALLOWED     => +{ __error__ => +[ 400, "{JSON:API} Server-side sorting not allowed" ] },
+    ERR_NO_MATCHING_ROUTE    => +{ __error__ => +[ 404, "{JSON:API} No matching route" ] },
 };
 
 my $QR_JSONAPI_MEDIATYPE = qr{application/vnd\.api\+json};
@@ -40,6 +40,15 @@ BEGIN {
 
     $DAO = PONAPI::DAO->new( repository => $repository );
 };
+
+sub _request_headers {
+    my $req = shift;
+
+    return Hash::MultiValue->from_mixed(
+        map { $_ => +[ split ', ' => $req->headers->header($_) ] }
+        $req->headers->header_field_names
+    );
+}
 
 sub _ponapi_params {
     my ( $wr, $req ) = @_;
@@ -73,24 +82,15 @@ sub _ponapi_params {
     return \%params;
 }
 
-sub _request_headers {
-    my $req = shift;
-
-    return Hash::MultiValue->from_mixed(
-        map { $_ => +[ split ', ' => $req->headers->header($_) ] }
-        $req->headers->header_field_names
-    );
-}
-
 sub _ponapi_route_match {
     my ( $wr, $method, $path ) = @_;
 
-    $wr->({ __error__ => ERR_BAD_REQ }) unless grep { $_ eq $method } qw< GET POST PATCH DELETE >;
+    $wr->(ERR_BAD_REQ) unless grep { $_ eq $method } qw< GET POST PATCH DELETE >;
 
     my ( $type, $id, $relationships, $rel_type ) = split '/' => substr($path,1);
 
-    $wr->({ __error__ => ERR_BAD_REQ }) unless $type;
-    $wr->({ __error__ => ERR_BAD_REQ }) if $rel_type and $relationships ne 'relationships';
+    $wr->(ERR_BAD_REQ) unless $type;
+    $wr->(ERR_BAD_REQ) if $rel_type and $relationships ne 'relationships';
 
     if ( !$rel_type and $relationships ) {
         $rel_type = $relationships;
@@ -113,7 +113,7 @@ sub _ponapi_route_match {
         $action = 'create'                   if $method eq 'POST';
     }
 
-    $wr->({ __error__ => ERR_NO_MATCHING_ROUTE }) unless $action;
+    $wr->(ERR_NO_MATCHING_ROUTE) unless $action;
 
     return ( $action, $type, $id||'', $rel_type||'' );
 }
@@ -125,10 +125,10 @@ sub _ponapi_check_headers {
 
     my $content_type = $headers->get('Content-Type');
 
-    $wr->({ __error__ => ERR_MISSING_CONTENT_TYPE })
+    $wr->(ERR_MISSING_CONTENT_TYPE)
         unless $content_type;
 
-    $wr->({ __error__ => ERR_WRONG_CONTENT_TYPE })
+    $wr->(ERR_WRONG_CONTENT_TYPE)
         unless $content_type eq JSONAPI_MEDIATYPE;
 
 
@@ -139,7 +139,7 @@ sub _ponapi_check_headers {
         split /,/ => $headers->get_all('Accept');
 
     if ( @jsonapi_accept ) {
-        $wr->({ __error__ => ERR_WRONG_HEADER_ACCEPT })
+        $wr->(ERR_WRONG_HEADER_ACCEPT)
             unless grep { /^$QR_JSONAPI_MEDIATYPE;?$/ } @jsonapi_accept;
     }
 
@@ -162,11 +162,11 @@ sub _ponapi_query_params {
         my ( $p, $f ) = $k =~ /^ (\w+?) (?:\[(\w+)\])? $/x;
 
         # valid parameter names
-        $wr->( +{ __error__ => ERR_BAD_REQ_PARAMS } )
+        $wr->(ERR_BAD_REQ_PARAMS)
             unless grep { $p eq $_ } qw< fields filter page include sort >;
 
         # 'sort' requested but not supported
-        $wr->( +{ __error__ => ERR_SORT_NOT_ALLOWED } )
+        $wr->(ERR_SORT_NOT_ALLOWED)
             if $p eq 'sort' and !PONAPI_SORT_ALLOWED;
 
         # values can be passed as CSV
@@ -199,7 +199,7 @@ sub _ponapi_data {
 
     my $body = decode_json( $req->content );
 
-    $wr->( +{ __error__ => ERR_BAD_REQ } )
+    $wr->(ERR_BAD_REQ)
         unless $body and ref $body eq 'HASH' and exists $body->{data};
 
     return $body->{data};
@@ -236,7 +236,6 @@ sub to_app {
 
         my ( $status, $res ) = $DAO->$action($ponapi_params);
         return _response( $status, $res );
-#        return _response( 200, $ponapi_params );
     }
 }
 
