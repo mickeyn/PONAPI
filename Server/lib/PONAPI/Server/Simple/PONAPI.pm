@@ -53,9 +53,6 @@ sub _request_headers {
 sub _ponapi_params {
     my ( $wr, $req ) = @_;
 
-    # THE METHOD
-    # my $method = $req->method;
-
     # THE HEADERS
     _ponapi_check_headers($wr, $req);
 
