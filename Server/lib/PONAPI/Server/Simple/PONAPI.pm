@@ -11,7 +11,7 @@ use PONAPI::DAO;
 
 # TODO: move some to a config file !?
 use constant {
-    JSONAPI_CONTENTTYPE => 'application/vnd.api+json',
+    JSONAPI_MEDIATYPE => 'application/vnd.api+json',
 
     # server options
     PONAPI_SORT_ALLOWED => 0,
@@ -22,12 +22,15 @@ use constant {
 
     # errors
     ERR_MISSING_CONTENT_TYPE => +[ 415, "{JSON:API} missing Content-Type header" ],
-    ERR_WRONG_CONTENT_TYPE   => +[ 406, "{JSON:API} Content-Type is not: 'application/vnd.api+json'" ],
+    ERR_WRONG_CONTENT_TYPE   => +[ 415, "{JSON:API} Content-Type is not: 'application/vnd.api+json'" ],
+    ERR_WRONG_HEADER_ACCEPT  => +[ 406, "{JSON:API} Accept has only modified json-api media-types" ],
     ERR_BAD_REQ              => +[ 400, "{JSON:API} Bad request" ],
     ERR_BAD_REQ_PARAMS       => +[ 400, "{JSON:API} Bad request (unsupported parameters)" ],
     ERR_SORT_NOT_ALLOWED     => +[ 400, "{JSON:API} Server-side sorting not allowed" ],
     ERR_NO_MATCHING_ROUTE    => +[ 404, "{JSON:API} No matching route" ],
 };
+
+my $QR_JSONAPI_MEDIATYPE = qr{application/vnd\.api\+json};
 
 ### TODO: ???
 my $DAO;
@@ -45,8 +48,8 @@ sub _ponapi_params {
     # my $method = $req->method;
 
     # THE HEADERS
-    my $headers = _request_headers($req); # needed??
-    my $content_type = _ponapi_content_type($wr, $headers);
+    my $headers      = _request_headers($req); # needed??
+    _ponapi_check_headers($wr, $headers);
 
     # THE PATH --> route matching
     my ( $action, $type, $id, $rel_type ) = _ponapi_route_match($wr, $req->method, $req->path_info);
@@ -115,8 +118,10 @@ sub _ponapi_route_match {
     return ( $action, $type, $id||'', $rel_type||'' );
 }
 
-sub _ponapi_content_type {
+sub _ponapi_check_headers {
     my ( $wr, $headers ) = @_;
+
+    # check Content-Type
 
     my $content_type = $headers->get('Content-Type');
 
@@ -124,9 +129,21 @@ sub _ponapi_content_type {
         unless $content_type;
 
     $wr->({ __error__ => ERR_WRONG_CONTENT_TYPE })
-        unless $content_type eq JSONAPI_CONTENTTYPE;
+        unless $content_type eq JSONAPI_MEDIATYPE;
 
-    return $content_type;
+
+    # check Accept
+
+    my @jsonapi_accept =
+        grep { /$QR_JSONAPI_MEDIATYPE/ }
+        split /,/ => $headers->get_all('Accept');
+
+    if ( @jsonapi_accept ) {
+        $wr->({ __error__ => ERR_WRONG_HEADER_ACCEPT })
+            unless grep { /^$QR_JSONAPI_MEDIATYPE;?$/ } @jsonapi_accept;
+    }
+
+    return;
 }
 
 sub _ponapi_query_params {
@@ -191,7 +208,7 @@ sub _ponapi_data {
 sub _response {
     my $res = Plack::Response->new( $_[0] || 200 );
 
-    $res->content_type( JSONAPI_CONTENTTYPE );
+    $res->content_type( JSONAPI_MEDIATYPE );
     $res->content( encode_json $_[1] );
     $res->finalize;
 }
