@@ -12,8 +12,7 @@ BEGIN {
     use_ok('PONAPI::Server::Simple::PONAPI');
 }
 
-my $JSONAPI_CONTENT_TYPE = 'application/vnd.api+json';
-my @CONTENT_TYPE = ( 'Content-Type' => $JSONAPI_CONTENT_TYPE );
+my $JSONAPI_MEDIATYPE = 'application/vnd.api+json';
 
 subtest '... basic server test' => sub {
 
@@ -25,22 +24,27 @@ subtest '... basic server test' => sub {
     }
 
     {
-        my $res = $app->request( GET '/', @CONTENT_TYPE, 'Accept' => $JSONAPI_CONTENT_TYPE . ";v=1" );
+        my $res = $app->request( GET '/' , 'Content-Type' => 'application/json' );
+        is( $res->code, 415, 'different content-type' );
+    }
+
+    {
+        my $res = $app->request( GET '/', 'Content-Type' => $JSONAPI_MEDIATYPE, 'Accept' => $JSONAPI_MEDIATYPE . ";v=1" );
         is( $res->code, 406, 'only modified Accept header' );
     }
 
     {
-        my $res = $app->request( GET '/', @CONTENT_TYPE, 'Accept' => $JSONAPI_CONTENT_TYPE );
+        my $res = $app->request( GET '/', 'Content-Type' => $JSONAPI_MEDIATYPE, 'Accept' => $JSONAPI_MEDIATYPE );
         is( $res->code, 400, 'missing type - invalid request' );
     }
 
     {
-        my $res = $app->request( GET '/', @CONTENT_TYPE );
+        my $res = $app->request( GET '/', 'Content-Type' => $JSONAPI_MEDIATYPE );
         is( $res->code, 400, 'missing type - invalid request' );
     }
 
     {
-        my $res = $app->request( GET '/articles', @CONTENT_TYPE );
+        my $res = $app->request( GET '/articles', 'Content-Type' => $JSONAPI_MEDIATYPE );
         ok( $res->is_success, 'Successful request' );
         is( $res->headers->content_type, 'application/vnd.api+json', 'Successful Content-Type' );
     }
