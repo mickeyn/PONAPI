@@ -58,11 +58,10 @@ sub _ponapi_params {
     _ponapi_check_headers($wr, $req);
 
     # THE PATH --> route matching
-    my ( $action, $type, $id, $rel_type ) = _ponapi_route_match($wr, $req->method, $req->path_info);
+    my ( $action, $type, $id, $rel_type ) = _ponapi_route_match($wr, $req);
 
     # THE QUERY
-    my $query = $req->query_parameters;
-    my @ponapi_query_params = _ponapi_query_params($wr, $query);
+    my @ponapi_query_params = _ponapi_query_params($wr, $req);
 
     # THE BODY CONTENT
     my $data = _ponapi_data($wr, $req);
@@ -80,11 +79,12 @@ sub _ponapi_params {
 }
 
 sub _ponapi_route_match {
-    my ( $wr, $method, $path ) = @_;
+    my ( $wr, $req ) = @_;
+    my $method = $req->method;
 
     $wr->(ERR_BAD_REQ) unless grep { $_ eq $method } qw< GET POST PATCH DELETE >;
 
-    my ( $type, $id, $relationships, $rel_type ) = split '/' => substr($path,1);
+    my ( $type, $id, $relationships, $rel_type ) = split '/' => substr($req->path_info,1);
 
     $wr->(ERR_BAD_REQ) unless $type;
     $wr->(ERR_BAD_REQ) if $rel_type and $relationships ne 'relationships';
@@ -145,7 +145,7 @@ sub _ponapi_check_headers {
 }
 
 sub _ponapi_query_params {
-    my ( $wr, $query ) = @_;
+    my ( $wr, $req ) = @_;
 
     my %params = (
         fields  => {},
@@ -156,7 +156,7 @@ sub _ponapi_query_params {
     );
 
     # loop over query parameters (unique keys)
-    for my $k ( keys %{ $query_parameters } ) {
+    for my $k ( keys %{ $req->query_parameters } ) {
         my ( $p, $f ) = $k =~ /^ (\w+?) (?:\[(\w+)\])? $/x;
 
         # valid parameter names
@@ -168,7 +168,7 @@ sub _ponapi_query_params {
             if $p eq 'sort' and !PONAPI_SORT_ALLOWED;
 
         # values can be passed as CSV
-        my @values = map { split /,/ } $query_parameters->get_all($k);
+        my @values = map { split /,/ } $req->query_parameters->get_all($k);
 
         # values passed on in array-ref
         grep { $p eq $_ } qw< fields filter >
