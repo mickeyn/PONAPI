@@ -15,6 +15,7 @@ use constant {
 
     # server options
     PONAPI_SORT_ALLOWED => 0,
+    PONAPI_SEND_VERSION_HEADER => 1,
 
     # repository
     REPOSITORY_CLASS    => 'Test::PONAPI::DAO::Repository::MockDB',
@@ -206,6 +207,7 @@ sub _response {
     my $res = Plack::Response->new( $_[0] || 200 );
 
     $res->content_type( JSONAPI_MEDIATYPE );
+    $res->header( 'X-PONAPI-Server-Version' => '1.0' ) if PONAPI_SEND_VERSION_HEADER;
     $res->content( encode_json $_[1] );
     $res->finalize;
 }
@@ -222,6 +224,7 @@ sub _error_response {
 sub to_app {
     return sub {
         my $req = Plack::Request->new($_[0]);
+
         my $ponapi_params = Return::MultiLevel::with_return {
             _ponapi_params( shift, $req )
         };

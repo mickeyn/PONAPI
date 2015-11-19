@@ -7,6 +7,7 @@ my $match_jsonapi_mt  = qr/^application\/vnd\.api\+json/;
 
 on_plugin_import {
     my $dsl = shift;
+    my $send_server_verison = $dsl->config->{ponapi}{server}{send_version_header} || 0;
 
     ### add 'before' hook to check content-type & accept headers
 
@@ -48,6 +49,8 @@ on_plugin_import {
             name => 'after',
             code => sub {
                 $dsl->header( 'Content-Type' => $jsonapi_mediatype );
+                $dsl->header( 'X-PONAPI-Server-Version' => '1.0' )
+                    if grep { $_ eq $send_version_header } qw< 1 true yes >;
             },
         )
     );

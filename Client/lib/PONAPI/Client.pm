@@ -28,6 +28,12 @@ has port => (
     default => sub { 5000 },
 );
 
+has send_version_header => (
+    is      => 'ro',
+    isa     => 'Bool',
+    default => sub { 1 },
+);
+
 
 ### public methods
 
@@ -102,7 +108,10 @@ sub _send_ponapi_request {
         %args,
         host => $self->host,
         port => $self->port,
-        head => [ 'Content-Type' => 'application/vnd.api+json' ],
+        head => [
+            'Content-Type' => 'application/vnd.api+json',
+            ( $self->send_version_header ? ( 'X-PONAPI-Client-Version' => '1.0' ) : () )
+        ],
     });
 
     return decode_json( $res->{body} );
