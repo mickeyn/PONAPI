@@ -57,8 +57,7 @@ sub _ponapi_params {
     # my $method = $req->method;
 
     # THE HEADERS
-    my $headers      = _request_headers($req); # needed??
-    _ponapi_check_headers($wr, $headers);
+    _ponapi_check_headers($wr, $req);
 
     # THE PATH --> route matching
     my ( $action, $type, $id, $rel_type ) = _ponapi_route_match($wr, $req->method, $req->path_info);
@@ -119,7 +118,8 @@ sub _ponapi_route_match {
 }
 
 sub _ponapi_check_headers {
-    my ( $wr, $headers ) = @_;
+    my ( $wr, $req ) = @_;
+    my $headers = _request_headers($req);
 
     # check Content-Type
 
