@@ -221,11 +221,19 @@ sub _add_resources {
 
 sub _add_resource_relationships {
     my ( $self, $rec, %args ) = @_;
-    my $doc = $rec->find_root;
+    my $doc  = $rec->find_root;
+    my $type = $rec->type;
     my %include = map { $_ => 1 } @{ $args{include} };
 
+    my @invalid_includes = grep { !$self->has_relationship($_, $type) } keys %include;
+    for ( @invalid_includes ) {
+        $doc->set_status(400);
+        $doc->raise_error({ message => "can't include type $_ (no relationship with $type)" });
+        return;
+    }
+
     my $rels = $self->_fetchall_relationships(
-        type     => $rec->type,
+        type     => $type,
         id       => $rec->id,
         document => $doc,
         fields   => $args{fields},
@@ -249,12 +257,13 @@ sub _add_included {
     my ( $self, $type, $ids, %args ) = @_;
     my ( $doc, $filter, $fields ) = @args{qw< document filter fields >};
 
+    $filter->{id} = $ids;
     my $filters = $self->_stmt_filters($type, $filter);
 
     my $stmt = SQL::Composer::Select->new(
         from    => $type,
         columns => $self->_stmt_columns({ type => $type, fields => $fields }),
-        where   => [ id => $ids, %{ $filters } ],
+        where   => [ %{ $filters } ],
     );
 
     my ( $sth, $errstr ) = $self->_db_execute( $stmt );
