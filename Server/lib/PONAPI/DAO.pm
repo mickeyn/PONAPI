@@ -28,10 +28,7 @@ sub retrieve_all {
     # has_type and has_relationship
     # - SL
 
-    if ( $doc->has_errors ) {
-        $doc->set_status(400); # bad request
-    }
-    else {
+    $doc->has_errors or
         eval {
             $self->repository->retrieve_all(
                 document => $doc,
@@ -43,8 +40,8 @@ sub retrieve_all {
             warn "$@";
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
-    }
 
+    $doc->has_errors and $doc->set_status(400);
     return ( $doc->status, $doc->build );
 }
 
@@ -62,10 +59,7 @@ sub retrieve {
     # has_type and has_relationship
     # - SL
 
-    if ( $doc->has_errors ) {
-        $doc->set_status(400); # bad request
-    }
-    else {
+    $doc->has_errors or
         eval {
             $self->repository->retrieve(
                 document => $doc,
@@ -77,8 +71,8 @@ sub retrieve {
             warn "$@";
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
-    }
 
+    $doc->has_errors and $doc->set_status(400);
     return ( $doc->status, $doc->build );
 }
 
@@ -97,10 +91,7 @@ sub retrieve_relationships {
     # has_type and has_relationship
     # - SL
 
-    if ( $doc->has_errors ) {
-        $doc->set_status(400); # bad request
-    }
-    else {
+    $doc->has_errors or
         eval {
             $self->repository->retrieve_relationships(
                 document => $doc,
@@ -112,8 +103,8 @@ sub retrieve_relationships {
             warn "$@";
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
-    }
 
+    $doc->has_errors and $doc->set_status(400);
     return ( $doc->status, $doc->build );
 }
 
@@ -132,10 +123,7 @@ sub retrieve_by_relationship {
     # has_type and has_relationship
     # - SL
 
-    if ( $doc->has_errors ) {
-        $doc->set_status(400); # bad request
-    }
-    else {
+    $doc->has_errors or
         eval {
             $self->repository->retrieve_by_relationship(
                 document => $doc,
@@ -147,8 +135,8 @@ sub retrieve_by_relationship {
             warn "$@";
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
-    }
 
+    $doc->has_errors and $doc->set_status(400);
     return ( $doc->status, $doc->build );
 }
 
@@ -168,10 +156,7 @@ sub create {
     # has_type and has_relationship
     # - SL
 
-    if ( $doc->has_errors ) {
-        $doc->set_status(400); # bad request
-    }
-    else {
+    $doc->has_errors or
         eval {
             $self->repository->create(
                 document => $doc,
@@ -189,8 +174,8 @@ sub create {
             warn "$@";
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
-    }
 
+    $doc->has_errors and $doc->set_status(400);
     return ( $doc->status, $doc->build );
 }
 
@@ -209,10 +194,7 @@ sub create_relationships {
     # has_type and has_relationship
     # - SL
 
-    if ( $doc->has_errors ) {
-        $doc->set_status(400); # bad request
-    }
-    else {
+    $doc->has_errors or
         eval {
             $self->repository->create_relationships(
                 document => $doc,
@@ -234,8 +216,8 @@ sub create_relationships {
             warn "$@";
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
-    }
 
+    $doc->has_errors and $doc->set_status(400);
     return ( $doc->status, $doc->build );
 }
 
@@ -254,10 +236,7 @@ sub update {
     # has_type and has_relationship
     # - SL
 
-    if ( $doc->has_errors ) {
-        $doc->set_status(400); # bad request
-    }
-    else {
+    $doc->has_errors or
         eval {
             $self->repository->update(
                 document => $doc,
@@ -277,8 +256,8 @@ sub update {
             warn "$@";
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
-    }
 
+    $doc->has_errors and $doc->set_status(400);
     return ( $doc->status, $doc->build );
 }
 
@@ -297,10 +276,7 @@ sub update_relationships {
     # has_type and has_relationship
     # - SL
 
-    if ( $doc->has_errors ) {
-        $doc->set_status(400); # bad request
-    }
-    else {
+    $doc->has_errors or
         eval {
             $self->repository->update_relationships(
                 document => $doc,
@@ -322,8 +298,8 @@ sub update_relationships {
             warn "$@";
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
-    }
 
+    $doc->has_errors and $doc->set_status(400);
     return ( $doc->status, $doc->build );
 }
 
@@ -342,10 +318,7 @@ sub delete : method {
     # has_type and has_relationship
     # - SL
 
-    if ( $doc->has_errors ) {
-        $doc->set_status(400); # bad request
-    }
-    else {
+    $doc->has_errors or
         eval {
             $self->repository->delete(
                 document => $doc,
@@ -363,8 +336,8 @@ sub delete : method {
             warn "$@";
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
-    }
 
+    $doc->has_errors and $doc->set_status(400);
     return ( $doc->status, $doc->build );
 }
 
@@ -383,10 +356,7 @@ sub delete_relationships {
     # has_type and has_relationship
     # - SL
 
-    if ( $doc->has_errors ) {
-        $doc->set_status(400); # bad request
-    }
-    else {
+    $doc->has_errors or
         eval {
             $self->repository->delete_relationships(
                 document => $doc,
@@ -408,8 +378,8 @@ sub delete_relationships {
             warn "$@";
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
-    }
 
+    $doc->has_errors and $doc->set_status(400);
     return ( $doc->status, $doc->build );
 }
 

@@ -213,6 +213,8 @@ sub _add_resources {
         $rec->add_attribute( $_ => $row->{$_} ) for keys %{$row};
 
         $self->_add_resource_relationships($rec, %args);
+        $doc->has_errors and return;
+
         $counter++;
     }
 
@@ -225,10 +227,11 @@ sub _add_resource_relationships {
     my $type = $rec->type;
     my %include = map { $_ => 1 } @{ $args{include} };
 
+    # check for invalid 'include' params
     my @invalid_includes = grep { !$self->has_relationship($_, $type) } keys %include;
-    for ( @invalid_includes ) {
-        $doc->set_status(400);
-        $doc->raise_error({ message => "can't include type $_ (no relationship with $type)" });
+    if ( @invalid_includes ) {
+        $doc->raise_error({ message => "can't include type $_ (no relationship with $type)" })
+            for @invalid_includes;
         return;
     }
 
