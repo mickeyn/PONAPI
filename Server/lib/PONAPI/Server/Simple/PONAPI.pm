@@ -209,14 +209,14 @@ sub _response {
     $res->headers( $_[1] );
     $res->content_type( JSONAPI_MEDIATYPE );
     $res->header( 'X-PONAPI-Server-Version' => '1.0' ) if PONAPI_SEND_VERSION_HEADER;
-    $res->content( encode_json $_[2] ) if substr($_[0],0,1) eq '2';
+    $res->content( encode_json $_[2] ) if ref $_[2];
     $res->finalize;
 }
 
 sub _error_response {
     my $args = shift;
 
-    return _response( $args->[0], +{
+    return _response( $args->[0], [], +{
         jsonapi => { version => "1.0" },
         errors  => [ { message => $args->[1] } ],
     } );
