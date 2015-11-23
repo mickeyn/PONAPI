@@ -1,0 +1,6 @@
+server:
+  supports_sort: "false"
+  send_version_header: "true"
+repository:
+  class:  "Test::PONAPI::DAO::Repository::MockDB"
+  args: []
