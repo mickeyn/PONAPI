@@ -5,25 +5,15 @@ use Plack::Response;
 use Hash::MultiValue;
 use Module::Runtime    ();
 use Return::MultiLevel ();
+use Path::Class::File  ();
+use YAML::XS           ();
 use JSON::XS           qw{ decode_json encode_json };
 
 use PONAPI::DAO;
 
 use parent 'Plack::Component';
 
-# TODO: move some to a config file !?
 use constant {
-    JSONAPI_MEDIATYPE => 'application/vnd.api+json',
-
-    # server options
-    PONAPI_SORT_ALLOWED => 0,
-    PONAPI_SEND_VERSION_HEADER => 1,
-
-    # repository
-    REPOSITORY_CLASS    => 'Test::PONAPI::DAO::Repository::MockDB',
-    REPOSITORY_ARGS     => [],
-
-    # errors
     ERR_MISSING_CONTENT_TYPE => +{ __error__ => +[ 415, "{JSON:API} missing Content-Type header" ] },
     ERR_WRONG_CONTENT_TYPE   => +{ __error__ => +[ 415, "{JSON:API} Content-Type is not: 'application/vnd.api+json'" ] },
     ERR_WRONG_HEADER_ACCEPT  => +{ __error__ => +[ 406, "{JSON:API} Accept has only modified json-api media-types" ] },
@@ -33,15 +23,18 @@ use constant {
     ERR_NO_MATCHING_ROUTE    => +{ __error__ => +[ 404, "{JSON:API} No matching route" ] },
 };
 
-my $QR_JSONAPI_MEDIATYPE = qr{application/vnd\.api\+json};
-
 sub prepare_app {
-    my $self = shift;
+    my ( $self ) = @_;
 
-    my $repository = Module::Runtime::use_module( REPOSITORY_CLASS )->new( @{REPOSITORY_ARGS} )
-        || die "[PONAPI Server] failed to create a repository object\n";
+    my $file = Path::Class::File->new('conf/server.yml');
+    my $conf = YAML::XS::Load( scalar $file->slurp );
 
-    $self->{'ponapi.DAO'} = PONAPI::DAO->new( repository => $repository );
+    $self->_set_server_sorting     ( $conf->{server} );
+    $self->_set_server_send_header ( $conf->{server} );
+    $self->_load_repository        ( $conf->{repository} );
+
+    $self->{'ponapi.mediatype'} = 'application/vnd.api+json';
+    $self->{'ponapi.qr_mediatype'} = qr{application/vnd\.api\+json};
 
     return;
 }
@@ -52,23 +45,51 @@ sub call {
     my $req = Plack::Request->new($env);
 
     my $ponapi_params = Return::MultiLevel::with_return {
-        _ponapi_params( shift, $req )
+        $self->_ponapi_params( shift, $req )
     };
 
-    return _error_response( $ponapi_params->{__error__} )
+    return $self->_error_response( $ponapi_params->{__error__} )
         if $ponapi_params->{__error__};
 
     my $action = delete $ponapi_params->{action};
 
     my ( $status, $headers, $res ) = $self->{'ponapi.DAO'}->$action($ponapi_params);
-    return _response( $status, $headers, $res );
+    return $self->_response( $status, $headers, $res );
 }
 
 
 ### ...
 
+sub _set_server_sorting {
+    my ( $self, $conf ) = @_;
+
+    my $sort_allowed = $conf->{sort_allowed}
+        // die "[PONAPI Server] server sorting configuration is missing";
+
+    $self->{'ponapi.sort_allowed'} =
+        ( grep { $sort_allowed eq $_ } qw< yes true 1 > ) ? 1 :
+        ( grep { $sort_allowed eq $_ } qw< no false 0 > ) ? 0 :
+        die "[PONAPI Server] server sorting is misconfigured";
+}
+
+sub _set_server_send_header {
+    my ( $self, $conf ) = @_;
+
+    $self->{'ponapi.send_version_header'} =
+        ( grep { $conf->{send_version_header} eq $_ } qw< yes true 1 > ) ? 1 : 0;
+}
+
+sub _load_repository {
+    my ( $self, $conf ) = @_;
+
+    my $repository = Module::Runtime::use_module( $conf->{class} )->new( @{ $conf->{args} } )
+        || die "[PONAPI Server] failed to create a repository object\n";
+
+    $self->{'ponapi.DAO'} = PONAPI::DAO->new( repository => $repository );
+}
+
 sub _request_headers {
-    my $req = shift;
+    my ( $self, $req ) = @_;
 
     return Hash::MultiValue->from_mixed(
         map { $_ => +[ split ', ' => $req->headers->header($_) ] }
@@ -77,19 +98,19 @@ sub _request_headers {
 }
 
 sub _ponapi_params {
-    my ( $wr, $req ) = @_;
+    my ( $self, $wr, $req ) = @_;
 
     # THE HEADERS
-    _ponapi_check_headers($wr, $req);
+    $self->_ponapi_check_headers($wr, $req);
 
     # THE PATH --> route matching
-    my ( $action, $type, $id, $rel_type ) = _ponapi_route_match($wr, $req);
+    my ( $action, $type, $id, $rel_type ) = $self->_ponapi_route_match($wr, $req);
 
     # THE QUERY
-    my @ponapi_query_params = _ponapi_query_params($wr, $req);
+    my @ponapi_query_params = $self->_ponapi_query_params($wr, $req);
 
     # THE BODY CONTENT
-    my $data = _ponapi_data($wr, $req);
+    my $data = $self->_ponapi_data($wr, $req);
 
     my %params = (
         action   => $action,
@@ -104,7 +125,7 @@ sub _ponapi_params {
 }
 
 sub _ponapi_route_match {
-    my ( $wr, $req ) = @_;
+    my ( $self, $wr, $req ) = @_;
     my $method = $req->method;
 
     $wr->(ERR_BAD_REQ) unless grep { $_ eq $method } qw< GET POST PATCH DELETE >;
@@ -141,8 +162,8 @@ sub _ponapi_route_match {
 }
 
 sub _ponapi_check_headers {
-    my ( $wr, $req ) = @_;
-    my $headers = _request_headers($req);
+    my ( $self, $wr, $req ) = @_;
+    my $headers = $self->_request_headers($req);
 
     # check Content-Type
 
@@ -152,25 +173,24 @@ sub _ponapi_check_headers {
         unless $content_type;
 
     $wr->(ERR_WRONG_CONTENT_TYPE)
-        unless $content_type eq JSONAPI_MEDIATYPE;
+        unless $content_type eq $self->{'ponapi.mediatype'};
 
 
     # check Accept
+    my $qr = $self->{'ponapi.qr_mediatype'};
 
-    my @jsonapi_accept =
-        grep { /$QR_JSONAPI_MEDIATYPE/ }
-        split /,/ => $headers->get_all('Accept');
+    my @jsonapi_accept = grep { /$qr/ } split /,/ => $headers->get_all('Accept');
 
     if ( @jsonapi_accept ) {
         $wr->(ERR_WRONG_HEADER_ACCEPT)
-            unless grep { /^$QR_JSONAPI_MEDIATYPE;?$/ } @jsonapi_accept;
+            unless grep { /^$qr;?$/ } @jsonapi_accept;
     }
 
     return;
 }
 
 sub _ponapi_query_params {
-    my ( $wr, $req ) = @_;
+    my ( $self, $wr, $req ) = @_;
 
     my %params = (
         fields  => {},
@@ -190,7 +210,7 @@ sub _ponapi_query_params {
 
         # 'sort' requested but not supported
         $wr->(ERR_SORT_NOT_ALLOWED)
-            if $p eq 'sort' and !PONAPI_SORT_ALLOWED;
+            if $p eq 'sort' and !$self->{'ponapi.sort_allowed'};
 
         # values can be passed as CSV
         my @values = map { split /,/ } $req->query_parameters->get_all($k);
@@ -216,7 +236,7 @@ sub _ponapi_query_params {
 }
 
 sub _ponapi_data {
-    my ( $wr, $req ) = @_;
+    my ( $self, $wr, $req ) = @_;
 
     $req->method eq 'GET' and return;
 
@@ -229,19 +249,20 @@ sub _ponapi_data {
 }
 
 sub _response {
-    my $res = Plack::Response->new( $_[0] || 200 );
+    my ( $self, $status, $headers, $content ) = @_;
+    my $res = Plack::Response->new( $status || 200 );
 
-    $res->headers( $_[1] );
-    $res->content_type( JSONAPI_MEDIATYPE );
-    $res->header( 'X-PONAPI-Server-Version' => '1.0' ) if PONAPI_SEND_VERSION_HEADER;
-    $res->content( encode_json $_[2] ) if ref $_[2];
+    $res->headers( $headers );
+    $res->content_type( $self->{'ponapi.mediatype'} );
+    $res->header( 'X-PONAPI-Server-Version' => '1.0' ) if $self->{'ponapi.send_version_header'};
+    $res->content( encode_json $content ) if ref $content;
     $res->finalize;
 }
 
 sub _error_response {
-    my $args = shift;
+    my ( $self, $args ) = @_;
 
-    return _response( $args->[0], [], +{
+    return $self->_response( $args->[0], [], +{
         jsonapi => { version => "1.0" },
         errors  => [ { message => $args->[1] } ],
     } );

@@ -1,0 +1,9 @@
+# PONAPI server & repository configuration file
+
+server:
+  sort_allowed: "false"
+  send_version_header: "true"
+
+repository:
+  class:  "Test::PONAPI::DAO::Repository::MockDB"
+  args: []
