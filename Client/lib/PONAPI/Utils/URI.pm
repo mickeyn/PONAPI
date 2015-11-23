@@ -4,7 +4,7 @@ use URI;
 use URI::QueryParam;
 
 use parent qw< Exporter >;
-@EXPORT_OK = qw< to_uri from_uri >;
+@EXPORT_OK = qw< to_uri >;
 
 sub to_uri {
     my ( $data ) = @_;
