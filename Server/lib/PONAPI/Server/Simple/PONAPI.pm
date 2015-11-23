@@ -206,9 +206,10 @@ sub _ponapi_data {
 sub _response {
     my $res = Plack::Response->new( $_[0] || 200 );
 
+    $res->headers( $_[1] );
     $res->content_type( JSONAPI_MEDIATYPE );
     $res->header( 'X-PONAPI-Server-Version' => '1.0' ) if PONAPI_SEND_VERSION_HEADER;
-    $res->content( encode_json $_[1] );
+    $res->content( encode_json $_[2] ) if substr($_[0],0,1) eq '2';
     $res->finalize;
 }
 
@@ -234,8 +235,8 @@ sub to_app {
 
         my $action = delete $ponapi_params->{action};
 
-        my ( $status, $res ) = $DAO->$action($ponapi_params);
-        return _response( $status, $res );
+        my ( $status, $headers, $res ) = $DAO->$action($ponapi_params);
+        return _response( $status, $headers, $res );
     }
 }
 

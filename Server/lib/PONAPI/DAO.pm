@@ -42,7 +42,7 @@ sub retrieve_all {
         };
 
     $doc->has_errors and $doc->set_status(400);
-    return ( $doc->status, $doc->build );
+    return ( $doc->status, [], $doc->build );
 }
 
 sub retrieve {
@@ -73,7 +73,7 @@ sub retrieve {
         };
 
     $doc->has_errors and $doc->set_status(400);
-    return ( $doc->status, $doc->build );
+    return ( $doc->status, [], $doc->build );
 }
 
 sub retrieve_relationships {
@@ -105,7 +105,7 @@ sub retrieve_relationships {
         };
 
     $doc->has_errors and $doc->set_status(400);
-    return ( $doc->status, $doc->build );
+    return ( $doc->status, [], $doc->build );
 }
 
 sub retrieve_by_relationship {
@@ -137,7 +137,7 @@ sub retrieve_by_relationship {
         };
 
     $doc->has_errors and $doc->set_status(400);
-    return ( $doc->status, $doc->build );
+    return ( $doc->status, [], $doc->build );
 }
 
 sub create {
@@ -176,7 +176,7 @@ sub create {
         };
 
     $doc->has_errors and $doc->set_status(400);
-    return ( $doc->status, $doc->build );
+    return ( $doc->status, [], $doc->build );
 }
 
 sub create_relationships {
@@ -218,7 +218,7 @@ sub create_relationships {
         };
 
     $doc->has_errors and $doc->set_status(400);
-    return ( $doc->status, $doc->build );
+    return ( $doc->status, [], $doc->build );
 }
 
 sub update {
@@ -258,7 +258,7 @@ sub update {
         };
 
     $doc->has_errors and $doc->set_status(400);
-    return ( $doc->status, $doc->build );
+    return ( $doc->status, [], $doc->build );
 }
 
 sub update_relationships {
@@ -300,7 +300,7 @@ sub update_relationships {
         };
 
     $doc->has_errors and $doc->set_status(400);
-    return ( $doc->status, $doc->build );
+    return ( $doc->status, [], $doc->build );
 }
 
 sub delete : method {
@@ -338,7 +338,7 @@ sub delete : method {
         };
 
     $doc->has_errors and $doc->set_status(400);
-    return ( $doc->status, $doc->build );
+    return ( $doc->status, [], $doc->build );
 }
 
 sub delete_relationships {
@@ -380,7 +380,7 @@ sub delete_relationships {
         };
 
     $doc->has_errors and $doc->set_status(400);
-    return ( $doc->status, $doc->build );
+    return ( $doc->status, [], $doc->build );
 }
 
 
