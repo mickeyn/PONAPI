@@ -5,21 +5,14 @@ use Plack::Response;
 use Hash::MultiValue;
 use Module::Runtime    ();
 use Return::MultiLevel ();
+use Path::Class::File   ();
+use YAML::XS           ();
 use JSON::XS           qw{ decode_json encode_json };
 
 use PONAPI::DAO;
 
-# TODO: move some to a config file !?
 use constant {
     JSONAPI_MEDIATYPE => 'application/vnd.api+json',
-
-    # server options
-    PONAPI_SORT_ALLOWED => 0,
-    PONAPI_SEND_VERSION_HEADER => 1,
-
-    # repository
-    REPOSITORY_CLASS    => 'Test::PONAPI::DAO::Repository::MockDB',
-    REPOSITORY_ARGS     => [],
 
     # errors
     ERR_MISSING_CONTENT_TYPE => +{ __error__ => +[ 415, "{JSON:API} missing Content-Type header" ] },
@@ -33,10 +26,27 @@ use constant {
 
 my $QR_JSONAPI_MEDIATYPE = qr{application/vnd\.api\+json};
 
-### TODO: ???
 my $DAO;
+my $PONAPI_SORT_ALLOWED        = 0;
+my $PONAPI_SEND_VERSION_HEADER = 1;
+
 BEGIN {
-    my $repository = Module::Runtime::use_module( REPOSITORY_CLASS )->new( @{REPOSITORY_ARGS} )
+    # read config file
+    my $file = Path::Class::File->new('conf/server.yml');
+    my $conf = YAML::XS::Load( scalar $file->slurp );
+
+    $PONAPI_SORT_ALLOWED = 1
+        if defined $conf->{server}{supports_sort}
+           and grep { $_ eq $conf->{server}{supports_sort} } qw< 1 yes true >;
+
+    $PONAPI_SEND_VERSION_HEADER = 0
+        if defined $conf->{server}{send_version_header}
+           and grep { $_ eq $conf->{server}{send_version_header} } qw< 0 no false >;
+
+    # set the DAO object
+    my $repositor_class = $conf->{repository}{class};
+    my $repositor_args  = $conf->{repository}{args};
+    my $repository = Module::Runtime::use_module($repositor_class)->new( @{$repository_args} )
         || die "[PONAPI Server] failed to create a repository object\n";
 
     $DAO = PONAPI::DAO->new( repository => $repository );
@@ -165,7 +175,7 @@ sub _ponapi_query_params {
 
         # 'sort' requested but not supported
         $wr->(ERR_SORT_NOT_ALLOWED)
-            if $p eq 'sort' and !PONAPI_SORT_ALLOWED;
+            if $p eq 'sort' and !$PONAPI_SORT_ALLOWED;
 
         # values can be passed as CSV
         my @values = map { split /,/ } $req->query_parameters->get_all($k);
@@ -208,7 +218,7 @@ sub _response {
 
     $res->headers( $_[1] );
     $res->content_type( JSONAPI_MEDIATYPE );
-    $res->header( 'X-PONAPI-Server-Version' => '1.0' ) if PONAPI_SEND_VERSION_HEADER;
+    $res->header( 'X-PONAPI-Server-Version' => '1.0' ) if $PONAPI_SEND_VERSION_HEADER;
     $res->content( encode_json $_[2] ) if ref $_[2];
     $res->finalize;
 }
