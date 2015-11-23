@@ -9,6 +9,8 @@ use JSON::XS           qw{ decode_json encode_json };
 
 use PONAPI::DAO;
 
+use parent 'Plack::Component';
+
 # TODO: move some to a config file !?
 use constant {
     JSONAPI_MEDIATYPE => 'application/vnd.api+json',
@@ -33,14 +35,37 @@ use constant {
 
 my $QR_JSONAPI_MEDIATYPE = qr{application/vnd\.api\+json};
 
-### TODO: ???
-my $DAO;
-BEGIN {
+sub prepare_app {
+    my $self = shift;
+
     my $repository = Module::Runtime::use_module( REPOSITORY_CLASS )->new( @{REPOSITORY_ARGS} )
         || die "[PONAPI Server] failed to create a repository object\n";
 
-    $DAO = PONAPI::DAO->new( repository => $repository );
-};
+    $self->{'ponapi.DAO'} = PONAPI::DAO->new( repository => $repository );
+
+    return;
+}
+
+sub call {
+    my ( $self, $env ) = @_;
+
+    my $req = Plack::Request->new($env);
+
+    my $ponapi_params = Return::MultiLevel::with_return {
+        _ponapi_params( shift, $req )
+    };
+
+    return _error_response( $ponapi_params->{__error__} )
+        if $ponapi_params->{__error__};
+
+    my $action = delete $ponapi_params->{action};
+
+    my ( $status, $headers, $res ) = $self->{'ponapi.DAO'}->$action($ponapi_params);
+    return _response( $status, $headers, $res );
+}
+
+
+### ...
 
 sub _request_headers {
     my $req = shift;
@@ -222,23 +247,6 @@ sub _error_response {
     } );
 }
 
-sub to_app {
-    return sub {
-        my $req = Plack::Request->new($_[0]);
-
-        my $ponapi_params = Return::MultiLevel::with_return {
-            _ponapi_params( shift, $req )
-        };
-
-        return _error_response( $ponapi_params->{__error__} )
-            if $ponapi_params->{__error__};
-
-        my $action = delete $ponapi_params->{action};
-
-        my ( $status, $headers, $res ) = $DAO->$action($ponapi_params);
-        return _response( $status, $headers, $res );
-    }
-}
 
 1;
 
