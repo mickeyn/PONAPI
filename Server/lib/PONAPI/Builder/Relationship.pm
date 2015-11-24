@@ -41,6 +41,12 @@ sub add_resource {
     $self->_add_resource_id_builder( $b );
 }
 
+sub add_link_self {
+    my ( $self, $base ) = @_;
+    warn "TODO";
+    return $self;
+}
+
 sub build {
     my $self   = $_[0];
     my $result = {};

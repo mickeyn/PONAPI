@@ -53,6 +53,8 @@ sub call {
 
     my $action = delete $ponapi_params->{action};
 
+    $ponapi_params->{req_base} = "".$req->base;
+
     my ( $status, $headers, $res ) = $self->{'ponapi.DAO'}->$action($ponapi_params);
     return $self->_response( $status, $headers, $res );
 }

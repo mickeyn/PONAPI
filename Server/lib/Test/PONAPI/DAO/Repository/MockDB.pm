@@ -197,7 +197,8 @@ sub delete_relationships {
 
 sub _add_resources {
     my ( $self, %args ) = @_;
-    my ( $doc, $stmt, $type, $convert_to_collection ) = @args{qw< document stmt type convert_to_collection >};
+    my ( $doc, $stmt, $type, $convert_to_collection, $req_base ) =
+        @args{qw< document stmt type convert_to_collection req_base >};
 
     my ( $sth, $errstr ) = $self->_db_execute( $stmt );
     $errstr and return $doc->raise_error({ message => $errstr });
@@ -211,6 +212,7 @@ sub _add_resources {
         my $id = delete $row->{id};
         my $rec = $doc->add_resource( type => $type, id => $id );
         $rec->add_attribute( $_ => $row->{$_} ) for keys %{$row};
+        $rec->add_link_self( $req_base );
 
         $self->_add_resource_relationships($rec, %args);
         $doc->has_errors and return;
