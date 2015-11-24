@@ -113,7 +113,7 @@ sub has_errors {
     return 0;
 }
 
-sub add_link_self {
+sub add_self_link {
     my ( $self, $base ) = @_;
     $self->_has_resource_builders or return; # ???
     my $rec = $self->_get_resource_builder(0)->build;

@@ -4,7 +4,7 @@ use Moose::Role;
 
 use PONAPI::Builder::Links;
 
-requires 'add_link_self';
+requires 'add_self_link';
 
 has 'links_builder' => (
     init_arg  => undef,

@@ -212,7 +212,7 @@ sub _add_resources {
         my $id = delete $row->{id};
         my $rec = $doc->add_resource( type => $type, id => $id );
         $rec->add_attribute( $_ => $row->{$_} ) for keys %{$row};
-        $rec->add_link_self( $req_base );
+        $rec->add_self_link( $req_base );
 
         $self->_add_resource_relationships($rec, %args);
         $doc->has_errors and return;
@@ -250,8 +250,8 @@ sub _add_resource_relationships {
 
         for ( @{ $rels->{$r} } ) {
             $rec->add_relationship( $r, $_ )
-                ->add_link_self( $args{req_base} )
-                ->add_link_related( $args{req_base} );
+                ->add_self_link( $args{req_base} )
+                ->add_related_link( $args{req_base} );
         }
 
         $self->_add_included(

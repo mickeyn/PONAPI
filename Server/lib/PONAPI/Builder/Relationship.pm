@@ -47,12 +47,12 @@ sub add_resource {
     $self->_add_resource_id_builder( $b );
 }
 
-sub add_link_self {
+sub add_self_link {
     my ( $self, $base ) = @_;
     return $self->_add_relationship_link( 'self', $base );
 }
 
-sub add_link_related {
+sub add_related_link {
     my ( $self, $base ) = @_;
     return $self->_add_relationship_link( 'related', $base );
 }

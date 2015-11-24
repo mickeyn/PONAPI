@@ -86,7 +86,7 @@ sub add_relationship {
     $self->_add_relationship( $key => $builder );
 }
 
-sub add_link_self {
+sub add_self_link {
     my ( $self, $base ) = @_;
     $self->links_builder->add_link( self => ( $base ? $base : '/' ) . $self->{type} . '/' . $self->{id} );
     return $self;

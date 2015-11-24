@@ -41,7 +41,7 @@ sub retrieve_all {
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
 
-    $doc->has_errors ? $doc->set_status(400) : $doc->add_link_self( $req->req_base );
+    $doc->has_errors ? $doc->set_status(400) : $doc->add_self_link( $req->req_base );
     return ( $doc->status, [], $doc->build );
 }
 
@@ -72,7 +72,7 @@ sub retrieve {
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
 
-    $doc->has_errors ? $doc->set_status(400) : $doc->add_link_self( $req->req_base );
+    $doc->has_errors ? $doc->set_status(400) : $doc->add_self_link( $req->req_base );
     return ( $doc->status, [], $doc->build );
 }
 
