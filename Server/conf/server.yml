@@ -3,6 +3,7 @@
 server:
   sort_allowed: "false"
   send_version_header: "true"
+  links_type: "relative"
 
 repository:
   class:  "Test::PONAPI::DAO::Repository::MockDB"

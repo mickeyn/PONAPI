@@ -29,9 +29,10 @@ sub prepare_app {
     my $file = Path::Class::File->new('conf/server.yml');
     my $conf = YAML::XS::Load( scalar $file->slurp );
 
-    $self->_set_server_sorting     ( $conf->{server} );
-    $self->_set_server_send_header ( $conf->{server} );
-    $self->_load_repository        ( $conf->{repository} );
+    $self->_set_server_sorting        ( $conf->{server} );
+    $self->_set_server_send_header    ( $conf->{server} );
+    $self->_set_server_relative_links ( $conf->{server} );
+    $self->_load_repository           ( $conf->{repository} );
 
     $self->{'ponapi.mediatype'} = 'application/vnd.api+json';
     $self->{'ponapi.qr_mediatype'} = qr{application/vnd\.api\+json};
@@ -53,7 +54,8 @@ sub call {
 
     my $action = delete $ponapi_params->{action};
 
-    $ponapi_params->{req_base} = "".$req->base;
+    $ponapi_params->{req_base} =
+        $self->{'ponapi.relative_links'} eq 'full' ? "".$req->base : '/';
 
     my ( $status, $headers, $res ) = $self->{'ponapi.DAO'}->$action($ponapi_params);
     return $self->_response( $status, $headers, $res );
@@ -79,6 +81,14 @@ sub _set_server_send_header {
 
     $self->{'ponapi.send_version_header'} =
         ( grep { $conf->{send_version_header} eq $_ } qw< yes true 1 > ) ? 1 : 0;
+}
+
+sub _set_server_relative_links {
+    my ( $self, $conf ) = @_;
+    grep { $conf->{links_type} eq $_ } qw< relative full >
+        or die "[PONAPI Server] server links_type is misconfigured";
+
+    $self->{'ponapi.relative_links'} = $conf->{links_type};
 }
 
 sub _load_repository {
