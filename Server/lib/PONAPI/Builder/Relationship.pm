@@ -8,6 +8,12 @@ with 'PONAPI::Builder',
      'PONAPI::Builder::Role::HasLinksBuilder',
      'PONAPI::Builder::Role::HasMeta';
 
+has name => (
+    is       => 'ro',
+    isa      => 'Str',
+    required => 1,
+);
+
 has '_resource_id_builders' => (
     init_arg  => undef,
     traits    => [ 'Array' ],
@@ -43,7 +49,19 @@ sub add_resource {
 
 sub add_link_self {
     my ( $self, $base ) = @_;
-    warn "TODO";
+    my $rec = $self->find_root->_get_resource_builder(0)->build;
+    $self->links_builder->add_link(
+        self => ( $base ? $base : '/' ) . $rec->{type} . '/' . $rec->{id} . '/relationships/' . $self->name
+    );
+    return $self;
+}
+
+sub add_link_related {
+    my ( $self, $base ) = @_;
+    my $rec = $self->find_root->_get_resource_builder(0)->build;
+    $self->links_builder->add_link(
+        related => ( $base ? $base : '/' ) . $rec->{type} . '/' . $rec->{id} . '/' . $self->name
+    );
     return $self;
 }
 

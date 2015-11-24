@@ -248,7 +248,11 @@ sub _add_resource_relationships {
     for my $r ( keys %{$rels} ) {
         @{ $rels->{$r} } > 0 or next;
 
-        $rec->add_relationship( $r, $_ ) for @{ $rels->{$r} };
+        for ( @{ $rels->{$r} } ) {
+            $rec->add_relationship( $r, $_ )
+                ->add_link_self( $args{req_base} )
+                ->add_link_related( $args{req_base} );
+        }
 
         $self->_add_included(
             $rels->{$r}[0]{type},                   # included type
