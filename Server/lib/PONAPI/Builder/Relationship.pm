@@ -49,20 +49,26 @@ sub add_resource {
 
 sub add_link_self {
     my ( $self, $base ) = @_;
-    my $rec = $self->parent->build;
-    $self->links_builder->add_link(
-        self => ( $base ? $base : '/' ) . $rec->{type} . '/' . $rec->{id} . '/relationships/' . $self->name
-    );
-    return $self;
+    return $self->_add_relationship_link( 'self', $base );
 }
 
 sub add_link_related {
     my ( $self, $base ) = @_;
+    return $self->_add_relationship_link( 'related', $base );
+}
+
+sub _add_relationship_link {
+    my ( $self, $key, $base ) = @_;
     my $rec = $self->parent->build;
     $self->links_builder->add_link(
-        related => ( $base ? $base : '/' ) . $rec->{type} . '/' . $rec->{id} . '/' . $self->name
+        $key => ( $base ? $base : '/' )
+              . $rec->{type}
+              . '/' . $rec->{id}
+              . ( $key eq 'self' ? '/relationships' : '' )
+              . '/' . $self->name
     );
     return $self;
+
 }
 
 sub build {
