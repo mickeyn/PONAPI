@@ -49,7 +49,7 @@ sub add_resource {
 
 sub add_link_self {
     my ( $self, $base ) = @_;
-    my $rec = $self->find_root->_get_resource_builder(0)->build;
+    my $rec = $self->parent->build;
     $self->links_builder->add_link(
         self => ( $base ? $base : '/' ) . $rec->{type} . '/' . $rec->{id} . '/relationships/' . $self->name
     );
@@ -58,7 +58,7 @@ sub add_link_self {
 
 sub add_link_related {
     my ( $self, $base ) = @_;
-    my $rec = $self->find_root->_get_resource_builder(0)->build;
+    my $rec = $self->parent->build;
     $self->links_builder->add_link(
         related => ( $base ? $base : '/' ) . $rec->{type} . '/' . $rec->{id} . '/' . $self->name
     );
