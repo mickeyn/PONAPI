@@ -34,14 +34,15 @@ my $dao = PONAPI::DAO->new( repository => $repository );
 isa_ok($dao, 'PONAPI::DAO');
 
 subtest '... retrieve all' => sub {
-    my $doc = $dao->retrieve_all( type => 'people' );
+    my $doc = $dao->retrieve_all( type => 'people', req_base => '/' );
 
     ok(!blessed($doc), '... the document we got is not blessed');
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');
 
     ok(exists $doc->{'jsonapi'}, '... we have a `jsonapi` key');
     ok(exists $doc->{'data'}, '... we have a `data` key');
-    is(scalar keys %$doc, 2, '... only got 2 keys');
+    ok(exists $doc->{'links'}, '... we have a `links` key');
+    is(scalar keys %$doc, 3, '... only got 3 keys');
 
     is(ref $doc->{'data'}, 'ARRAY', '.... the document->{data} we got is an ARRAY ref');
 
@@ -59,8 +60,12 @@ subtest '... retrieve all' => sub {
 };
 
 subtest '... retrieve' => sub {
-    my $doc = $dao->retrieve( type   => 'articles', id => 2,
-                              fields => { articles => [qw< title >] } );
+    my $doc = $dao->retrieve(
+        type     => 'articles',
+        id       => 2,
+        fields   => { articles => [qw< title >] },
+        req_base => '/',
+    );
 
     ok(!blessed($doc), '... the document we got is not blessed');
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');
@@ -75,8 +80,12 @@ subtest '... retrieve' => sub {
 };
 
 subtest '... retrieve relationships' => sub {
-    my $doc = $dao->retrieve_relationships( type => 'articles', id => 2,
-                                            rel_type => 'comments' );
+    my $doc = $dao->retrieve_relationships(
+        type     => 'articles',
+        id       => 2,
+        rel_type => 'comments',
+        req_base => '/',
+    );
 
     ok(!blessed($doc), '... the document we got is not blessed');
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');
@@ -92,9 +101,10 @@ subtest '... retrieve relationships' => sub {
 
 subtest '... retrieve by relationship' => sub {
     my $doc = $dao->retrieve_by_relationship(
-        type => 'articles',
-        id   => 2,
-        rel_type => 'authors'
+        type     => 'articles',
+        id       => 2,
+        rel_type => 'authors',
+        req_base => '/',
     );
 
     ok(!blessed($doc), '... the document we got is not blessed');
