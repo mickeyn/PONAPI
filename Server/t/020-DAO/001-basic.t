@@ -34,7 +34,7 @@ my $dao = PONAPI::DAO->new( repository => $repository );
 isa_ok($dao, 'PONAPI::DAO');
 
 subtest '... retrieve all' => sub {
-    my $doc = $dao->retrieve_all( type => 'people', req_base => '/' );
+    my $doc = $dao->retrieve_all( type => 'people', req_base => '/', send_doc_self_link => 1 );
 
     ok(!blessed($doc), '... the document we got is not blessed');
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');
