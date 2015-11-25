@@ -1,10 +1,13 @@
 # PONAPI server & repository configuration file
 
+# switch options take the positive values: "yes", 1 & "true"
+#                     and negative values: "no", 0 & "false"
+
 server:
-  sort_allowed: "false"
-  send_version_header: "true"
-  links_type: "relative"
+  sort_allowed:            "false"      # server-side sorting support
+  send_version_header:     "true"       # server will send 'X-PONAPI-Server-Version' header responses
+  links_type:              "relative"   # all links are either "relative" or "full" (inc. request base)
 
 repository:
   class:  "Test::PONAPI::DAO::Repository::MockDB"
-  args: []
+  args:   []
