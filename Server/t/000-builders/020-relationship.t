@@ -19,13 +19,15 @@ TODO:
 
 subtest '... testing constructor' => sub {
 
-    my $builder = PONAPI::Builder::Relationship->new( resource => { id => 10, type => 'foo' } );
+    my $builder = PONAPI::Builder::Relationship->new( resource => { id => 10, type => 'foo' }, name => 'author' );
     isa_ok( $builder, 'PONAPI::Builder::Relationship');
     does_ok($builder, 'PONAPI::Builder');
     does_ok($builder, 'PONAPI::Builder::Role::HasLinksBuilder');
     does_ok($builder, 'PONAPI::Builder::Role::HasMeta');
 
     can_ok( $builder, $_ ) foreach qw[
+        name
+
         has_resource
         has_resources
 

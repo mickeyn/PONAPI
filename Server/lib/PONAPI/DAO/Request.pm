@@ -2,6 +2,18 @@ package PONAPI::DAO::Request;
 
 use Moose;
 
+has req_base => (
+    is       => 'ro',
+    isa      => 'Str',
+    required => 1,
+);
+
+has send_doc_self_link => (
+    is      => 'ro',
+    isa     => 'Bool',
+    default => sub { 0 },
+);
+
 has type => (
     is       => 'ro',
     isa      => 'Str',

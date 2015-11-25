@@ -14,6 +14,19 @@ has 'repository' => (
     required => 1,
 );
 
+sub dao_response {
+    my ( $req, $doc, @headers ) = @_;
+
+    if ( $doc->has_errors ) {
+        $doc->set_status(400);
+    }
+    elsif ( $req->send_doc_self_link ) {
+        $doc->add_self_link( $req->req_base )
+    }
+
+    return ( $doc->status, \@headers, $doc->build );
+}
+
 sub retrieve_all {
     my $self = shift;
     my $req  = PONAPI::DAO::Request->new(@_);
@@ -41,8 +54,7 @@ sub retrieve_all {
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
 
-    $doc->has_errors and $doc->set_status(400);
-    return ( $doc->status, [], $doc->build );
+    return dao_response( $req, $doc );
 }
 
 sub retrieve {
@@ -72,8 +84,7 @@ sub retrieve {
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
 
-    $doc->has_errors and $doc->set_status(400);
-    return ( $doc->status, [], $doc->build );
+    return dao_response( $req, $doc );
 }
 
 sub retrieve_relationships {
@@ -104,8 +115,7 @@ sub retrieve_relationships {
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
 
-    $doc->has_errors and $doc->set_status(400);
-    return ( $doc->status, [], $doc->build );
+    return dao_response( $req, $doc );
 }
 
 sub retrieve_by_relationship {
@@ -136,8 +146,7 @@ sub retrieve_by_relationship {
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
 
-    $doc->has_errors and $doc->set_status(400);
-    return ( $doc->status, [], $doc->build );
+    return dao_response( $req, $doc );
 }
 
 sub create {
@@ -175,8 +184,7 @@ sub create {
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
 
-    $doc->has_errors and $doc->set_status(400);
-    return ( $doc->status, [], $doc->build );
+    return dao_response( $req, $doc );
 }
 
 sub create_relationships {
@@ -217,8 +225,7 @@ sub create_relationships {
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
 
-    $doc->has_errors and $doc->set_status(400);
-    return ( $doc->status, [], $doc->build );
+    return dao_response( $req, $doc );
 }
 
 sub update {
@@ -257,8 +264,7 @@ sub update {
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
 
-    $doc->has_errors and $doc->set_status(400);
-    return ( $doc->status, [], $doc->build );
+    return dao_response( $req, $doc );
 }
 
 sub update_relationships {
@@ -299,8 +305,7 @@ sub update_relationships {
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
 
-    $doc->has_errors and $doc->set_status(400);
-    return ( $doc->status, [], $doc->build );
+    return dao_response( $req, $doc );
 }
 
 sub delete : method {
@@ -337,8 +342,8 @@ sub delete : method {
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
 
-    $doc->has_errors and $doc->set_status(400);
-    return ( $doc->status, [], $doc->build );
+
+    return dao_response( $req, $doc );
 }
 
 sub delete_relationships {
@@ -379,8 +384,7 @@ sub delete_relationships {
             $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
         };
 
-    $doc->has_errors and $doc->set_status(400);
-    return ( $doc->status, [], $doc->build );
+    return dao_response( $req, $doc );
 }
 
 

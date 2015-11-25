@@ -79,11 +79,17 @@ sub add_relationship {
 
     my $builder = $self->has_relationship_for($key)
         ? $self->_get_relationship($key)
-        : PONAPI::Builder::Relationship->new( parent => $self );
+        : PONAPI::Builder::Relationship->new( parent => $self, name => $key );
 
     $builder->add_resource( $_ ) foreach @resources;
 
     $self->_add_relationship( $key => $builder );
+}
+
+sub add_self_link {
+    my ( $self, $base ) = @_;
+    $self->links_builder->add_link( self => ( $base ? $base : '/' ) . $self->{type} . '/' . $self->{id} );
+    return $self;
 }
 
 sub build {

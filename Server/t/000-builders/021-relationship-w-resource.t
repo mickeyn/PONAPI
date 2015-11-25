@@ -18,7 +18,7 @@ TODO:
 =cut
 
 subtest '... testing links sub-building' => sub {
-    my $builder = PONAPI::Builder::Relationship->new();
+    my $builder = PONAPI::Builder::Relationship->new( name => 'author' );
     isa_ok($builder, 'PONAPI::Builder::Relationship');
     does_ok($builder, 'PONAPI::Builder');
     does_ok($builder, 'PONAPI::Builder::Role::HasLinksBuilder');
