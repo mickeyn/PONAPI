@@ -31,6 +31,7 @@ sub prepare_app {
 
     $self->_set_server_sorting        ( $conf->{server} );
     $self->_set_server_send_header    ( $conf->{server} );
+    $self->_set_server_self_link      ( $conf->{server} );
     $self->_set_server_relative_links ( $conf->{server} );
     $self->_load_repository           ( $conf->{repository} );
 
@@ -57,6 +58,9 @@ sub call {
     $ponapi_params->{req_base} =
         $self->{'ponapi.relative_links'} eq 'full' ? "".$req->base : '/';
 
+    $ponapi_params->{send_doc_self_link} = $self->{'ponapi.doc_auto_self_link'}
+        if $req->method eq 'GET';
+
     my ( $status, $headers, $res ) = $self->{'ponapi.DAO'}->$action($ponapi_params);
     return $self->_response( $status, $headers, $res );
 }
@@ -81,6 +85,13 @@ sub _set_server_send_header {
 
     $self->{'ponapi.send_version_header'} =
         ( grep { $conf->{send_version_header} eq $_ } qw< yes true 1 > ) ? 1 : 0;
+}
+
+sub _set_server_self_link {
+    my ( $self, $conf ) = @_;
+
+    $self->{'ponapi.doc_auto_self_link'} =
+        ( grep { $conf->{send_document_self_link} eq $_ } qw< yes true 1 > ) ? 1 : 0;
 }
 
 sub _set_server_relative_links {
