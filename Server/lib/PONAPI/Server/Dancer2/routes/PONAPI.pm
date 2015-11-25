@@ -11,7 +11,9 @@ set serializer => 'JSON';
 sub dao_action {
     my $action = shift;
     return sub {
-        my ( $status, $content ) = DAO->$action( ponapi_parameters );
+        my ( $status, $headers, $content ) = DAO->$action( ponapi_parameters );
+        use DDP;
+        headers @{ $headers } if @{ $headers };
         response->status($status);
         return $content;
     };

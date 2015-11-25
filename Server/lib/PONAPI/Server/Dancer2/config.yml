@@ -33,10 +33,12 @@ template: "simple"
 
 ponapi:
   server:
-    supports_sort: "false"
-    send_version_header: "true"
+    sort_allowed:            "false"      # server-side sorting support
+    send_version_header:     "true"       # server will send 'X-PONAPI-Server-Version' header responses
+    send_document_self_link: "true"       # server will add a 'self' link to documents without errors
+    links_type:              "relative"   # all links are either "relative" or "full" (inc. request base)
   repository:
     class:  "Test::PONAPI::DAO::Repository::MockDB"
-    args: []
+    args:   []
 
 ######################################################################

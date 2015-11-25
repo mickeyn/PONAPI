@@ -5,21 +5,22 @@ use Dancer2::Plugin;
 with 'PONAPI::Plugin::Role::Error';
 with 'PONAPI::Plugin::Role::Config';
 
-my $supports_sort = 0;
+my $sort_allowed = 0;
 
 on_plugin_import {
     my $dsl = shift;
-    $supports_sort = ponapi_config_get_server_sort($dsl);
+    $sort_allowed = ponapi_config_get_server_sort($dsl);
 };
 
 register ponapi_parameters => sub {
     my $dsl = shift;
 
     my %params = (
+        req_base => "".$dsl->request->base,
         type     => $dsl->route_parameters->get('resource_type'),
         id       => $dsl->route_parameters->get('resource_id')       || '',
         rel_type => $dsl->route_parameters->get('relationship_type') || '',
-        data     => $dsl->body_parameters->get('data')               || {},
+        data     => ( $dsl->request->method eq 'GET' ? undef : $dsl->body_parameters->get('data') || {} ),
         fields => {}, filter => {}, page => {}, include => [], 'sort' => [],
     );
 
@@ -36,7 +37,7 @@ register ponapi_parameters => sub {
             );
 
         # 'sort' requested but not supported
-        if ( $p eq 'sort' and !$supports_sort ) {
+        if ( $p eq 'sort' and !$sort_allowed ) {
             ponapi_error(
                 $dsl,
                 { message => "{JSON:API} Server-side sorting not supported" },

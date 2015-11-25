@@ -7,7 +7,7 @@ my $match_jsonapi_mt  = qr/^application\/vnd\.api\+json/;
 
 on_plugin_import {
     my $dsl = shift;
-    my $send_server_verison = $dsl->config->{ponapi}{server}{send_version_header} || 0;
+    my $send_version_header = $dsl->config->{ponapi}{server}{send_version_header} || 0;
 
     ### add 'before' hook to check content-type & accept headers
 
