@@ -223,7 +223,8 @@ sub _response {
 
     $res->headers( $headers );
     $res->content_type( $self->{'ponapi.mediatype'} );
-    $res->header( 'X-PONAPI-Server-Version' => '1.0' ) if $self->{'ponapi.send_version_header'};
+    $res->header( 'X-PONAPI-Server-Version' => $self->{'ponapi.spec_version'} )
+        if $self->{'ponapi.send_version_header'};
     $res->content( encode_json $content ) if ref $content;
     $res->finalize;
 }
@@ -232,7 +233,7 @@ sub _error_response {
     my ( $self, $args ) = @_;
 
     return $self->_response( $args->[0], [], +{
-        jsonapi => { version => "1.0" },
+        jsonapi => { version => $self->{'ponapi.spec_version'} },
         errors  => [ { message => $args->[1] } ],
     } );
 }

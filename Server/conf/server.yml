@@ -4,6 +4,7 @@
 #                     and negative values: "no", 0 & "false"
 
 server:
+  spec_version:            "1.0"        # {json:api} version
   sort_allowed:            "false"      # server-side sorting support
   send_version_header:     "true"       # server will send 'X-PONAPI-Server-Version' header responses
   send_document_self_link: "true"       # server will add a 'self' link to documents without errors
