@@ -14,24 +14,19 @@ has 'repository' => (
     required => 1,
 );
 
-
 sub retrieve_all {
     my $self = shift;
-    my $req  = PONAPI::DAO::Request->new(@_);
 
-    my $doc = PONAPI::Builder::Document->new( is_collection => 1 );
+    my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
+    _valid_types( $req, $doc, $repo ) or return ( $doc->status, [], $doc->build );
 
     $req->id   and $doc->raise_error({ message => "retrieve_all: 'id' param not allowed" });
     $req->data and $doc->raise_error({ message => "retrieve_all: request body not allowed" });
 
-    # TODO:
-    # add some type checking using
-    # has_type and has_relationship
-    # - SL
-
     $doc->has_errors or
         eval {
-            $self->repository->retrieve_all(
+            $doc->convert_to_collection;
+            $repo->retrieve_all(
                 document => $doc,
                 %{ $req },
             );
@@ -47,21 +42,16 @@ sub retrieve_all {
 
 sub retrieve {
     my $self = shift;
-    my $req  = PONAPI::DAO::Request->new(@_);
 
-    my $doc = PONAPI::Builder::Document->new();
+    my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
+    _valid_types( $req, $doc, $repo ) or return ( $doc->status, [], $doc->build );
 
     $req->id   or  $doc->raise_error({ message => "retrieve: 'id' param is missing" });
     $req->data and $doc->raise_error({ message => "retrieve: request body not allowed" });
 
-    # TODO:
-    # add some type checking using
-    # has_type and has_relationship
-    # - SL
-
     $doc->has_errors or
         eval {
-            $self->repository->retrieve(
+            $repo->retrieve(
                 document => $doc,
                 %{ $req },
             );
@@ -77,22 +67,17 @@ sub retrieve {
 
 sub retrieve_relationships {
     my $self = shift;
-    my $req  = PONAPI::DAO::Request->new(@_);
 
-    my $doc = PONAPI::Builder::Document->new();
+    my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
+    _valid_types( $req, $doc, $repo ) or return ( $doc->status, [], $doc->build );
 
     $req->id       or  $doc->raise_error({ message => "retrieve_relationships: 'id' param is missing" });
     $req->rel_type or  $doc->raise_error({ message => "retrieve_relationships: 'rel_type' param is missing" });
     $req->data     and $doc->raise_error({ message => "retrieve_relationships: request body not allowed" });
 
-    # TODO:
-    # add some (more) type checking using
-    # has_type and has_relationship
-    # - SL
-
     $doc->has_errors or
         eval {
-            $self->repository->retrieve_relationships(
+            $repo->retrieve_relationships(
                 document => $doc,
                 %{ $req },
             );
@@ -108,22 +93,17 @@ sub retrieve_relationships {
 
 sub retrieve_by_relationship {
     my $self = shift;
-    my $req  = PONAPI::DAO::Request->new(@_);
 
-    my $doc = PONAPI::Builder::Document->new();
+    my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
+    _valid_types( $req, $doc, $repo ) or return ( $doc->status, [], $doc->build );
 
     $req->id       or  $doc->raise_error({ message => "retrieve_by_relationship: 'id' param is missing" });
     $req->rel_type or  $doc->raise_error({ message => "retrieve_by_relationship: 'rel_type' param is missing" });
     $req->data     and $doc->raise_error({ message => "retrieve_by_relationship: request body not allowed" });
 
-    # TODO:
-    # add some (more) type checking using
-    # has_type and has_relationship
-    # - SL
-
     $doc->has_errors or
         eval {
-            $self->repository->retrieve_by_relationship(
+            $repo->retrieve_by_relationship(
                 document => $doc,
                 %{ $req },
             );
@@ -139,23 +119,18 @@ sub retrieve_by_relationship {
 
 sub create {
     my $self = shift;
-    my $req  = PONAPI::DAO::Request->new(@_);
 
-    my $doc = PONAPI::Builder::Document->new();
+    my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
+    _valid_types( $req, $doc, $repo ) or return ( $doc->status, [], $doc->build );
 
     # client-generated id needs to be passed in the body
     $req->id       and $doc->raise_error({ message => "create: 'id' param is not allowed" });
     $req->rel_type and $doc->raise_error({ message => "create: 'rel_type' param not allowed" });
     $req->data     or  $doc->raise_error({ message => "create: request body is missing" });
 
-    # TODO:
-    # add some type checking using
-    # has_type and has_relationship
-    # - SL
-
     $doc->has_errors or
         eval {
-            $self->repository->create(
+            $repo->create(
                 document => $doc,
                 %{ $req },
             );
@@ -177,22 +152,17 @@ sub create {
 
 sub create_relationships {
     my $self = shift;
-    my $req  = PONAPI::DAO::Request->new(@_);
 
-    my $doc = PONAPI::Builder::Document->new();
+    my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
+    _valid_types( $req, $doc, $repo ) or return ( $doc->status, [], $doc->build );
 
     $req->id       or $doc->raise_error({ message => "create_relationships: 'id' param is missing" });
     $req->rel_type or $doc->raise_error({ message => "create_relationships: 'rel_type' param is missing" });
     $req->data     or $doc->raise_error({ message => "create_relationships: request body is missing" });
 
-    # TODO:
-    # add some type checking using
-    # has_type and has_relationship
-    # - SL
-
     $doc->has_errors or
         eval {
-            $self->repository->create_relationships(
+            $repo->create_relationships(
                 document => $doc,
                 %{ $req },
             );
@@ -218,22 +188,17 @@ sub create_relationships {
 
 sub update {
     my $self = shift;
-    my $req  = PONAPI::DAO::Request->new(@_);
 
-    my $doc = PONAPI::Builder::Document->new();
+    my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
+    _valid_types( $req, $doc, $repo ) or return ( $doc->status, [], $doc->build );
 
     $req->id       or  $doc->raise_error({ message => "update: 'id' param is missing" });
     $req->rel_type and $doc->raise_error({ message => "update: 'rel_type' param not allowed" });
     $req->data     or  $doc->raise_error({ message => "update: request body is missing" });
 
-    # TODO:
-    # add some type checking using
-    # has_type and has_relationship
-    # - SL
-
     $doc->has_errors or
         eval {
-            $self->repository->update(
+            $repo->update(
                 document => $doc,
                 %{ $req },
             );
@@ -257,22 +222,17 @@ sub update {
 
 sub update_relationships {
     my $self = shift;
-    my $req  = PONAPI::DAO::Request->new(@_);
 
-    my $doc = PONAPI::Builder::Document->new();
+    my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
+    _valid_types( $req, $doc, $repo ) or return ( $doc->status, [], $doc->build );
 
     $req->id       or $doc->raise_error({ message => "update_relationships: 'id' param is missing" });
     $req->rel_type or $doc->raise_error({ message => "update_relationships: 'rel_type' param is missing" });
     $req->data     or $doc->raise_error({ message => "update_relationships: request body is missing" });
 
-    # TODO:
-    # add some type checking using
-    # has_type and has_relationship
-    # - SL
-
     $doc->has_errors or
         eval {
-            $self->repository->update_relationships(
+            $repo->update_relationships(
                 document => $doc,
                 %{ $req },
             );
@@ -298,22 +258,17 @@ sub update_relationships {
 
 sub delete : method {
     my $self = shift;
-    my $req  = PONAPI::DAO::Request->new(@_);
 
-    my $doc = PONAPI::Builder::Document->new();
+    my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
+    _valid_types( $req, $doc, $repo ) or return ( $doc->status, [], $doc->build );
 
     $req->id       or  $doc->raise_error({ message => "delete: 'id' param is missing" });
     $req->rel_type and $doc->raise_error({ message => "delete: 'rel_type' param not allowed" });
     $req->data     and $doc->raise_error({ message => "delete: request body is not allowed" });
 
-    # TODO:
-    # add some type checking using
-    # has_type and has_relationship
-    # - SL
-
     $doc->has_errors or
         eval {
-            $self->repository->delete(
+            $repo->delete(
                 document => $doc,
                 %{ $req },
             );
@@ -336,22 +291,17 @@ sub delete : method {
 
 sub delete_relationships {
     my $self = shift;
-    my $req  = PONAPI::DAO::Request->new(@_);
 
-    my $doc = PONAPI::Builder::Document->new();
+    my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
+    _valid_types( $req, $doc, $repo ) or return ( $doc->status, [], $doc->build );
 
     $req->id       or $doc->raise_error({ message => "delete_relationships: 'id' param is missing" });
     $req->rel_type or $doc->raise_error({ message => "delete_relationships: 'rel_type' param is missing" });
     $req->data     or $doc->raise_error({ message => "delete_relationships: request body is missing" });
 
-    # TODO:
-    # add some type checking using
-    # has_type and has_relationship
-    # - SL
-
     $doc->has_errors or
         eval {
-            $self->repository->delete_relationships(
+            $repo->delete_relationships(
                 document => $doc,
                 %{ $req },
             );
@@ -375,6 +325,19 @@ sub delete_relationships {
     return _dao_response( $req, $doc );
 }
 
+
+### ... internal
+
+sub _prepare_req {
+    my $self = shift;
+
+    my $req  = PONAPI::DAO::Request->new(@_);
+    my $doc  = PONAPI::Builder::Document->new();
+    my $repo = $self->repository;
+
+    return ( $req, $doc, $repo );
+}
+
 sub _dao_response {
     my ( $req, $doc, @headers ) = @_;
 
@@ -386,6 +349,38 @@ sub _dao_response {
     }
 
     return ( $doc->status, \@headers, $doc->build );
+}
+
+sub _valid_types {
+    my ( $req, $doc, $repo ) = @_;
+
+    # check type and relations
+    $repo->has_type( $req->type )
+        or return _error_not_found( $doc, "Type `" . $req->type . "` doesn't exist." );
+
+    if ( $req->rel_type ) {
+        $repo->has_type( $req->rel_type )
+            or return _error_not_found( $doc, "Type `" . $req->rel_type . "` doesn't exist." );
+
+        $repo->has_relationship( $req->type, $req->rel_type )
+            or return _error_not_found( $doc, "Types `" . $req->type . "` and `" . $req->rel_type . "` are not related" );
+    }
+
+    for ( @{ $req->include } ) {
+        $repo->has_relationship( $req->type, $_ )
+            or return _error_not_found( $doc, "Types `" . $req->type . "` and `$_` are not related" );
+    }
+
+    return 1;
+}
+
+sub _error_not_found {
+    my ( $doc, $message ) = @_;
+
+    $doc->raise_error({ message => $message });
+    $doc->set_status(404);
+
+    return;
 }
 
 
