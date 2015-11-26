@@ -122,6 +122,7 @@ subtest '... retrieve by relationship' => sub {
         type     => 'articles',
         id       => 2,
         rel_type => 'comments',
+        req_base => '/',
     );
 
     ok(!blessed($doc), '... the document we got is not blessed');
@@ -133,7 +134,7 @@ subtest '... retrieve by relationship' => sub {
 };
 
 subtest '... update' => sub {
-    my %who    = (type => 'articles', id => 2);
+    my %who    = (type => 'articles', id => 2, req_base => '/');
     my $orig   = $dao->retrieve( %who );
     my $backup = $dao->retrieve( %who );
 
@@ -335,7 +336,7 @@ subtest '... delete_relationships' => sub {
             }
           ];
     is_deeply(\@retrieve, $expect, "... and the correct changes are retrieved");
-    
+
     # Multiple deletes, what does meta say?
     # TODO with 200s + extra changes, need to do the retrieve dance
 };
@@ -499,9 +500,9 @@ subtest '... create + create_relationship' => sub {
     my $retrieved_again = $dao->retrieve(
         type    => "articles",
         id      => $article_id,
-        include => [qw/ authors comments /], 
+        include => [qw/ authors comments /],
     );
-    delete @{ $retrieved_again->{data}{attributes} }{qw/ created status updated /}; 
+    delete @{ $retrieved_again->{data}{attributes} }{qw/ created status updated /};
 
     my $final_expect = {
         'jsonapi' => { 'version' => '1.0' },
@@ -528,7 +529,7 @@ subtest '... create + create_relationship' => sub {
         }
     };
     is_deeply($retrieved_again, $final_expect, "... including missing resources works");
-    
+
     # Special case; updating a one-to-one lets you pass undef.
     # See http://jsonapi.org/format/#crud-updating-to-one-relationships
     TODO: {

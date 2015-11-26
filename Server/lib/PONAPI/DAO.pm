@@ -316,12 +316,12 @@ sub _validate_types {
     return;
 }
 
-sub _check_id          { $_[0]->id   or  _bad_request( $_[0]->document, "`id` is missing"                 ) }
-sub _check_no_id       { $_[0]->id   and _bad_request( $_[0]->document, "`id` not allowed"                ) }
-sub _check_rel_type    { $_[0]->id   or  _bad_request( $_[0]->document, "`relationship type` is missing"  ) }
-sub _check_no_rel_type { $_[0]->id   and _bad_request( $_[0]->document, "`relationship type` not allowed" ) }
-sub _check_data        { $_[0]->data or  _bad_request( $_[0]->document, "request body is missing"         ) }
-sub _check_no_data     { $_[0]->data and _bad_request( $_[0]->document, "request body is not allowed"     ) }
+sub _check_id          { $_[0]->id       or  _bad_request( $_[0]->document, "`id` is missing"                 ) }
+sub _check_no_id       { $_[0]->id       and _bad_request( $_[0]->document, "`id` not allowed"                ) }
+sub _check_rel_type    { $_[0]->rel_type or  _bad_request( $_[0]->document, "`relationship type` is missing"  ) }
+sub _check_no_rel_type { $_[0]->rel_type and _bad_request( $_[0]->document, "`relationship type` not allowed" ) }
+sub _check_data        { $_[0]->data     or  _bad_request( $_[0]->document, "request body is missing"         ) }
+sub _check_no_data     { $_[0]->data     and _bad_request( $_[0]->document, "request body is not allowed"     ) }
 
 sub _bad_request {
     $_[0]->raise_error( 400, { message => $_[1] } );
