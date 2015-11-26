@@ -20,7 +20,11 @@ sub find_root {
 }
 
 sub raise_error {
-    my $self = shift;
+    my $self   = shift;
+    my $status = shift;
+
+    # sets status only if not already set to error code
+    $self->set_status($status) if $self->status < 400;
 
     # XXX:
     # we could check the args here and look for
@@ -34,7 +38,9 @@ sub raise_error {
 
     $self->find_root->errors_builder->add_error( @_ );
 
-    return $self;
+    # we don't return value to allow condition
+    # check when returned from validation methods
+    return;
 }
 
 no Moose::Role; 1;

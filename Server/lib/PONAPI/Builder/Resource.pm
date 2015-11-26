@@ -33,7 +33,7 @@ sub add_attribute {
     my $key   = $_[1];
     my $value = $_[2];
 
-    $self->raise_error(
+    $self->raise_error( 400,
         title => 'Attribute key conflict, a relation already exists for key: ' . $key
     ) if $self->has_relationship_for( $key );
 
@@ -68,7 +68,7 @@ has '_relationships' => (
 sub add_relationship {
     my ($self, $key, $resource) = @_;
 
-    $self->raise_error(
+    $self->raise_error( 400,
         title => 'Relationship key conflict, an attribute already exists for key: ' . $key
     ) if $self->has_attribute_for( $key );
 

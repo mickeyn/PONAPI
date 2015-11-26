@@ -16,12 +16,10 @@ has 'repository' => (
 
 sub retrieve_all {
     my $self = shift;
-
     my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
-    _valid_types( $req, $doc, $repo ) or return ( $doc->status, [], $doc->build );
 
-    $req->id   and $doc->raise_error({ message => "retrieve_all: 'id' param not allowed" });
-    $req->data and $doc->raise_error({ message => "retrieve_all: request body not allowed" });
+    _check_no_id   ( $req, $doc );
+    _check_no_data ( $req, $doc );
 
     $doc->has_errors or
         eval {
@@ -34,7 +32,7 @@ sub retrieve_all {
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
             warn "$@";
-            $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
+            _failure($doc);
         };
 
     return _dao_response( $req, $doc );
@@ -42,12 +40,10 @@ sub retrieve_all {
 
 sub retrieve {
     my $self = shift;
-
     my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
-    _valid_types( $req, $doc, $repo ) or return ( $doc->status, [], $doc->build );
 
-    $req->id   or  $doc->raise_error({ message => "retrieve: 'id' param is missing" });
-    $req->data and $doc->raise_error({ message => "retrieve: request body not allowed" });
+    _check_id      ( $req, $doc );
+    _check_no_data ( $req, $doc );
 
     $doc->has_errors or
         eval {
@@ -59,7 +55,7 @@ sub retrieve {
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
             warn "$@";
-            $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
+            _failure($doc);
         };
 
     return _dao_response( $req, $doc );
@@ -67,13 +63,11 @@ sub retrieve {
 
 sub retrieve_relationships {
     my $self = shift;
-
     my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
-    _valid_types( $req, $doc, $repo ) or return ( $doc->status, [], $doc->build );
 
-    $req->id       or  $doc->raise_error({ message => "retrieve_relationships: 'id' param is missing" });
-    $req->rel_type or  $doc->raise_error({ message => "retrieve_relationships: 'rel_type' param is missing" });
-    $req->data     and $doc->raise_error({ message => "retrieve_relationships: request body not allowed" });
+    _check_id       ( $req, $doc );
+    _check_rel_type ( $req, $doc );
+    _check_no_data  ( $req, $doc );
 
     $doc->has_errors or
         eval {
@@ -85,7 +79,7 @@ sub retrieve_relationships {
         } or do {
             # NOTE:  this probably needs to be more sophisticated - SL
             warn "$@";
-            $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
+            _failure($doc);
         };
 
     return _dao_response( $req, $doc );
@@ -93,13 +87,11 @@ sub retrieve_relationships {
 
 sub retrieve_by_relationship {
     my $self = shift;
-
     my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
-    _valid_types( $req, $doc, $repo ) or return ( $doc->status, [], $doc->build );
 
-    $req->id       or  $doc->raise_error({ message => "retrieve_by_relationship: 'id' param is missing" });
-    $req->rel_type or  $doc->raise_error({ message => "retrieve_by_relationship: 'rel_type' param is missing" });
-    $req->data     and $doc->raise_error({ message => "retrieve_by_relationship: request body not allowed" });
+    _check_id       ( $req, $doc );
+    _check_rel_type ( $req, $doc );
+    _check_no_data  ( $req, $doc );
 
     $doc->has_errors or
         eval {
@@ -111,7 +103,7 @@ sub retrieve_by_relationship {
         } or do {
             # NOTE:  this probably needs to be more sophisticated - SL
             warn "$@";
-            $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
+            _failure($doc);
         };
 
     return _dao_response( $req, $doc );
@@ -119,14 +111,12 @@ sub retrieve_by_relationship {
 
 sub create {
     my $self = shift;
-
     my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
-    _valid_types( $req, $doc, $repo ) or return ( $doc->status, [], $doc->build );
 
     # client-generated id needs to be passed in the body
-    $req->id       and $doc->raise_error({ message => "create: 'id' param is not allowed" });
-    $req->rel_type and $doc->raise_error({ message => "create: 'rel_type' param not allowed" });
-    $req->data     or  $doc->raise_error({ message => "create: request body is missing" });
+    _check_no_id();
+    _check_no_rel_type();
+    _check_data();
 
     $doc->has_errors or
         eval {
@@ -144,7 +134,7 @@ sub create {
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
             warn "$@";
-            $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
+            _failure($doc);
         };
 
     return _dao_response( $req, $doc );
@@ -152,13 +142,11 @@ sub create {
 
 sub create_relationships {
     my $self = shift;
-
     my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
-    _valid_types( $req, $doc, $repo ) or return ( $doc->status, [], $doc->build );
 
-    $req->id       or $doc->raise_error({ message => "create_relationships: 'id' param is missing" });
-    $req->rel_type or $doc->raise_error({ message => "create_relationships: 'rel_type' param is missing" });
-    $req->data     or $doc->raise_error({ message => "create_relationships: request body is missing" });
+    _check_id       ( $req, $doc );
+    _check_rel_type ( $req, $doc );
+    _check_data     ( $req, $doc );
 
     $doc->has_errors or
         eval {
@@ -180,7 +168,7 @@ sub create_relationships {
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
             warn "$@";
-            $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
+            _failure($doc);
         };
 
     return _dao_response( $req, $doc );
@@ -188,13 +176,11 @@ sub create_relationships {
 
 sub update {
     my $self = shift;
-
     my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
-    _valid_types( $req, $doc, $repo ) or return ( $doc->status, [], $doc->build );
 
-    $req->id       or  $doc->raise_error({ message => "update: 'id' param is missing" });
-    $req->rel_type and $doc->raise_error({ message => "update: 'rel_type' param not allowed" });
-    $req->data     or  $doc->raise_error({ message => "update: request body is missing" });
+    _check_id          ( $req, $doc );
+    _check_no_rel_type ( $req, $doc );
+    _check_data        ( $req, $doc );
 
     $doc->has_errors or
         eval {
@@ -214,7 +200,7 @@ sub update {
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
             warn "$@";
-            $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
+            _failure($doc);
         };
 
     return _dao_response( $req, $doc );
@@ -222,13 +208,11 @@ sub update {
 
 sub update_relationships {
     my $self = shift;
-
     my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
-    _valid_types( $req, $doc, $repo ) or return ( $doc->status, [], $doc->build );
 
-    $req->id       or $doc->raise_error({ message => "update_relationships: 'id' param is missing" });
-    $req->rel_type or $doc->raise_error({ message => "update_relationships: 'rel_type' param is missing" });
-    $req->data     or $doc->raise_error({ message => "update_relationships: request body is missing" });
+    _check_id       ( $req, $doc );
+    _check_rel_type ( $req, $doc );
+    _check_data     ( $req, $doc );
 
     $doc->has_errors or
         eval {
@@ -250,7 +234,7 @@ sub update_relationships {
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
             warn "$@";
-            $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
+            _failure($doc);
         };
 
     return _dao_response( $req, $doc );
@@ -258,13 +242,11 @@ sub update_relationships {
 
 sub delete : method {
     my $self = shift;
-
     my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
-    _valid_types( $req, $doc, $repo ) or return ( $doc->status, [], $doc->build );
 
-    $req->id       or  $doc->raise_error({ message => "delete: 'id' param is missing" });
-    $req->rel_type and $doc->raise_error({ message => "delete: 'rel_type' param not allowed" });
-    $req->data     and $doc->raise_error({ message => "delete: request body is not allowed" });
+    _check_id          ( $req, $doc );
+    _check_no_rel_type ( $req, $doc );
+    _check_no_data     ( $req, $doc );
 
     $doc->has_errors or
         eval {
@@ -282,7 +264,7 @@ sub delete : method {
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
             warn "$@";
-            $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
+            _failure($doc);
         };
 
 
@@ -291,13 +273,11 @@ sub delete : method {
 
 sub delete_relationships {
     my $self = shift;
-
     my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
-    _valid_types( $req, $doc, $repo ) or return ( $doc->status, [], $doc->build );
 
-    $req->id       or $doc->raise_error({ message => "delete_relationships: 'id' param is missing" });
-    $req->rel_type or $doc->raise_error({ message => "delete_relationships: 'rel_type' param is missing" });
-    $req->data     or $doc->raise_error({ message => "delete_relationships: request body is missing" });
+    _check_id       ( $req, $doc );
+    _check_rel_type ( $req, $doc );
+    _check_data     ( $req, $doc );
 
     $doc->has_errors or
         eval {
@@ -319,7 +299,7 @@ sub delete_relationships {
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
             warn "$@";
-            $doc->raise_error({ message => 'A fatal error has occured, please check server logs' });
+            _failure($doc);
         };
 
     return _dao_response( $req, $doc );
@@ -335,49 +315,53 @@ sub _prepare_req {
     my $doc  = PONAPI::Builder::Document->new();
     my $repo = $self->repository;
 
+    _validate_types( $req, $doc, $repo );
+
     return ( $req, $doc, $repo );
 }
 
 sub _dao_response {
     my ( $req, $doc, @headers ) = @_;
 
-    if ( $doc->has_errors ) {
-        $doc->set_status(400);
-    }
-    elsif ( $req->send_doc_self_link ) {
-        $doc->add_self_link( $req->req_base )
-    }
+    $doc->add_self_link( $req->req_base )
+        if $req->send_doc_self_link;
 
     return ( $doc->status, \@headers, $doc->build );
 }
 
-sub _valid_types {
+sub _validate_types {
     my ( $req, $doc, $repo ) = @_;
+    my ( $type, $rel_type ) = @{$req}{qw< type rel_type >};
 
     # check type and relations
-    $repo->has_type( $req->type )
-        or return _error_not_found( $doc, "Type `" . $req->type . "` doesn't exist." );
+    $repo->has_type( $type )
+        or $doc->raise_error( 404, { message => "Type `$type` doesn't exist." } );
 
-    if ( $req->rel_type ) {
-        $repo->has_relationship( $req->type, $req->rel_type )
-            or return _error_not_found( $doc, "Types `" . $req->type . "` and `" . $req->rel_type . "` are not related" );
+    if ( $rel_type and !$repo->has_relationship( $type, $rel_type ) ) {
+        $doc->raise_error( 404, { message => "Types `$type` and `$rel_type` are not related" } );
     }
 
     for ( @{ $req->include } ) {
-        $repo->has_relationship( $req->type, $_ )
-            or return _error_not_found( $doc, "Types `" . $req->type . "` and `$_` are not related" );
+        $repo->has_relationship( $type, $_ )
+            or $doc->raise_error( 404, { message => "Types `$type` and `$_` are not related" } );
     }
 
-    return 1;
+    return;
 }
 
-sub _error_not_found {
-    my ( $doc, $message ) = @_;
+sub _check_id          { $_[0]->id   or  _bad_request( $_[1], "`id` is missing"                 ) }
+sub _check_no_id       { $_[0]->id   and _bad_request( $_[1], "`id` not allowed"                ) }
+sub _check_rel_type    { $_[0]->id   or  _bad_request( $_[1], "`relationship type` is missing"  ) }
+sub _check_no_rel_type { $_[0]->id   and _bad_request( $_[1], "`relationship type` not allowed" ) }
+sub _check_data        { $_[0]->data or  _bad_request( $_[1], "request body is missing"         ) }
+sub _check_no_data     { $_[0]->data and _bad_request( $_[1], "request body is not allowed"     ) }
 
-    $doc->raise_error({ message => $message });
-    $doc->set_status(404);
+sub _bad_request {
+    $_[0]->raise_error( 400, { message => $_[1] } );
+}
 
-    return;
+sub _failure {
+    $_[0]->raise_error(500, { message => 'A fatal error has occured, please check server logs' } );
 }
 
 

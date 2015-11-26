@@ -20,7 +20,7 @@ subtest '... creating a document with errors' => sub {
     my $doc = PONAPI::Builder::Document->new;
     isa_ok( $doc, 'PONAPI::Builder::Document');
 
-    $doc->raise_error( $ERROR );
+    $doc->raise_error( 400, $ERROR );
 
     my $GOT = $doc->build->{errors}[0];
 
