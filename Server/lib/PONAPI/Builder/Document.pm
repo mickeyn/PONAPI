@@ -11,11 +11,13 @@ with 'PONAPI::Builder',
      'PONAPI::Builder::Role::HasMeta';
 
 has status => (
-    init_arg => undef,
-    is       => 'ro',
-    isa      => 'Num',
-    default  => sub { 200 },
-    writer   => 'set_status',
+    init_arg  => undef,
+    is        => 'ro',
+    isa       => 'Num',
+    default   => sub { 200 },
+    writer    => 'set_status',
+    lazy      => 1,
+    predicate => 'has_status',
 );
 
 has '_included' => (
