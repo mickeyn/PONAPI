@@ -32,7 +32,7 @@ sub retrieve_all {
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
             warn "$@";
-            _failure($doc);
+            _server_failure($doc);
         };
 
     return _dao_response( $req, $doc );
@@ -55,7 +55,7 @@ sub retrieve {
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
             warn "$@";
-            _failure($doc);
+            _server_failure($doc);
         };
 
     return _dao_response( $req, $doc );
@@ -79,7 +79,7 @@ sub retrieve_relationships {
         } or do {
             # NOTE:  this probably needs to be more sophisticated - SL
             warn "$@";
-            _failure($doc);
+            _server_failure($doc);
         };
 
     return _dao_response( $req, $doc );
@@ -103,7 +103,7 @@ sub retrieve_by_relationship {
         } or do {
             # NOTE:  this probably needs to be more sophisticated - SL
             warn "$@";
-            _failure($doc);
+            _server_failure($doc);
         };
 
     return _dao_response( $req, $doc );
@@ -134,7 +134,7 @@ sub create {
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
             warn "$@";
-            _failure($doc);
+            _server_failure($doc);
         };
 
     return _dao_response( $req, $doc );
@@ -168,7 +168,7 @@ sub create_relationships {
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
             warn "$@";
-            _failure($doc);
+            _server_failure($doc);
         };
 
     return _dao_response( $req, $doc );
@@ -200,7 +200,7 @@ sub update {
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
             warn "$@";
-            _failure($doc);
+            _server_failure($doc);
         };
 
     return _dao_response( $req, $doc );
@@ -234,7 +234,7 @@ sub update_relationships {
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
             warn "$@";
-            _failure($doc);
+            _server_failure($doc);
         };
 
     return _dao_response( $req, $doc );
@@ -264,7 +264,7 @@ sub delete : method {
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
             warn "$@";
-            _failure($doc);
+            _server_failure($doc);
         };
 
 
@@ -299,7 +299,7 @@ sub delete_relationships {
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
             warn "$@";
-            _failure($doc);
+            _server_failure($doc);
         };
 
     return _dao_response( $req, $doc );
@@ -360,7 +360,7 @@ sub _bad_request {
     $_[0]->raise_error( 400, { message => $_[1] } );
 }
 
-sub _failure {
+sub _server_failure {
     $_[0]->raise_error(500, { message => 'A fatal error has occured, please check server logs' } );
 }
 
