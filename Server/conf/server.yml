@@ -9,6 +9,7 @@ server:
   send_version_header:     "true"       # server will send 'X-PONAPI-Server-Version' header responses
   send_document_self_link: "true"       # server will add a 'self' link to documents without errors
   links_type:              "relative"   # all links are either "relative" or "full" (inc. request base)
+  respond_to_updates_with_200: "false"  # successful updates will return 200's instead of 202's
 
 repository:
   class:  "Test::PONAPI::DAO::Repository::MockDB"

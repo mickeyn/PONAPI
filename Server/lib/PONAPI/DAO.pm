@@ -14,6 +14,11 @@ has 'repository' => (
     required => 1,
 );
 
+has 'respond_to_updates_with_200' => (
+    is  => 'ro',
+    isa => 'Bool',
+);
+
 sub retrieve_all {
     my $self = shift;
     my $req  = $self->_prepare_req(@_);
