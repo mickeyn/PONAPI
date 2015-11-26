@@ -10,6 +10,7 @@ use YAML::XS           ();
 use JSON::XS           qw{ decode_json encode_json };
 
 use PONAPI::DAO;
+use PONAPI::Server::ConfigReader;
 
 use parent 'Plack::Component';
 
@@ -24,21 +25,9 @@ use constant {
 };
 
 sub prepare_app {
-    my ( $self ) = @_;
-
-    my $file = Path::Class::File->new('conf/server.yml');
-    my $conf = YAML::XS::Load( scalar $file->slurp );
-
-    $self->_set_server_sorting        ( $conf->{server} );
-    $self->_set_server_send_header    ( $conf->{server} );
-    $self->_set_server_self_link      ( $conf->{server} );
-    $self->_set_server_relative_links ( $conf->{server} );
-    $self->_load_repository           ( $conf->{repository} );
-
-    $self->{'ponapi.mediatype'} = 'application/vnd.api+json';
-    $self->{'ponapi.qr_mediatype'} = qr{application/vnd\.api\+json};
-
-    return;
+    my $self = shift;
+    my %conf = PONAPI::Server::ConfigReader->new( dir => 'conf' )->read_config;
+    $self->{$_} = $conf{$_} for keys %conf;
 }
 
 sub call {
@@ -67,49 +56,6 @@ sub call {
 
 
 ### ...
-
-sub _set_server_sorting {
-    my ( $self, $conf ) = @_;
-
-    my $sort_allowed = $conf->{sort_allowed}
-        // die "[PONAPI Server] server sorting configuration is missing";
-
-    $self->{'ponapi.sort_allowed'} =
-        ( grep { $sort_allowed eq $_ } qw< yes true 1 > ) ? 1 :
-        ( grep { $sort_allowed eq $_ } qw< no false 0 > ) ? 0 :
-        die "[PONAPI Server] server sorting is misconfigured";
-}
-
-sub _set_server_send_header {
-    my ( $self, $conf ) = @_;
-
-    $self->{'ponapi.send_version_header'} =
-        ( grep { $conf->{send_version_header} eq $_ } qw< yes true 1 > ) ? 1 : 0;
-}
-
-sub _set_server_self_link {
-    my ( $self, $conf ) = @_;
-
-    $self->{'ponapi.doc_auto_self_link'} =
-        ( grep { $conf->{send_document_self_link} eq $_ } qw< yes true 1 > ) ? 1 : 0;
-}
-
-sub _set_server_relative_links {
-    my ( $self, $conf ) = @_;
-    grep { $conf->{links_type} eq $_ } qw< relative full >
-        or die "[PONAPI Server] server links_type is misconfigured";
-
-    $self->{'ponapi.relative_links'} = $conf->{links_type};
-}
-
-sub _load_repository {
-    my ( $self, $conf ) = @_;
-
-    my $repository = Module::Runtime::use_module( $conf->{class} )->new( @{ $conf->{args} } )
-        || die "[PONAPI Server] failed to create a repository object\n";
-
-    $self->{'ponapi.DAO'} = PONAPI::DAO->new( repository => $repository );
-}
 
 sub _request_headers {
     my ( $self, $req ) = @_;
