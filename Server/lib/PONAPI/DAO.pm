@@ -299,6 +299,10 @@ sub _prepare_req {
     return $req;
 }
 
+# http://jsonapi.org/format/#crud-updating-responses-404
+# http://jsonapi.org/format/#fetching-resources-responses-404
+# There's nothing on *creating* a resource of an invalid type,
+# but might as well for consistency.
 sub _validate_types {
     my ( $self, $req ) = @_;
     my ( $type, $rel_type, $doc ) = @{$req}{qw< type rel_type document >};
@@ -361,7 +365,6 @@ sub _dao_response {
 
     return ( $doc->status, \@headers, $doc->build );
 }
-
 
 __PACKAGE__->meta->make_immutable;
 no Moose; 1;
