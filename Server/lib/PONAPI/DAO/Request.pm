@@ -2,6 +2,12 @@ package PONAPI::DAO::Request;
 
 use Moose;
 
+has document => (
+    is       => 'ro',
+    isa      => 'PONAPI::Builder::Document',
+    default  => sub { PONAPI::Builder::Document->new() }
+);
+
 has req_base => (
     is       => 'ro',
     isa      => 'Str',

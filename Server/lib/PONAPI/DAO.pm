@@ -16,18 +16,16 @@ has 'repository' => (
 
 sub retrieve_all {
     my $self = shift;
-    my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
+    my $req  = $self->_prepare_req(@_);
+    my $doc  = $req->document;
 
-    _check_no_id   ( $req, $doc );
-    _check_no_data ( $req, $doc );
+    _check_no_id   ($req);
+    _check_no_data ($req);
 
     $doc->has_errors or
         eval {
             $doc->convert_to_collection;
-            $repo->retrieve_all(
-                document => $doc,
-                %{ $req },
-            );
+            $self->repository->retrieve_all( %{ $req } );
             1;
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
@@ -35,22 +33,20 @@ sub retrieve_all {
             _server_failure($doc);
         };
 
-    return _dao_response( $req, $doc );
+    return _dao_response($req);
 }
 
 sub retrieve {
     my $self = shift;
-    my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
+    my $req  = $self->_prepare_req(@_);
+    my $doc  = $req->document;
 
-    _check_id      ( $req, $doc );
-    _check_no_data ( $req, $doc );
+    _check_id      ($req);
+    _check_no_data ($req);
 
     $doc->has_errors or
         eval {
-            $repo->retrieve(
-                document => $doc,
-                %{ $req },
-            );
+            $self->repository->retrieve( %{ $req } );
             1;
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
@@ -58,23 +54,21 @@ sub retrieve {
             _server_failure($doc);
         };
 
-    return _dao_response( $req, $doc );
+    return _dao_response($req);
 }
 
 sub retrieve_relationships {
     my $self = shift;
-    my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
+    my $req  = $self->_prepare_req(@_);
+    my $doc  = $req->document;
 
-    _check_id       ( $req, $doc );
-    _check_rel_type ( $req, $doc );
-    _check_no_data  ( $req, $doc );
+    _check_id       ($req);
+    _check_rel_type ($req);
+    _check_no_data  ($req);
 
     $doc->has_errors or
         eval {
-            $repo->retrieve_relationships(
-                document => $doc,
-                %{ $req },
-            );
+            $self->repository->retrieve_relationships( %{ $req } );
             1;
         } or do {
             # NOTE:  this probably needs to be more sophisticated - SL
@@ -82,23 +76,21 @@ sub retrieve_relationships {
             _server_failure($doc);
         };
 
-    return _dao_response( $req, $doc );
+    return _dao_response($req);
 }
 
 sub retrieve_by_relationship {
     my $self = shift;
-    my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
+    my $req  = $self->_prepare_req(@_);
+    my $doc  = $req->document;
 
-    _check_id       ( $req, $doc );
-    _check_rel_type ( $req, $doc );
-    _check_no_data  ( $req, $doc );
+    _check_id       ($req);
+    _check_rel_type ($req);
+    _check_no_data  ($req);
 
     $doc->has_errors or
         eval {
-            $repo->retrieve_by_relationship(
-                document => $doc,
-                %{ $req },
-            );
+            $self->repository->retrieve_by_relationship( %{ $req } );
             1;
         } or do {
             # NOTE:  this probably needs to be more sophisticated - SL
@@ -106,24 +98,22 @@ sub retrieve_by_relationship {
             _server_failure($doc);
         };
 
-    return _dao_response( $req, $doc );
+    return _dao_response($req);
 }
 
 sub create {
     my $self = shift;
-    my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
+    my $req  = $self->_prepare_req(@_);
+    my $doc  = $req->document;
 
     # client-generated id needs to be passed in the body
-    _check_no_id();
-    _check_no_rel_type();
-    _check_data();
+    _check_no_id       ($req);
+    _check_no_rel_type ($req);
+    _check_data        ($req);
 
     $doc->has_errors or
         eval {
-            $repo->create(
-                document => $doc,
-                %{ $req },
-            );
+            $self->repository->create( %{ $req } );
             $doc->add_meta(
                 message => "successfully created the resource: "
                          . $req->type
@@ -137,23 +127,21 @@ sub create {
             _server_failure($doc);
         };
 
-    return _dao_response( $req, $doc );
+    return _dao_response($req);
 }
 
 sub create_relationships {
     my $self = shift;
-    my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
+    my $req  = $self->_prepare_req(@_);
+    my $doc  = $req->document;
 
-    _check_id       ( $req, $doc );
-    _check_rel_type ( $req, $doc );
-    _check_data     ( $req, $doc );
+    _check_id       ($req);
+    _check_rel_type ($req);
+    _check_data     ($req);
 
     $doc->has_errors or
         eval {
-            $repo->create_relationships(
-                document => $doc,
-                %{ $req },
-            );
+            $self->repository->create_relationships( %{ $req } );
             $doc->add_meta(
                 message => "successfully created the relationship /"
                          . $req->type
@@ -171,23 +159,21 @@ sub create_relationships {
             _server_failure($doc);
         };
 
-    return _dao_response( $req, $doc );
+    return _dao_response($req);
 }
 
 sub update {
     my $self = shift;
-    my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
+    my $req  = $self->_prepare_req(@_);
+    my $doc  = $req->document;
 
-    _check_id          ( $req, $doc );
-    _check_no_rel_type ( $req, $doc );
-    _check_data        ( $req, $doc );
+    _check_id          ($req);
+    _check_no_rel_type ($req);
+    _check_data        ($req);
 
     $doc->has_errors or
         eval {
-            $repo->update(
-                document => $doc,
-                %{ $req },
-            );
+            $self->repository->update( %{ $req } );
             $doc->add_meta(
                 message => "successfully updated the resource /"
                          . $req->type
@@ -203,23 +189,21 @@ sub update {
             _server_failure($doc);
         };
 
-    return _dao_response( $req, $doc );
+    return _dao_response($req);
 }
 
 sub update_relationships {
     my $self = shift;
-    my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
+    my $req  = $self->_prepare_req(@_);
+    my $doc  = $req->document;
 
-    _check_id       ( $req, $doc );
-    _check_rel_type ( $req, $doc );
-    _check_data     ( $req, $doc );
+    _check_id       ($req);
+    _check_rel_type ($req);
+    _check_data     ($req);
 
     $doc->has_errors or
         eval {
-            $repo->update_relationships(
-                document => $doc,
-                %{ $req },
-            );
+            $self->repository->update_relationships( %{ $req } );
             $doc->add_meta(
                 message => "successfully updated the relationship /"
                          . $req->type
@@ -237,23 +221,21 @@ sub update_relationships {
             _server_failure($doc);
         };
 
-    return _dao_response( $req, $doc );
+    return _dao_response($req);
 }
 
 sub delete : method {
     my $self = shift;
-    my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
+    my $req  = $self->_prepare_req(@_);
+    my $doc  = $req->document;
 
-    _check_id          ( $req, $doc );
-    _check_no_rel_type ( $req, $doc );
-    _check_no_data     ( $req, $doc );
+    _check_id          ($req);
+    _check_no_rel_type ($req);
+    _check_no_data     ($req);
 
     $doc->has_errors or
         eval {
-            $repo->delete(
-                document => $doc,
-                %{ $req },
-            );
+            $self->repository->delete( %{ $req } );
             $doc->add_meta(
                 message => "successfully deleted the resource /"
                          . $req->type
@@ -268,23 +250,21 @@ sub delete : method {
         };
 
 
-    return _dao_response( $req, $doc );
+    return _dao_response($req);
 }
 
 sub delete_relationships {
     my $self = shift;
-    my ( $req, $doc, $repo ) = $self->_prepare_req(@_);
+    my $req  = $self->_prepare_req(@_);
+    my $doc  = $req->document;
 
-    _check_id       ( $req, $doc );
-    _check_rel_type ( $req, $doc );
-    _check_data     ( $req, $doc );
+    _check_id       ($req);
+    _check_rel_type ($req);
+    _check_data     ($req);
 
     $doc->has_errors or
         eval {
-            $repo->delete_relationships(
-                document => $doc,
-                %{ $req },
-            );
+            $self->repository->delete_relationships( %{ $req } );
             $doc->add_meta(
                 message => "successfully deleted the relationship /"
                          . $req->type
@@ -302,7 +282,7 @@ sub delete_relationships {
             _server_failure($doc);
         };
 
-    return _dao_response( $req, $doc );
+    return _dao_response($req);
 }
 
 
@@ -311,50 +291,37 @@ sub delete_relationships {
 sub _prepare_req {
     my $self = shift;
 
-    my $req  = PONAPI::DAO::Request->new(@_);
-    my $doc  = PONAPI::Builder::Document->new();
-    my $repo = $self->repository;
-
-    _validate_types( $req, $doc, $repo );
-
-    return ( $req, $doc, $repo );
-}
-
-sub _dao_response {
-    my ( $req, $doc, @headers ) = @_;
-
-    $doc->add_self_link( $req->req_base )
-        if $req->send_doc_self_link;
-
-    return ( $doc->status, \@headers, $doc->build );
+    my $req = PONAPI::DAO::Request->new(@_);
+    $self->_validate_types( $req );
+    return $req;
 }
 
 sub _validate_types {
-    my ( $req, $doc, $repo ) = @_;
-    my ( $type, $rel_type ) = @{$req}{qw< type rel_type >};
+    my ( $self, $req ) = @_;
+    my ( $type, $rel_type, $doc ) = @{$req}{qw< type rel_type document >};
 
     # check type and relations
-    $repo->has_type( $type )
+    $self->repository->has_type( $type )
         or $doc->raise_error( 404, { message => "Type `$type` doesn't exist." } );
 
-    if ( $rel_type and !$repo->has_relationship( $type, $rel_type ) ) {
+    if ( $rel_type and !$self->repository->has_relationship( $type, $rel_type ) ) {
         $doc->raise_error( 404, { message => "Types `$type` and `$rel_type` are not related" } );
     }
 
     for ( @{ $req->include } ) {
-        $repo->has_relationship( $type, $_ )
+        $self->repository->has_relationship( $type, $_ )
             or $doc->raise_error( 404, { message => "Types `$type` and `$_` are not related" } );
     }
 
     return;
 }
 
-sub _check_id          { $_[0]->id   or  _bad_request( $_[1], "`id` is missing"                 ) }
-sub _check_no_id       { $_[0]->id   and _bad_request( $_[1], "`id` not allowed"                ) }
-sub _check_rel_type    { $_[0]->id   or  _bad_request( $_[1], "`relationship type` is missing"  ) }
-sub _check_no_rel_type { $_[0]->id   and _bad_request( $_[1], "`relationship type` not allowed" ) }
-sub _check_data        { $_[0]->data or  _bad_request( $_[1], "request body is missing"         ) }
-sub _check_no_data     { $_[0]->data and _bad_request( $_[1], "request body is not allowed"     ) }
+sub _check_id          { $_[0]->id   or  _bad_request( $_[0]->document, "`id` is missing"                 ) }
+sub _check_no_id       { $_[0]->id   and _bad_request( $_[0]->document, "`id` not allowed"                ) }
+sub _check_rel_type    { $_[0]->id   or  _bad_request( $_[0]->document, "`relationship type` is missing"  ) }
+sub _check_no_rel_type { $_[0]->id   and _bad_request( $_[0]->document, "`relationship type` not allowed" ) }
+sub _check_data        { $_[0]->data or  _bad_request( $_[0]->document, "request body is missing"         ) }
+sub _check_no_data     { $_[0]->data and _bad_request( $_[0]->document, "request body is not allowed"     ) }
 
 sub _bad_request {
     $_[0]->raise_error( 400, { message => $_[1] } );
@@ -362,6 +329,16 @@ sub _bad_request {
 
 sub _server_failure {
     $_[0]->raise_error(500, { message => 'A fatal error has occured, please check server logs' } );
+}
+
+sub _dao_response {
+    my ( $req, @headers ) = @_;
+    my $doc = $req->document;
+
+    $doc->add_self_link( $req->req_base )
+        if $req->send_doc_self_link;
+
+    return ( $doc->status, \@headers, $doc->build );
 }
 
 
