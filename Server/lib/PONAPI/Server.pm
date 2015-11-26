@@ -1,4 +1,4 @@
-package PONAPI::Server::Simple::PONAPI;
+package PONAPI::Server;
 
 use Plack::Request;
 use Plack::Response;

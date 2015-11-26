@@ -9,14 +9,14 @@ use Plack::Test;
 use HTTP::Request::Common;
 
 BEGIN {
-    use_ok('PONAPI::Server::Simple::PONAPI');
+    use_ok('PONAPI::Server');
 }
 
 my $JSONAPI_MEDIATYPE = 'application/vnd.api+json';
 
 subtest '... basic server test' => sub {
 
-    my $app = Plack::Test->create( PONAPI::Server::Simple::PONAPI->to_app );
+    my $app = Plack::Test->create( PONAPI::Server->to_app );
 
     {
         my $res = $app->request( GET '/' );

@@ -9,14 +9,14 @@ use Plack::Test;
 use HTTP::Request::Common;
 
 BEGIN {
-    use_ok('PONAPI::Server::Simple::PONAPI');
+    use_ok('PONAPI::Server');
 }
 
 my @TEST_HEADERS = ( 'Content-Type' => 'application/vnd.api+json' );
 
 subtest '... include errors' => sub {
 
-    my $app = Plack::Test->create( PONAPI::Server::Simple::PONAPI->to_app );
+    my $app = Plack::Test->create( PONAPI::Server->to_app );
 
     {
         my $res = $app->request( GET '/articles/2?include=comments', @TEST_HEADERS );
