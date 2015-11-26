@@ -25,14 +25,12 @@ use constant {
 };
 
 sub prepare_app {
-    my $self = shift;
     my %conf = PONAPI::Server::ConfigReader->new( dir => 'conf' )->read_config;
-    $self->{$_} = $conf{$_} for keys %conf;
+    $_[0]->{$_} = $conf{$_} for keys %conf;
 }
 
 sub call {
     my ( $self, $env ) = @_;
-
     my $req = Plack::Request->new($env);
 
     my $ponapi_params = Return::MultiLevel::with_return {
@@ -42,14 +40,13 @@ sub call {
     return $self->_error_response( $ponapi_params->{__error__} )
         if $ponapi_params->{__error__};
 
-    my $action = delete $ponapi_params->{action};
-
     $ponapi_params->{req_base} =
         $self->{'ponapi.relative_links'} eq 'full' ? "".$req->base : '/';
 
     $ponapi_params->{send_doc_self_link} = $self->{'ponapi.doc_auto_self_link'}
         if $req->method eq 'GET';
 
+    my $action = delete $ponapi_params->{action};
     my ( $status, $headers, $res ) = $self->{'ponapi.DAO'}->$action($ponapi_params);
     return $self->_response( $status, $headers, $res );
 }
@@ -135,27 +132,15 @@ sub _ponapi_check_headers {
     my $headers = $self->_request_headers($req);
 
     # check Content-Type
-
     my $content_type = $headers->get('Content-Type');
-
-    $wr->(ERR_MISSING_CONTENT_TYPE)
-        unless $content_type;
-
-    $wr->(ERR_WRONG_CONTENT_TYPE)
-        unless $content_type eq $self->{'ponapi.mediatype'};
-
+    $wr->(ERR_MISSING_CONTENT_TYPE) unless $content_type;
+    $wr->(ERR_WRONG_CONTENT_TYPE)   unless $content_type eq $self->{'ponapi.mediatype'};
 
     # check Accept
     my $qr = $self->{'ponapi.qr_mediatype'};
-
     my @jsonapi_accept = grep { /$qr/ } split /,/ => $headers->get_all('Accept');
-
-    if ( @jsonapi_accept ) {
-        $wr->(ERR_WRONG_HEADER_ACCEPT)
-            unless grep { /^$qr;?$/ } @jsonapi_accept;
-    }
-
-    return;
+    return unless @jsonapi_accept;
+    $wr->(ERR_WRONG_HEADER_ACCEPT) unless grep { /^$qr;?$/ } @jsonapi_accept;
 }
 
 sub _ponapi_query_params {
@@ -206,7 +191,6 @@ sub _ponapi_query_params {
 
 sub _ponapi_data {
     my ( $self, $wr, $req ) = @_;
-
     $req->method eq 'GET' and return;
 
     my $body = decode_json( $req->content );
@@ -235,7 +219,7 @@ sub _error_response {
     return $self->_response( $args->[0], [], +{
         jsonapi => { version => $self->{'ponapi.spec_version'} },
         errors  => [ { message => $args->[1] } ],
-    } );
+    });
 }
 
 
