@@ -25,7 +25,7 @@ subtest '... include errors' => sub {
 
     {
         my $res = $app->request( GET '/articles/2?include=asdasd,comments.not_there', @TEST_HEADERS );
-        is( $res->code, 400, 'non-existing relationships are not' );
+        is( $res->code, 404, 'non-existing relationships are not found' );
     }
 
 };

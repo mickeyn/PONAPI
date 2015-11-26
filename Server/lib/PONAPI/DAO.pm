@@ -359,9 +359,6 @@ sub _valid_types {
         or return _error_not_found( $doc, "Type `" . $req->type . "` doesn't exist." );
 
     if ( $req->rel_type ) {
-        $repo->has_type( $req->rel_type )
-            or return _error_not_found( $doc, "Type `" . $req->rel_type . "` doesn't exist." );
-
         $repo->has_relationship( $req->type, $req->rel_type )
             or return _error_not_found( $doc, "Types `" . $req->type . "` and `" . $req->rel_type . "` are not related" );
     }
