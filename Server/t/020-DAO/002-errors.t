@@ -98,11 +98,6 @@ subtest '... retrieve' => sub {
             "id is required (missing)"
         ],
         [
-            [ @TEST_ARGS_BASE_TYPE, id => "" ],
-            $ERR_ID_MISSING,
-            "id is required (empty string)"
-        ],
-        [
             [ @TEST_ARGS_BASE_TYPE_ID, data => { id => 1 } ],
             $ERR_BODY_NOT_ALLOWED,
             "body is not allowed"
@@ -143,11 +138,6 @@ subtest '... retrieve relationships' => sub {
             [ @TEST_ARGS_BASE_TYPE ],
             $ERR_ID_MISSING,
             "id is required (missing)"
-        ],
-        [
-            [ @TEST_ARGS_BASE_TYPE, id => "" ],
-            $ERR_ID_MISSING,
-            "id is required (empty string)"
         ],
         [
             [ @TEST_ARGS_BASE_TYPE_ID, data => { id => 1 } ],
@@ -505,14 +495,14 @@ subtest '... explodey repo errors' => sub {
             is_deeply(
                 \@ret,
                 [
-                    400,
+                    500,
                     [],
                     {
                         errors => [
                             {
                                 message =>
 'A fatal error has occured, please check server logs',
-                                status => 400
+                                status => 500
                             }
                         ],
                         jsonapi => { version => '1.0' }
@@ -539,21 +529,21 @@ subtest '... explodey repo errors' => sub {
             ($w, @ret) = ('');
             {
                 no warnings 'redefine';
-                local $SIG{__WARN__} = sub { $w .= shift };
-                local *$glob = sub { return -1111.5 };
+                local $SIG{__WARN__} = sub { $w .= shift    };
+                local *$glob         = sub { return -1111.5 };
                 @ret = $dao->$method(@$arguments);
             }
             is_deeply(
                 \@ret,
                 [
-                    400,
+                    500,
                     [],
                     {
                         'errors' => [
                             {
                                 'message' =>
     'A fatal error has occured, please check server logs',
-                                'status' => 400
+                                'status' => 500
                             }
                         ],
                         'jsonapi' => { 'version' => '1.0' }
@@ -638,7 +628,7 @@ subtest '... create_relationships' => sub {
         my $doc = $res[2];
         $status ||= 400;
         is( $res[0],                    $status,   "... $status on error" );
-        is( $doc->{errors}[0]{message}, $expected, $desc );
+        is( $doc->{errors}[0]{message}, $expected, $desc);
     }
 
 
@@ -762,7 +752,7 @@ subtest '... delete_relationships' => sub {
                         {
                             'status' => 400,
                             'message' =>
-'delete_relationships: relationship articles -> authors is one-to-one, can\'t use delete here'
+'Types `articles` and `authors` are one-to-one, invalid delete_relationships',
                         }
                     ],
                     'jsonapi' => {

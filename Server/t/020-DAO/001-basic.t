@@ -76,6 +76,15 @@ subtest '... retrieve' => sub {
     ok(scalar keys %{ $data->{attributes} } == 1, '... one key in `attributes`');
     ok(exists $data->{attributes}->{title}, '... the attribute `title` key exists');
 
+    # Retrieve using false values as ids; should return nothing,
+    # because the ids don't exist, but should not error.
+    foreach my $id ( '', 0, 0E0, 0.0, '0 but true' ) {
+        my @ret = $dao->retrieve(type => articles => id => $id);
+        is_deeply(\@ret,
+            [ 200, [], { data => undef, jsonapi => { version => '1.0' } } ],
+            "... retrieve using $id as id works without errors",
+        );
+    }
 };
 
 subtest '... retrieve relationships' => sub {
@@ -530,16 +539,37 @@ subtest '... create + create_relationship' => sub {
     };
     is_deeply($retrieved_again, $final_expect, "... including missing resources works");
 
-    # Special case; updating a one-to-one lets you pass undef.
+
+    # Special cases; updating a one-to-one lets you pass undef.
     # See http://jsonapi.org/format/#crud-updating-to-one-relationships
-    TODO: {
-        local $TODO = "TBI";
-        my @author_update_rel = eval {$dao->update_relationships(
+    {
+        my @author_update_rel = $dao->update_relationships(
             type => "articles",
             id   => $article_id,
-            rel_type => "author",
+            rel_type => "authors",
             data => undef,
-        )};
+        );
+        is_deeply(\@author_update_rel, [200, [], {
+            meta => { message => 'successfully updated the relationship /articles/4/authors => null' },
+            jsonapi => { 'version' => '1.0' },
+        }], "... clearing out a one-to-one works (using update_relationships)");
+
+        my @author_update = $dao->update(
+            type => "articles",
+            id   => $article_id,
+            data => {
+                type => "articles",
+                id   => $article_id,
+                relationships => {
+                    authors  => undef,
+                    comments => [],
+                }
+            },
+        );
+        is_deeply(\@author_update, [202, [], {
+            meta => { message => 'successfully updated the resource /articles/4 => {"relationships":{"authors":null,"comments":[]},"id":"4","type":"articles","attributes":null}' },
+            jsonapi => { 'version' => '1.0' },
+        }], "... clearing out a one-to-one works (using update)");
     }
 };
 
