@@ -358,6 +358,7 @@ subtest '... update' => sub {
     {
         my ( $who, $test ) = @$tuple;
         my @ret = $dao->update(
+            req_base => '/',
             %$who,
             data => {
                 %$who, attributes => { title => "Nonexistent" },
@@ -372,8 +373,10 @@ subtest '... update' => sub {
             }
         ];
         $ret[2]->{meta}{message} = '';
-        is_deeply( \@ret, $expected,
-"trying to update a non-existent attribute should give a 404 and a body explaining why"
+        is_deeply(
+            \@ret,
+            $expected,
+            "trying to update a non-existent attribute should give a 404 and a body explaining why"
         );
     }
 
@@ -456,8 +459,11 @@ subtest '... update' => sub {
         );
     }
     my @second_retrieve = $dao->retrieve(%who);
-    is_deeply( \@first_retrieve, \@second_retrieve,
-        "... changes are rolled back" );
+    is_deeply(
+        \@first_retrieve,
+        \@second_retrieve,
+        "... changes are rolled back"
+    );
     is( $ret[0], 400, "... the update had the correct error status" );
     ok( exists $ret[2]->{errors}, "... and an errors member" );
     ok( $w,                       "... and we gave a perl warning, too" );
@@ -685,8 +691,11 @@ subtest '... create_relationships' => sub {
     );
 
     my @second_retrieve = $dao->retrieve(%who);
-    is_deeply( \@first_retrieve, \@second_retrieve,
-        "... and the changes are not applied" );
+    is_deeply(
+        \@first_retrieve,
+        \@second_retrieve,
+        "... and the changes are not applied"
+    );
 
     @ret = $dao->create_relationships(
         %who,
