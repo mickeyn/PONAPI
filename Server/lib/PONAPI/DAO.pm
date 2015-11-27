@@ -2,8 +2,11 @@
 package PONAPI::DAO;
 use Moose;
 
+use PONAPI::DAO::Constants;
 use PONAPI::DAO::Repository;
 use PONAPI::DAO::Request;
+use PONAPI::DAO::Request::RelationshipUpdate;
+use PONAPI::DAO::Request::ResourceCollection;
 use PONAPI::Builder::Document;
 
 use JSON::XS qw< encode_json >;
@@ -21,7 +24,7 @@ has 'respond_to_updates_with_200' => (
 
 sub retrieve_all {
     my $self = shift;
-    my $req  = $self->_prepare_req(@_);
+    my $req  = $self->_prepare_req(retrieve_all => @_);
     my $doc  = $req->document;
 
     _check_no_id   ($req);
@@ -43,7 +46,7 @@ sub retrieve_all {
 
 sub retrieve {
     my $self = shift;
-    my $req  = $self->_prepare_req(@_);
+    my $req  = $self->_prepare_req(retrieve => @_);
     my $doc  = $req->document;
 
     _check_has_id  ($req);
@@ -64,7 +67,7 @@ sub retrieve {
 
 sub retrieve_relationships {
     my $self = shift;
-    my $req  = $self->_prepare_req(@_);
+    my $req  = $self->_prepare_req(retrieve_relationships => @_);
     my $doc  = $req->document;
 
     _check_has_id       ($req);
@@ -86,7 +89,7 @@ sub retrieve_relationships {
 
 sub retrieve_by_relationship {
     my $self = shift;
-    my $req  = $self->_prepare_req(@_);
+    my $req  = $self->_prepare_req(retrieve_by_relationship => @_);
     my $doc  = $req->document;
 
     _check_has_id       ($req);
@@ -108,7 +111,7 @@ sub retrieve_by_relationship {
 
 sub create {
     my $self = shift;
-    my $req  = $self->_prepare_req(@_);
+    my $req  = $self->_prepare_req(create => @_);
     my $doc  = $req->document;
 
     # client-generated id needs to be passed in the body
@@ -140,7 +143,7 @@ sub create {
 
 sub create_relationships {
     my $self = shift;
-    my $req  = $self->_prepare_req(@_);
+    my $req  = $self->_prepare_req(create_relationships => @_);
     my $doc  = $req->document;
 
     _check_has_id       ($req);
@@ -172,7 +175,7 @@ sub create_relationships {
 
 sub update {
     my $self = shift;
-    my $req  = $self->_prepare_req(@_);
+    my $req  = $self->_prepare_req(update => @_);
     my $doc  = $req->document;
 
     _check_has_id      ($req);
@@ -202,7 +205,7 @@ sub update {
 
 sub update_relationships {
     my $self = shift;
-    my $req  = $self->_prepare_req(@_);
+    my $req  = $self->_prepare_req(update_relationships => @_);
     my $doc  = $req->document;
 
     _check_has_id       ($req);
@@ -234,7 +237,7 @@ sub update_relationships {
 
 sub delete : method {
     my $self = shift;
-    my $req  = $self->_prepare_req(@_);
+    my $req  = $self->_prepare_req(delete => @_);
     my $doc  = $req->document;
 
     _check_has_id      ($req);
@@ -257,13 +260,12 @@ sub delete : method {
             _server_failure($doc);
         };
 
-
     return _dao_response($req);
 }
 
 sub delete_relationships {
     my $self = shift;
-    my $req  = $self->_prepare_req(@_);
+    my $req  = $self->_prepare_req(delete_relationships => @_);
     my $doc  = $req->document;
 
     _check_has_id       ($req);
@@ -296,11 +298,28 @@ sub delete_relationships {
 
 ### ... internal
 
+# delete & create relationships *always* take an arrayref of resources,
+# while update_relationships may get either a hashref, an arrayref, or
+# even undef
+my %resource_collection = map +($_=>1), qw/
+    delete_relationships
+    create_relationships
+/;
 sub _prepare_req {
-    my $self = shift;
+    my ($self, $request_type, @args) = @_;
 
-    my $req = PONAPI::DAO::Request->new(@_);
-    $self->_validate_types( $req );
+    my $req;
+    
+    if ( exists $resource_collection{$request_type} ) {
+        $req = PONAPI::DAO::Request::ResourceCollection->new(@args)
+    }
+    elsif ( $request_type eq 'update_relationships' ) {
+        $req = PONAPI::DAO::Request::RelationshipUpdate->new(@args)
+    }
+    else {
+        $req = PONAPI::DAO::Request->new(@args);
+    }
+    $self->_validate_types( $request_type, $req );
     return $req;
 }
 
@@ -308,32 +327,47 @@ sub _prepare_req {
 # http://jsonapi.org/format/#fetching-resources-responses-404
 # There's nothing on *creating* a resource of an invalid type,
 # but might as well for consistency.
+my %only_one_to_many = map +($_=>1), qw/
+    delete_relationships
+    create_relationships
+/;
 sub _validate_types {
-    my ( $self, $req ) = @_;
+    my ( $self, $request_type, $req ) = @_;
     my ( $type, $rel_type, $doc ) = @{$req}{qw< type rel_type document >};
 
+    my $repo = $self->repository;
+
     # check type and relations
-    $self->repository->has_type( $type )
+    $repo->has_type( $type )
         or $doc->raise_error( 404, { message => "Type `$type` doesn't exist." } );
 
-    if ( $rel_type and !$self->repository->has_relationship( $type, $rel_type ) ) {
-        $doc->raise_error( 404, { message => "Types `$type` and `$rel_type` are not related" } );
+    if ( defined($rel_type) ) {
+        if ( !$repo->has_relationship( $type, $rel_type ) ) {
+            $doc->raise_error( 404, {
+                message => "Types `$type` and `$rel_type` are not related"
+            });
+        }
+        elsif ( $only_one_to_many{$request_type} ) {
+            $doc->raise_error(400, {
+                message => "Types `$type` and `$rel_type` are one-to-one, invalid $request_type"
+            }) if !$repo->has_one_to_many_relationship($type, $rel_type);
+        }
     }
 
     for ( @{ $req->include } ) {
-        $self->repository->has_relationship( $type, $_ )
+        $repo->has_relationship( $type, $_ )
             or $doc->raise_error( 404, { message => "Types `$type` and `$_` are not related" } );
     }
 
     return;
 }
 
-sub _check_has_id       { $_[0]->id       or  _bad_request( $_[0]->document, "`id` is missing"                 ) }
-sub _check_no_id        { $_[0]->id       and _bad_request( $_[0]->document, "`id` not allowed"                ) }
-sub _check_has_rel_type { $_[0]->rel_type or  _bad_request( $_[0]->document, "`relationship type` is missing"  ) }
-sub _check_no_rel_type  { $_[0]->rel_type and _bad_request( $_[0]->document, "`relationship type` not allowed" ) }
-sub _check_has_data     { $_[0]->data     or  _bad_request( $_[0]->document, "request body is missing"         ) }
-sub _check_no_data      { $_[0]->data     and _bad_request( $_[0]->document, "request body is not allowed"     ) }
+sub _check_has_id       { defined($_[0]->id)       or  _bad_request( $_[0]->document, "`id` is missing"                 ) }
+sub _check_no_id        { defined($_[0]->id)       and _bad_request( $_[0]->document, "`id` not allowed"                ) }
+sub _check_has_rel_type { defined($_[0]->rel_type) or  _bad_request( $_[0]->document, "`relationship type` is missing"  ) }
+sub _check_no_rel_type  { defined($_[0]->rel_type) and _bad_request( $_[0]->document, "`relationship type` not allowed" ) }
+sub _check_has_data     { $_[0]->has_data or  _bad_request( $_[0]->document, "request body is missing"         ) }
+sub _check_no_data      { $_[0]->has_data and _bad_request( $_[0]->document, "request body is not allowed"     ) }
 
 sub _check_data_has_type {
     my $req = shift;
