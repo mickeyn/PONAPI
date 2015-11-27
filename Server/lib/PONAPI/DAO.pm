@@ -130,13 +130,20 @@ sub create {
 
     $doc->has_errors or
         eval {
-            $self->repository->create( %{ $req } );
-            $doc->add_meta(
-                message => "successfully created the resource: "
+            my $ret = $self->repository->create( %{ $req } );
+
+            if ( $doc->has_errors || $PONAPI_ERROR_RETURN{$ret} ) {
+                $doc->set_status(409) if $ret == PONAPI_CONFLICT_ERROR;
+                $doc->set_status(404) if $ret == PONAPI_UNKNOWN_RELATIONSHIP;
+            }
+            else {
+                $doc->add_meta(
+                    message => "successfully created the resource: "
                          . $req->type
                          . " => "
                          . encode_json( $req->data )
-            );
+                );
+            }
             1;
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
@@ -158,17 +165,28 @@ sub create_relationships {
 
     $doc->has_errors or
         eval {
-            $self->repository->create_relationships( %{ $req } );
-            $doc->add_meta(
-                message => "successfully created the relationship /"
-                         . $req->type
-                         . "/"
-                         . $req->id
-                         . "/"
-                         . $req->rel_type
-                         . " => "
-                         . encode_json( $req->data )
-            );
+            my $ret = $self->repository->create_relationships( %{ $req } );
+
+            if ( !exists $PONAPI_UPDATE_RETURN_VALUES{$ret} ) {
+                die ref($self->repository), "->create_relationships returned an unexpected value";
+            }
+
+            # http://jsonapi.org/format/#crud-updating-responses-409
+            if ( $PONAPI_ERROR_RETURN{$ret} ) {
+                $doc->set_status(409) if $ret == PONAPI_CONFLICT_ERROR;
+            }
+            else {
+                $doc->add_meta(
+                    message => "successfully created the relationship /"
+                             . $req->type
+                             . "/"
+                             . $req->id
+                             . "/"
+                             . $req->rel_type
+                             . " => "
+                             . encode_json( $req->data )
+                );
+            }
             1;
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
@@ -205,15 +223,50 @@ sub update {
 
     $doc->has_errors or
         eval {
-            $self->repository->update( %{ $req } );
-            $doc->add_meta(
-                message => "successfully updated the resource /"
+            my $ret = $self->repository->update(
+                document => $doc,
+                %{ $req },
+            );
+
+            if ( !exists $PONAPI_UPDATE_RETURN_VALUES{$ret} ) {
+                die ref($self->repository), "->update returned an unexpected value";
+            }
+
+            if ( $PONAPI_ERROR_RETURN{$ret} ) {
+                $doc->set_status(409) if $ret == PONAPI_CONFLICT_ERROR;
+                $doc->set_status(404) if $ret == PONAPI_UNKNOWN_RELATIONSHIP;
+                return 1; # return from eval
+            }
+
+            my $resource = "/"
                          . $req->type
                          . "/"
                          . $req->id
                          . " => "
-                         . encode_json( $req->data )
-            );
+                         . encode_json( $req->data );
+
+            my $message = "successfully updated the resource $resource";
+            if ( $ret == PONAPI_UPDATED_NOTHING ) {
+                $doc->set_status(404);
+                $message = "updated nothing for the resource $resource"
+            }
+
+            $doc->add_meta( message => $message );
+
+            if ( !$doc->has_errors && !$doc->has_status ) {
+                if ( $self->respond_to_updates_with_200 ) {
+                    $doc->set_status(200);
+                    return $self->repository->retrieve(
+                        type => $type,
+                        id   => $req->id,
+                        document => $doc,
+                    ) if $ret == PONAPI_UPDATED_EXTENDED;
+                }
+                else {
+                    $doc->set_status(202);
+                }
+            }
+
             1;
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
@@ -235,7 +288,13 @@ sub update_relationships {
 
     $doc->has_errors or
         eval {
-            $self->repository->update_relationships( %{ $req } );
+            my $ret = $self->repository->update_relationships( %{ $req } );
+
+            if ( !exists $PONAPI_UPDATE_RETURN_VALUES{$ret} ) {
+                die ref($self->repository), "->update_relationships returned an unexpected value";
+            }
+
+            my $json = JSON::XS->new->allow_nonref->utf8;
             $doc->add_meta(
                 message => "successfully updated the relationship /"
                          . $req->type
@@ -244,7 +303,7 @@ sub update_relationships {
                          . "/"
                          . $req->rel_type
                          . " => "
-                         . encode_json( $req->data )
+                         . $json->encode( $req->data )
             );
             1;
         } or do {
@@ -295,17 +354,30 @@ sub delete_relationships {
 
     $doc->has_errors or
         eval {
-            $self->repository->delete_relationships( %{ $req } );
-            $doc->add_meta(
-                message => "successfully deleted the relationship /"
+            my $ret = $self->repository->delete_relationships( %{ $req } );
+
+            if ( !exists $PONAPI_UPDATE_RETURN_VALUES{$ret} ) {
+                die ref($self->repository), "->delete_relationships returned an unexpected value";
+            }
+
+            my $resource = "/"
                          . $req->type
                          . "/"
                          . $req->id
                          . "/"
                          . $req->rel_type
                          . " => "
-                         . encode_json( $req->data )
-            );
+                         . encode_json( $req->data );
+            my $message  = "successfully deleted the relationship $resource";
+
+        # http://jsonapi.org/format/#crud-updating-relationship-responses-204
+            if ( $ret == PONAPI_UPDATED_NOTHING ) {
+                $doc->set_status(204);
+                $message = "deleted nothing for the resource $resource"
+            }
+
+            $doc->add_meta( message => $message );
+
             1;
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
