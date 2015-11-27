@@ -3,7 +3,6 @@
 use strict;
 use warnings;
 
-use Data::Dumper;
 use Scalar::Util qw[ blessed ];
 
 use Test::More;
@@ -15,27 +14,44 @@ use Test::PONAPI::DAO::Repository::MockDB::Loader;
 my $repository = Test::PONAPI::DAO::Repository::MockDB->new;
 my $dao = PONAPI::DAO->new( repository => $repository );
 
+my @TEST_ARGS = ( req_base => '/', type => 'articles' );
+
+my $ERR_ID_MISSING          = "`id` is missing";
+my $ERR_ID_NOT_ALLOWED      = "`id` not allowed";
+my $ERR_BODY_MISSING        = "";
+my $ERR_BODY_NOT_ALLOWED    = "request body is not allowed";
+my $ERR_RELTYPE_MISSING     = "`relationship type` is missing";
+my $ERR_RELTYPE_NOT_ALLOWED = "";
+
+
 subtest '... retrieve all' => sub {
     {
         local $@;
         my $e;
         eval { $dao->retrieve_all(); 1; } or do { $e = "$@"; };
+        like( $e, qr/\QAttribute (req_base) is required\E/, "dies without a req_base" )
+    }
+
+    {
+        local $@;
+        my $e;
+        eval { $dao->retrieve_all( req_base => '/' ); 1; } or do { $e = "$@"; };
         like( $e, qr/\QAttribute (type) is required\E/, "dies without a type" )
     }
 
     foreach my $tuple (
         [
-            [ type => 'articles', id => 1 ],
-            "retrieve_all: \'id\' param not allowed",
+            [ @TEST_ARGS, id => 1 ],
+            $ERR_ID_NOT_ALLOWED,
             "id is not allowed"
         ],
         [
-            [ type => 'articles', data => { id => 1 } ],
-            "retrieve_all: request body not allowed",
+            [ @TEST_ARGS, data => { id => 1 } ],
+            $ERR_BODY_NOT_ALLOWED,
             "body is not allowed"
         ],
         [
-            [ type => 'articles', include => [qw/author/] ],
+            [ @TEST_ARGS, include => [qw/author/] ],
             "Types `articles` and `author` are not related",
             "include with unknown types are caught",
             404
@@ -46,7 +62,7 @@ subtest '... retrieve all' => sub {
         my @res = $dao->retrieve_all(@$args);
         my $doc = $res[2];
         $status ||= 400;
-        is( $res[0],                    $status,   "... $status on error" );
+        is( $res[0], $status, "... $status on error" );
         is( $doc->{errors}[0]{message}, $expected, $desc );
         is( scalar( @{ $doc->{errors} } ), 1, "... and that's the only error" );
     }
@@ -57,23 +73,30 @@ subtest '... retrieve' => sub {
         local $@;
         my $e;
         eval { $dao->retrieve(); 1; } or do { $e = "$@"; };
+        like( $e, qr/\QAttribute (req_base) is required\E/, "dies without a req_base" )
+    }
+
+    {
+        local $@;
+        my $e;
+        eval { $dao->retrieve( req_base => '/' ); 1; } or do { $e = "$@"; };
         like( $e, qr/\QAttribute (type) is required\E/, "dies without a type" )
     }
 
     foreach my $tuple (
         [
-            [ type => 'articles' ],
-            "retrieve: \'id\' param is missing",
+            [ @TEST_ARGS ],
+            $ERR_ID_MISSING,
             "id is required (missing)"
         ],
         [
-            [ type => 'articles', id => "" ],
-            "retrieve: \'id\' param is missing",
+            [ @TEST_ARGS, id => "" ],
+            $ERR_ID_MISSING,
             "id is required (empty string)"
         ],
         [
-            [ type => 'articles', id => 1, data => { id => 1 } ],
-            "retrieve: request body not allowed",
+            [ @TEST_ARGS, id => 1, data => { id => 1 } ],
+            $ERR_BODY_NOT_ALLOWED,
             "body is not allowed"
         ],
       )
@@ -91,13 +114,13 @@ subtest '... retrieve' => sub {
 
 # Spec says we can either stop processing as soon as we spot an error, or keep going an accumulate·
 # multiple errors.  Currently we do multiple, so testing that here.
-    my $doc = $dao->retrieve( type => "articles", data => { id => 1 } );
+    my $doc = $dao->retrieve( @TEST_ARGS, data => { id => 1 } );
 
     is_deeply(
         [ sort { $a->{message} cmp $b->{message} } @{ $doc->{errors} } ],
         [
-            { message => "retrieve: \'id\' param is missing",  status => 400 },
-            { message => "retrieve: request body not allowed", status => 400 },
+            { message => $ERR_ID_MISSING       }, # TODO: should status be part of the error?
+            { message => $ERR_BODY_NOT_ALLOWED }, # TODO: should status be part of the error?
         ],
         "DAO can result multiple error objects for one request",
     );
@@ -109,36 +132,36 @@ subtest '... retrieve relationships' => sub {
 # TODO
 #[ [ type => 'fake', id => 1 ], "type \'fake\' not allowed", "DAO itself doesn't give errors for nonexistent types" ],
         [
-            [ type => 'articles' ],
-            ": \'id\' param is missing",
+            [ @TEST_ARGS ],
+            $ERR_ID_MISSING,
             "id is required (missing)"
         ],
         [
-            [ type => 'articles', id => "" ],
-            ": \'id\' param is missing",
+            [ @TEST_ARGS, id => "" ],
+            $ERR_ID_MISSING,
             "id is required (empty string)"
         ],
         [
-            [ type => 'articles', id => 1, data => { id => 1 } ],
-            ": 'rel_type' param is missing",
+            [ @TEST_ARGS, id => 1, data => { id => 1 } ],
+            $ERR_RELTYPE_MISSING,
             "rel_type is missing"
         ],
 
         [
             [
-                type     => 'articles',
+                @TEST_ARGS,
                 id       => 1,
                 rel_type => "comments",
                 data     => { id => 1 }
             ],
-            ": request body not allowed",
+            $ERR_BODY_NOT_ALLOWED,
             "body is not allowed"
         ],
       )
     {
         my ( $args, $expected, $desc ) = @$tuple;
-        foreach my $meth (qw/retrieve_by_relationship retrieve_relationships/) {
-            my @ret = $dao->$meth(@$args);
+        foreach my $method (qw/retrieve_by_relationship retrieve_relationships/) {
+            my @ret = $dao->$method(@$args);
             my $doc = pop @ret;
             is_deeply(
                 \@ret,
@@ -147,8 +170,8 @@ subtest '... retrieve relationships' => sub {
             );
             is(
                 $doc->{errors}[0]{message},
-                $meth . $expected,
-                $desc . " $meth"
+                $expected,
+                "$desc $method"
             );
         }
     }
@@ -156,56 +179,55 @@ subtest '... retrieve relationships' => sub {
 
 subtest '... create' => sub {
     my @res = $dao->create(
-        type => "articles",
+        @TEST_ARGS,
         data => { type => "not_articles" },
     );
-    my $expect = [
+    my $expected = [
         409,
         [],
         {
             errors => [
                 {
-                    message =>
-'create: conflict between the request type and the data type',
+                    message => 'create: conflict between the request type and the data type',
                     status => 409
                 }
             ],
             jsonapi => { version => '1.0' }
         }
     ];
-    is_deeply( \@res, $expect );
+    is_deeply( \@res, $expected );
 
     foreach my $tuple (
         [
-            [ type => 'articles', id => 1 ],
+            [ @TEST_ARGS, id => 1 ],
             "create: 'id' param is not allowed",
             "id is not allowed"
         ],
         [
-            [ type => 'articles', rel_type => 1 ],
+            [ @TEST_ARGS, rel_type => 1 ],
             "Types `articles` and `1` are not related",
             "bad rel_type", 404
         ],
         [
-            [ type => 'articles', rel_type => 'authors' ],
+            [ @TEST_ARGS, rel_type => 'authors' ],
             "create: 'rel_type' param not allowed",
             "rel_type is not allowed"
         ],
         [
-            [ type => 'articles', ],
+            [ @TEST_ARGS ],
             "create: request body is missing",
             "data is missing"
         ],
 
         # Spec says these two need to return 409
         [
-            [ type => 'articles', data => { type => "" } ],
+            [ @TEST_ARGS, data => { type => "" } ],
             "create: conflict between the request type and the data type",
             "data->{type} is missing",
             409
         ],
         [
-            [ type => 'articles', data => { type => "fake" } ],
+            [ @TEST_ARGS, data => { type => "fake" } ],
             "create: conflict between the request type and the data type",
             "data->{type} is wrong",
             409
@@ -248,8 +270,10 @@ subtest '... create' => sub {
         [
             {
                 data => {
-                    attributes =>
-                      { %{ $good_create{data}{attributes} }, extra => 111 }
+                    attributes => {
+                        %{ $good_create{data}{attributes} },
+                        extra => 111
+                    }
                 }
             },
             400 => 'Unknown columns passed to create',
@@ -258,7 +282,9 @@ subtest '... create' => sub {
         [
             {
                 data => {
-                    relationships => { nope => { type => people => id => 42 } }
+                    relationships => {
+                        nope => { type => people => id => 42 }
+                    }
                 }
             },
             404 => 'create_relationship: unknown relationship articles -> nope',
@@ -271,15 +297,14 @@ subtest '... create' => sub {
                       { authors => { type => comments => id => 5 } }
                 }
             },
-            409 =>
-'creating a relationship of type people, but data has type comments',
+            409 => 'creating a relationship of type people, but data has type comments',
             "... error on relationship conflicts"
         ],
       )
     {
         my $copy = dclone( \%good_create );
 
-        my ( $who, $status, $expect, $msg ) = @$tuple;
+        my ( $who, $status, $expected, $msg ) = @$tuple;
 
         while ( my ( $k, $v ) = each %$who ) {
             if ( ref($v) ) {
@@ -297,12 +322,12 @@ subtest '... create' => sub {
             local $SIG{__WARN__} = sub { $w .= shift };
             @ret = $dao->create(%$copy);
         }
-        if ( ref($expect) ) {
-            like( $ret[2]->{errors}[0]{message}, $expect, $msg );
-            like( $w, $expect, "... and the warning matches" );
+        if ( ref($expected) ) {
+            like( $ret[2]->{errors}[0]{message}, $expected, $msg );
+            like( $w, $expected, "... and the warning matches" );
         }
         else {
-            is( $ret[2]->{errors}[0]{message}, $expect, $msg );
+            is( $ret[2]->{errors}[0]{message}, $expected, $msg );
             is( $w, '', "... with no warnings" );
         }
         is( $ret[0], $status, "... and with the expected status" );
@@ -325,7 +350,7 @@ subtest '... update' => sub {
                 %$who, attributes => { title => "Nonexistent" },
             },
         );
-        my $expect = [
+        my $expected = [
             404,
             [],
             {
@@ -334,7 +359,7 @@ subtest '... update' => sub {
             }
         ];
         $ret[2]->{meta}{message} = '';
-        is_deeply( \@ret, $expect,
+        is_deeply( \@ret, $expected,
 "trying to update a non-existent attribute should give a 404 and a body explaining why"
         );
     }
@@ -449,7 +474,7 @@ subtest '... explodey repo errors' => sub {
         update create_relationships update_relationships delete_relationships
     /;
 
-    my $expect_re = qr/\A\QServer error, halp at\E/;
+    my $expected_re = qr/\A\QServer error, halp at\E/;
     foreach my $tuple (@all) {
         my ( $methods, $arguments ) = @$tuple;
         foreach my $method (@$methods) {
@@ -482,7 +507,7 @@ subtest '... explodey repo errors' => sub {
                 ],
                 "... expected PONAPI response for error on $method"
             );
-            like( $w, $expect_re, "... expected perl error from $method" );
+            like( $w, $expected_re, "... expected perl error from $method" );
 
             # Let's also test that all the methods detect unknown types
             $w = '';
