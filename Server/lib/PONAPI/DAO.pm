@@ -422,7 +422,7 @@ my %only_one_to_many = map +($_=>1), qw/
 /;
 sub _validate_types {
     my ( $self, $request_type, $req ) = @_;
-    my ( $type, $rel_type, $doc ) = @{$req}{qw< type rel_type document >};
+    my ( $type, $doc ) = @{$req}{qw< type document >};
 
     my $repo = $self->repository;
 
@@ -430,7 +430,8 @@ sub _validate_types {
     $repo->has_type( $type )
         or $doc->raise_error( 404, { message => "Type `$type` doesn't exist." } );
 
-    if ( defined($rel_type) ) {
+    if ( $req->has_rel_type ) {
+        my $rel_type = $req->rel_type;
         if ( !$repo->has_relationship( $type, $rel_type ) ) {
             $doc->raise_error( 404, {
                 message => "Types `$type` and `$rel_type` are not related"
@@ -451,12 +452,12 @@ sub _validate_types {
     return;
 }
 
-sub _check_has_id       { defined($_[0]->id)       or  _bad_request( $_[0]->document, "`id` is missing"                 ) }
-sub _check_no_id        { defined($_[0]->id)       and _bad_request( $_[0]->document, "`id` not allowed"                ) }
-sub _check_has_rel_type { defined($_[0]->rel_type) or  _bad_request( $_[0]->document, "`relationship type` is missing"  ) }
-sub _check_no_rel_type  { defined($_[0]->rel_type) and _bad_request( $_[0]->document, "`relationship type` not allowed" ) }
-sub _check_has_data     { $_[0]->has_data or  _bad_request( $_[0]->document, "request body is missing"         ) }
-sub _check_no_data      { $_[0]->has_data and _bad_request( $_[0]->document, "request body is not allowed"     ) }
+sub _check_has_id       { $_[0]->has_id       or  _bad_request( $_[0]->document, "`id` is missing"                 ) }
+sub _check_no_id        { $_[0]->has_id       and _bad_request( $_[0]->document, "`id` not allowed"                ) }
+sub _check_has_rel_type { $_[0]->has_rel_type or  _bad_request( $_[0]->document, "`relationship type` is missing"  ) }
+sub _check_no_rel_type  { $_[0]->has_rel_type and _bad_request( $_[0]->document, "`relationship type` not allowed" ) }
+sub _check_has_data     { $_[0]->has_data     or  _bad_request( $_[0]->document, "request body is missing"         ) }
+sub _check_no_data      { $_[0]->has_data     and _bad_request( $_[0]->document, "request body is not allowed"     ) }
 
 sub _check_data_has_type {
     my $req = shift;
@@ -496,6 +497,7 @@ sub _dao_response {
 
 __PACKAGE__->meta->make_immutable;
 no Moose; 1;
+
 __END__
 =encoding UTF-8
 

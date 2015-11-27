@@ -118,12 +118,11 @@ subtest '... retrieve' => sub {
 # Spec says we can either stop processing as soon as we spot an error, or keep going an accumulate·
 # multiple errors.  Currently we do multiple, so testing that here.
     my $doc = $dao->retrieve( @TEST_ARGS_BASE_TYPE, data => { id => 1 } );
-
     is_deeply(
         [ sort { $a->{message} cmp $b->{message} } @{ $doc->{errors} } ],
         [
-            { message => $ERR_ID_MISSING       }, # TODO: should status be part of the error?
-            { message => $ERR_BODY_NOT_ALLOWED }, # TODO: should status be part of the error?
+            { message => $ERR_ID_MISSING,       status => 400 },
+            { message => $ERR_BODY_NOT_ALLOWED, status => 400 },
         ],
         "DAO can result multiple error objects for one request",
     );
@@ -184,7 +183,12 @@ subtest '... create' => sub {
             400,
             [],
             {
-                errors  => [ { message => 'request body: `data` key is missing' } ], # TODO: status?
+                errors  => [
+                    {
+                        message => 'request body: `data` key is missing',
+                        status => 400
+                    }
+                ],
                 jsonapi => { version => '1.0' }
             }
         ];
@@ -200,7 +204,12 @@ subtest '... create' => sub {
             409,
             [],
             {
-                errors  => [ { message => 'conflict between the request type and the data type' } ], # TODO: status?
+                errors  => [
+                    {
+                        message => 'conflict between the request type and the data type',
+                        status => 409,
+                    }
+                ],
                 jsonapi => { version => '1.0' }
             }
         ];
@@ -417,8 +426,7 @@ subtest '... update' => sub {
                 {
                     errors => [
                         {
-                            message =>
-'update: unknown relationship articles -> not_real',
+                            message => 'update: unknown relationship articles -> not_real',
                             status => 404
                         }
                     ],
@@ -501,7 +509,7 @@ subtest '... explodey repo errors' => sub {
                         errors => [
                             {
                                 message => 'A fatal error has occured, please check server logs',
-#                                status => 500
+                                status => 500
                             }
                         ],
                         jsonapi => { version => '1.0' }
@@ -541,7 +549,7 @@ subtest '... explodey repo errors' => sub {
                         'errors' => [
                             {
                                 'message' => 'A fatal error has occured, please check server logs',
-#                                'status'  => 500
+                                'status'  => 500
                             }
                         ],
                         'jsonapi' => { 'version' => '1.0' }
@@ -656,7 +664,7 @@ subtest '... create_relationships' => sub {
             409,
             [],
             {
-                errors  => [         { status => 409 } ],
+                errors  => [ { status => 409 } ],
                 jsonapi => { version => '1.0' }
             }
         ],
@@ -690,7 +698,7 @@ subtest '... create_relationships' => sub {
                 errors => [
                     {
                         message => 'creating a relationship of type comments, but data has type fake',
-#                        status => 409
+                        status => 409
                     }
                 ],
                 jsonapi => { version => '1.0' }
@@ -747,7 +755,7 @@ subtest '... delete_relationships' => sub {
                     'errors' => [
                         {
                             'message' => 'Types `articles` and `authors` are one-to-one, invalid delete_relationships',
-#                            'status'  => 400,
+                            'status'  => 400,
                         }
                     ],
                     'jsonapi' => {

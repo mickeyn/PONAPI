@@ -70,21 +70,20 @@ sub _ponapi_params {
     $self->_ponapi_check_headers($wr, $req);
 
     # THE PATH --> route matching
-    my ( $action, $type, $id, $rel_type ) = $self->_ponapi_route_match($wr, $req);
+    my @ponapi_route_params = $self->_ponapi_route_match($wr, $req);
 
     # THE QUERY
     my @ponapi_query_params = $self->_ponapi_query_params($wr, $req);
 
     # THE BODY CONTENT
+    $wr->(ERR_BAD_REQ) if $req->method eq 'GET' and $req->content_length > 0;
+
     my $data = $self->_ponapi_data($wr, $req);
 
     my %params = (
-        action   => $action,
-        type     => $type,
-        id       => $id,
-        rel_type => $rel_type,
-        data     => $data,
+        @ponapi_route_params,
         @ponapi_query_params,
+        data => $data,
     );
 
     return \%params;
@@ -124,7 +123,11 @@ sub _ponapi_route_match {
 
     $wr->(ERR_NO_MATCHING_ROUTE) unless $action;
 
-    return ( $action, $type, $id||'', $rel_type||'' );
+    my @ret = ( action => $action, type => $type );
+    defined $id and push @ret => id => $id;
+    $rel_type   and push @ret => rel_type => $rel_type;
+
+    return @ret;
 }
 
 sub _ponapi_check_headers {
@@ -191,7 +194,7 @@ sub _ponapi_query_params {
 
 sub _ponapi_data {
     my ( $self, $wr, $req ) = @_;
-    $req->method eq 'GET' and return;
+    $req->method eq 'GET' and return +{};
 
     my $body = decode_json( $req->content );
 

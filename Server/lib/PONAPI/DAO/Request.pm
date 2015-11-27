@@ -27,13 +27,15 @@ has type => (
 );
 
 has id => (
-    is  => 'ro',
-    isa => 'Str',
+    is        => 'ro',
+    isa       => 'Str',
+    predicate => 'has_id',
 );
 
 has rel_type => (
-    is  => 'ro',
-    isa => 'Str',
+    is        => 'ro',
+    isa       => 'Str',
+    predicate => 'has_rel_type',
 );
 
 for ( qw< data fields filter page > ) {
