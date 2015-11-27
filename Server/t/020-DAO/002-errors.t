@@ -260,9 +260,10 @@ subtest '... create' => sub {
     }
 
     my %good_create = (
-        type => "articles",
-        data => {
-            type       => "articles",
+        req_base => '/',
+        type     => "articles",
+        data     => {
+            type => "articles",
             attributes => {
                 title => "Title!",
                 body  => "Body!",
@@ -316,7 +317,6 @@ subtest '... create' => sub {
       )
     {
         my $copy = dclone( \%good_create );
-
         my ( $who, $status, $expected, $msg ) = @$tuple;
 
         while ( my ( $k, $v ) = each %$who ) {
