@@ -30,6 +30,11 @@ has '_resource_id_builders' => (
     }
 );
 
+has 'collection' => (
+    is       => 'ro',
+    isa      => 'Bool',
+);
+
 sub has_resource {
     my $self = $_[0];
     $self->_has_resource_id_builders && $self->_num_resource_id_builders > 0;
@@ -75,7 +80,7 @@ sub build {
     my $self   = $_[0];
     my $result = {};
 
-    if ( $self->has_resources ) {
+    if ( $self->collection || $self->has_resources ) {
         # if it is a collection, then
         # call build on each one ...
         $result->{data} = [ map { $_->build } @{ $self->_resource_id_builders } ];

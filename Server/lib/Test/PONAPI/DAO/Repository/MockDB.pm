@@ -269,19 +269,21 @@ sub _add_resource_relationships {
     );
     $rels or return;
 
-    for my $r ( keys %{$rels} ) {
-        @{ $rels->{$r} } > 0 or next;
+    for my $r ( keys %$rels ) {
+        my $relationship = $rels->{$r};
+        @$relationship or next;
 
-        for ( @{ $rels->{$r} } ) {
-            $rec->add_relationship( $r, $_ )
+        my $one_to_many = $self->has_one_to_many_relationship($type, $r);
+        for ( @$relationship ) {
+            $rec->add_relationship( $r, $_, $one_to_many )
                 ->add_self_link( $args{req_base} )
                 ->add_related_link( $args{req_base} );
         }
 
         $self->_add_included(
-            $rels->{$r}[0]{type},                   # included type
-            +[ map { $_->{id} } @{ $rels->{$r} } ], # included ids
-            %args                                   # filters / fields / etc.
+            $relationship->[0]{type},             # included type
+            +[ map { $_->{id} } @$relationship ], # included ids
+            %args                                 # filters / fields / etc.
         ) if exists $include{$r};
     }
 }
