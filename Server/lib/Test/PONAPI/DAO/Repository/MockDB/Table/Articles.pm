@@ -16,7 +16,8 @@ use constant COLUMNS => [qw[
 use constant RELATIONS => {
     authors  => {
         type      => 'people',
-        rel_table => 'rel_articles_people'
+        rel_table => 'rel_articles_people',
+        one_to_one => 1,
     },
     comments => {
         type      => 'comments',

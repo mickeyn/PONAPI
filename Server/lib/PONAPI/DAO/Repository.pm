@@ -3,6 +3,7 @@ use Moose::Role;
 
 requires 'has_type';
 requires 'has_relationship';
+requires 'has_one_to_many_relationship';
 
 requires 'retrieve';
 requires 'retrieve_all';

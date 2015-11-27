@@ -52,6 +52,16 @@ sub has_relationship {
     return 0;
 }
 
+sub has_one_to_many_relationship {
+    my ( $self, $type, $rel_name ) = @_;
+    if ( my $table = $self->tables->{$type} ) {
+        my $relations = $table->RELATIONS;
+        return if !exists $relations->{ $rel_name };
+        return !$relations->{ $rel_name }{one_to_one};
+    }
+    return;
+}
+
 sub retrieve_all {
     my ( $self, %args ) = @_;
     my $type = $args{type};
