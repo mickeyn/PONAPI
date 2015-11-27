@@ -41,7 +41,7 @@ sub retrieve {
     my $req  = $self->_prepare_req(@_);
     my $doc  = $req->document;
 
-    _check_id      ($req);
+    _check_has_id  ($req);
     _check_no_data ($req);
 
     $doc->has_errors or
@@ -62,9 +62,9 @@ sub retrieve_relationships {
     my $req  = $self->_prepare_req(@_);
     my $doc  = $req->document;
 
-    _check_id       ($req);
-    _check_rel_type ($req);
-    _check_no_data  ($req);
+    _check_has_id       ($req);
+    _check_has_rel_type ($req);
+    _check_no_data      ($req);
 
     $doc->has_errors or
         eval {
@@ -84,9 +84,9 @@ sub retrieve_by_relationship {
     my $req  = $self->_prepare_req(@_);
     my $doc  = $req->document;
 
-    _check_id       ($req);
-    _check_rel_type ($req);
-    _check_no_data  ($req);
+    _check_has_id       ($req);
+    _check_has_rel_type ($req);
+    _check_no_data      ($req);
 
     $doc->has_errors or
         eval {
@@ -109,7 +109,7 @@ sub create {
     # client-generated id needs to be passed in the body
     _check_no_id       ($req);
     _check_no_rel_type ($req);
-    _check_data        ($req);
+    _check_has_data    ($req);
 
     $doc->has_errors or
         eval {
@@ -135,9 +135,9 @@ sub create_relationships {
     my $req  = $self->_prepare_req(@_);
     my $doc  = $req->document;
 
-    _check_id       ($req);
-    _check_rel_type ($req);
-    _check_data     ($req);
+    _check_has_id       ($req);
+    _check_has_rel_type ($req);
+    _check_has_data     ($req);
 
     $doc->has_errors or
         eval {
@@ -167,9 +167,9 @@ sub update {
     my $req  = $self->_prepare_req(@_);
     my $doc  = $req->document;
 
-    _check_id          ($req);
+    _check_has_id      ($req);
     _check_no_rel_type ($req);
-    _check_data        ($req);
+    _check_has_data    ($req);
 
     $doc->has_errors or
         eval {
@@ -197,9 +197,9 @@ sub update_relationships {
     my $req  = $self->_prepare_req(@_);
     my $doc  = $req->document;
 
-    _check_id       ($req);
-    _check_rel_type ($req);
-    _check_data     ($req);
+    _check_has_id       ($req);
+    _check_has_rel_type ($req);
+    _check_has_data     ($req);
 
     $doc->has_errors or
         eval {
@@ -229,7 +229,7 @@ sub delete : method {
     my $req  = $self->_prepare_req(@_);
     my $doc  = $req->document;
 
-    _check_id          ($req);
+    _check_has_id      ($req);
     _check_no_rel_type ($req);
     _check_no_data     ($req);
 
@@ -258,9 +258,9 @@ sub delete_relationships {
     my $req  = $self->_prepare_req(@_);
     my $doc  = $req->document;
 
-    _check_id       ($req);
-    _check_rel_type ($req);
-    _check_data     ($req);
+    _check_has_id       ($req);
+    _check_has_rel_type ($req);
+    _check_has_data     ($req);
 
     $doc->has_errors or
         eval {
@@ -316,12 +316,12 @@ sub _validate_types {
     return;
 }
 
-sub _check_id          { $_[0]->id       or  _bad_request( $_[0]->document, "`id` is missing"                 ) }
-sub _check_no_id       { $_[0]->id       and _bad_request( $_[0]->document, "`id` not allowed"                ) }
-sub _check_rel_type    { $_[0]->rel_type or  _bad_request( $_[0]->document, "`relationship type` is missing"  ) }
-sub _check_no_rel_type { $_[0]->rel_type and _bad_request( $_[0]->document, "`relationship type` not allowed" ) }
-sub _check_data        { $_[0]->data     or  _bad_request( $_[0]->document, "request body is missing"         ) }
-sub _check_no_data     { $_[0]->data     and _bad_request( $_[0]->document, "request body is not allowed"     ) }
+sub _check_has_id       { $_[0]->id       or  _bad_request( $_[0]->document, "`id` is missing"                 ) }
+sub _check_no_id        { $_[0]->id       and _bad_request( $_[0]->document, "`id` not allowed"                ) }
+sub _check_has_rel_type { $_[0]->rel_type or  _bad_request( $_[0]->document, "`relationship type` is missing"  ) }
+sub _check_no_rel_type  { $_[0]->rel_type and _bad_request( $_[0]->document, "`relationship type` not allowed" ) }
+sub _check_has_data     { $_[0]->data     or  _bad_request( $_[0]->document, "request body is missing"         ) }
+sub _check_no_data      { $_[0]->data     and _bad_request( $_[0]->document, "request body is not allowed"     ) }
 
 sub _bad_request {
     $_[0]->raise_error( 400, { message => $_[1] } );
