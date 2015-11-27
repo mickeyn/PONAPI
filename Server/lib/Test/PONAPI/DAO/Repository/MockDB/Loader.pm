@@ -11,7 +11,7 @@ has dbd => (
 
 use File::Temp qw/tempfile/;
 sub _build_dbd {
-    my ($fh, $path) = tempfile("MockDB.db.XXXXXXX", tmpdir => 1);
+    my ($fh, $path) = tempfile("MockDB.db.XXXXXXX", TMPDIR => 1, UNLINK => 1);
     close $fh;
     return "DBI:SQLite:dbname=$path";
 }

@@ -1,5 +1,6 @@
 package Test::PONAPI::DAO::Repository::MockDB::Table::People;
 use Moose;
+extends 'Test::PONAPI::DAO::Repository::MockDB::Table';
 
 use constant TYPE   => 'people';
 use constant TABLE  => 'people';

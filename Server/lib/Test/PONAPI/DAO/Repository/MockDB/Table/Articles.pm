@@ -25,6 +25,22 @@ use constant RELATIONS => {
     },
 };
 
+extends 'Test::PONAPI::DAO::Repository::MockDB::Table';
+
+use PONAPI::DAO::Constants;
+
+override update_stmt => sub {
+    my ($self, %args) = @_;
+
+    my $values   = $args{values} || {};
+    my $copy = { %$values };
+    $copy->{updated} = \'CURRENT_TIMESTAMP';
+
+    my ($stmt, $ret, $msg) = $self->SUPER::update_stmt(%args, values => $copy);
+    $ret ||= PONAPI_UPDATED_EXTENDED;
+    return $stmt, $ret, $msg;
+};
+
 __PACKAGE__->meta->make_immutable;
 
 no Moose; 1;

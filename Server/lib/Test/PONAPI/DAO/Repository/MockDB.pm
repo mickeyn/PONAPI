@@ -10,6 +10,8 @@ use Test::PONAPI::DAO::Repository::MockDB::Table::Articles;
 use Test::PONAPI::DAO::Repository::MockDB::Table::People;
 use Test::PONAPI::DAO::Repository::MockDB::Table::Comments;
 
+use PONAPI::DAO::Constants;
+
 with 'PONAPI::DAO::Repository';
 
 has dbh => (
@@ -65,15 +67,9 @@ sub has_one_to_many_relationship {
 sub retrieve_all {
     my ( $self, %args ) = @_;
     my $type = $args{type};
+    my $doc  = $args{document};
 
-    my $filters = $self->_stmt_filters($type, $args{filter});
-
-    my $stmt = SQL::Composer::Select->new(
-        from    => $type,
-        columns => $self->_stmt_columns(\%args),
-        where   => [ %{ $filters } ],
-    );
-
+    my $stmt = $self->tables->{$type}->select_stmt($type, %args);
     $self->_add_resources( stmt => $stmt, %args );
 }
 
@@ -107,10 +103,10 @@ sub retrieve_by_relationship {
     my $q_type = $rels->[0]{type};
     my $q_ids  = [ map { $_->{id} } @{$rels} ];
 
-    my $stmt = SQL::Composer::Select->new(
-        from    => $q_type,
-        columns => $self->_stmt_columns({ type => $q_type, fields => $fields }),
-        where   => [ id => $q_ids ],
+    my $stmt = $self->tables->{$q_type}->select_stmt($q_type,
+        type   => $q_type,
+        fields => $fields,
+        filter => { id => $q_ids },
     );
 
     $self->_add_resources(
@@ -127,67 +123,346 @@ sub create {
     my ( $self, %args ) = @_;
     my ( $doc, $type, $data ) = @args{qw< document type data >};
 
-    my @attributes = exists $data->{attributes} ? %{ $data->{attributes} } : ();
+    my $attributes    = $data->{attributes} || {};
+    my $relationships = delete $data->{relationships} || {};
 
-    if ( @attributes ) {
-        my $stmt = SQL::Composer::Insert->new(
-            into   => $type,
-            values => \@attributes,
+    my $table_obj = $self->tables->{$type};
+    my %columns   = map +($_=>1), @{ $table_obj->COLUMNS };
+    if ( grep(exists $columns{$_}, keys %$attributes) != keys %$attributes ) {
+        $doc->raise_error(400, { message => 'Unknown columns passed to create' });
+        return PONAPI_UNKNOWN_RESOURCE_ERROR;
+    }
+
+    my $dbh = $self->dbh;
+    $dbh->begin_work;
+
+    my $stmt = SQL::Composer::Insert->new(
+        into   => $type,
+        values => [ %$attributes ],
+        driver => 'sqlite',
+    );
+
+    my ( $sth, $errstr ) = $self->_db_execute( $stmt );
+    # TODO: 409 Conflict
+    if ( $errstr ) {
+        $dbh->rollback;
+        $doc->raise_error(400, { message => $errstr });
+        return PONAPI_ERROR;
+    }
+
+    my $new_id = $dbh->last_insert_id("","","","");
+
+    foreach my $rel_type ( keys %$relationships ) {
+        my $rel_data = $relationships->{$rel_type};
+        $rel_data = [ $rel_data ] if ref($rel_data) ne 'ARRAY';
+        my $ret = $self->_create_relationships(
+            %args,
+            id       => $new_id,
+            rel_type => $rel_type,
+            data     => $rel_data,
         );
 
-        my ( $sth, $errstr ) = $self->_db_execute( $stmt );
-        $errstr and return $doc->raise_error({ message => $errstr });
-    }
-    else {
-        # TODO: what do we do if we don't have attributes?
+        if ( $doc->has_errors ) {
+            $dbh->rollback;
+            return $ret;
+        }
     }
 
+    $dbh->commit;
+    # Spec says we MUST return this, both here and in the Location header;
+    # the DAO takes care of the header, but we need to put it in the doc
+    $doc->add_resource( type => $type, id => $new_id );
+
+    $doc->set_status(201);
     return 1;
 }
 
-sub create_relationships {
+sub _create_relationships {
     my ( $self, %args ) = @_;
     my ( $doc, $type, $id, $rel_type, $data ) = @args{qw< document type id rel_type data >};
+
+    if ( ref($data) ne 'ARRAY' || !@$data ) {
+        $doc->raise_error(400, {
+            message => "create_relationships: Invalid data passed in",
+        });
+        return PONAPI_ERROR;
+    }
+
+    my $all_relations = $self->tables->{$type}->RELATIONS->{$rel_type};
+
+    if ( !$all_relations ) {
+        $doc->raise_error(400, { message => "create_relationship: unknown relationship $type -> $rel_type" });
+        return PONAPI_UNKNOWN_RELATIONSHIP;
+    }
+
+    my @all_values;
+    foreach my $orig ( @$data ) {
+        my $relationship = { %$orig };
+        my $data_type = delete $relationship->{type};
+        my $key_type = $all_relations->{type};
+
+        if ( $data_type ne $key_type ) {
+            $doc->raise_error(400, {
+                message => "creating a relationship of type $key_type, but data has type $data_type"
+            });
+            return PONAPI_CONFLICT_ERROR;
+        }
+
+        $relationship->{'id_' . $type}     = $id;
+        $relationship->{'id_' . $key_type} = delete $relationship->{id};
+
+        push @all_values, $relationship;
+    }
+
+    return PONAPI_ERROR if $doc->has_errors;
+
+    my $table = $all_relations->{rel_table};
+    my $one_to_one = !$self->has_one_to_many_relationship($type, $rel_type);
+
+    if ( $one_to_one && @all_values > 1 ) {
+        $doc->raise_error(400, {
+            message => "Trying to update a one-on-one relationship multiple times",
+        });
+        return PONAPI_ERROR;
+    }
+
+    foreach my $values ( @all_values ) {
+        my $stmt = SQL::Composer::Insert->new(
+            into   => $table,
+            values => [ %$values ],
+            driver => 'sqlite',
+        );
+
+        my ( $sth, $errstr );
+        eval  { ($sth, $errstr) = $self->_db_execute( $stmt ); 1 }
+        or do { ($sth, $errstr) = ('', "$@"||"Unknown error");   };
+
+        if ( $errstr ) {
+            if ( $one_to_one ) {
+                $stmt = SQL::Composer::Update->new(
+                    table  => $table,
+                    values => [ %$values ],
+                    where  => [ 'id_' . $type => $id ],
+                    driver => 'sqlite',
+                );
+                ($sth, $errstr) = $self->_db_execute( $stmt )
+            }
+        }
+        
+        if ( $errstr ) {
+            $doc->raise_error(400, { message => $errstr });
+            if ( $errstr =~ /column \S+ is not unique/ ) {
+                return PONAPI_CONFLICT_ERROR;
+            }
+            return PONAPI_ERROR;
+        }
+    }
+    
+    return PONAPI_UPDATED_NORMAL;
+}
+
+sub create_relationships {
+    my ($self, %args) = @_;
+    my $doc = $args{document};
+
+    my $dbh = $self->dbh;
+    $dbh->begin_work;
+
+    my $ret;
+    eval  { $ret = $self->_create_relationships( %args ); 1 }
+    or do {
+        my $e = "$@"||'Unknown error';
+        $ret = PONAPI_ERROR;
+        $doc->raise_error(400, {message => $e});
+    };
+
+    if ( $doc->has_errors ) {
+        $dbh->rollback;
+    }
+    else {
+        $dbh->commit;
+    }
+
+    return $ret;
 
     # TODO: check type can have To-Many relationships or error
 
     # TODO: add missing login
-
-    return 1;
 }
 
 sub update {
     my ( $self, %args ) = @_;
-    my ( $doc, $type, $id, $data ) = @args{qw< document type id data >};
+    my $doc = $args{document};
 
-    my @attributes = exists $data->{attributes} ? %{ $data->{attributes} } : ();
+    my $dbh = $self->dbh;
+    $dbh->begin_work;
 
-    if ( @attributes ) {
-        my $stmt = SQL::Composer::Update->new(
-            table  => $type,
-            values => [ %{ $data->{attributes} } ],
-            where  => [ id => $id ],
-        );
+    my $ret;
+    eval  { $ret = $self->_update( %args ); 1 }
+    or do {
+        my $e = "$@"||'Unknown error';
+        $ret = PONAPI_ERROR;
+        $doc->raise_error(400, {message => $e});
+    };
 
-        my ( $sth, $errstr ) = $self->_db_execute( $stmt );
-        $errstr and return $doc->raise_error({ message => $errstr });
+    if ( $doc->has_errors ) {
+        $dbh->rollback;
     }
     else {
-        # TODO: what do we do if we don't have attributes?
+        $dbh->commit;
     }
 
-    return 1;
+    return $ret;
+}
+
+sub _update {
+    my ( $self, %args ) = @_;
+    my ( $doc, $type, $id, $data ) = @args{qw< document type id data >};
+
+    # TODO this needs to be part of $data's validation in Request.pm
+    my ($attributes, $relationships) = map $_||{}, @{ $data }{qw/ attributes relationships /};
+
+    foreach my $rel_type ( keys %$relationships ) {
+        next if $self->has_relationship($type, $rel_type);
+        $doc->raise_error(400, { message => "update: unknown relationship $type -> $rel_type" });
+        return PONAPI_UNKNOWN_RELATIONSHIP;
+    }
+    return PONAPI_ERROR if $doc->has_errors;
+
+    my $return = PONAPI_UPDATED_NORMAL;
+    if ( %$attributes ) {
+        my $table_obj = $self->tables->{$type};
+        # Per the spec, the api behaves *very* differently if ->update does extra things
+        # under the hood.  Case point: the updated column in Articles
+        my ($stmt, $extra_return, $msg) = $table_obj->update_stmt(
+            table  => $type,
+            id     => $id,
+            values => $attributes,
+        );
+
+        $return = $extra_return if defined $extra_return;
+        if ( $PONAPI_ERROR_RETURN{$return} || !$stmt ) {
+            $doc->raise_error(400, { message => $msg || 'Unknown error' });
+            return $return;
+        }
+
+        my ( $sth, $errstr ) = $self->_db_execute( $stmt );
+        if ( $errstr ) {
+            $doc->raise_error(400, { message => $errstr });
+            return PONAPI_ERROR;
+        }
+
+        # We had a successful update, but it updated nothing
+        if ( !$sth->rows ) {
+            return PONAPI_UPDATED_NOTHING;
+        }
+    }
+
+    if ( %$relationships ) {
+        foreach my $rel_type ( keys %$relationships ) {
+            $self->_update_relationships(
+                document => $doc,
+                type     => $type,
+                id       => $id,
+                rel_type => $rel_type,
+                data     => $relationships->{$rel_type},
+            );
+            if ( $doc->has_errors ) {
+                return PONAPI_ERROR;
+            }
+        }
+    }
+
+    return $doc->has_errors ? PONAPI_ERROR : $return;
+}
+
+sub _update_relationships {
+    my ($self, %args) = @_;
+    my ( $doc, $type, $id, $rel_type, $data ) = @args{qw< document type id rel_type data >};
+
+    if ( $data ) {
+        $data = [ keys(%$data) ? $data : () ] if ref($data) eq 'HASH';
+
+        my $clear_ret = $self->_clear_relationships(%args);
+        return $clear_ret if $doc->has_errors;
+        if ( @$data ) {
+            my ( $column_rel_type, $rel_table ) = 
+                    @{ $self->tables->{$type}->RELATIONS->{$rel_type} }{qw< type rel_table >}; 
+
+            foreach my $insert ( @$data ) {
+                my %insert = (%$insert, 'id_' . $type => $id);
+
+                delete $insert{type};
+                $insert{'id_' . $column_rel_type} = delete $insert{id};
+
+                my $stmt = SQL::Composer::Insert->new(
+                    into   => $rel_table,
+                    values => [ %insert ],
+                    driver => 'sqlite',
+                );
+
+                my ( $sth, $errstr ) = $self->_db_execute( $stmt );
+                if ( $errstr ) {
+                    $doc->raise_error(400, { message => $errstr });
+                    return PONAPI_ERROR;
+                }
+            }
+        }
+        return PONAPI_UPDATED_NORMAL;
+    }
+    else {
+        return $self->_clear_relationships(%args);
+    }
 }
 
 sub update_relationships {
     my ( $self, %args ) = @_;
-    my ( $doc, $type, $id, $rel_type, $data ) = @args{qw< document type id rel_type data >};
+    my $doc = $args{document};
+
+    my $dbh = $self->dbh;
+    $dbh->begin_work;
+
+    my $ret;
+    eval  { $ret = $self->_update_relationships( %args ); 1 }
+    or do {
+        my $e = "$@"||'Unknown error';
+        $ret = PONAPI_ERROR;
+        $doc->raise_error(400, {message => $e});
+    };
+
+    if ( $doc->has_errors ) {
+        $dbh->rollback;
+    }
+    else {
+        $dbh->commit;
+    }
+
+    return $ret;
 
     # TODO: check type can have To-Many relationships or error
 
     # TODO: add missing login
+}
 
-    return 1;
+sub _clear_relationships {
+    my ( $self, %args ) = @_;
+    my ( $doc, $type, $id, $rel_type ) = @args{qw< document type id rel_type >};
+
+    my $table = $self->tables->{$type}->RELATIONS->{$rel_type}{rel_table};
+
+    my $stmt = SQL::Composer::Delete->new(
+        from => $table,
+        where => [ 'id_' . $type => $id ],
+        driver => 'sqlite',
+    );
+
+    my ( $sth, $errstr ) = $self->_db_execute( $stmt );
+    if ( $errstr ) {
+        $doc->raise_error(400, { message => $errstr });
+        return PONAPI_ERROR;
+    }
+
+    return PONAPI_UPDATED_NORMAL;
 }
 
 sub delete : method {
@@ -197,10 +472,13 @@ sub delete : method {
     my $stmt = SQL::Composer::Delete->new(
         from  => $type,
         where => [ id => $id ],
+        driver => 'sqlite',
     );
 
     my ( $sth, $errstr ) = $self->_db_execute( $stmt );
-    $errstr and return $doc->raise_error({ message => $errstr });
+    $errstr and return $doc->raise_error(400, { message => $errstr });
+
+    # TODO: Should this also clear relationships?
 
     return 1;
 }
@@ -209,11 +487,65 @@ sub delete_relationships {
     my ( $self, %args ) = @_;
     my ( $doc, $type, $id, $rel_type, $data ) = @args{qw< document type id rel_type data >};
 
-    # TODO: check type can have To-Many relationships or error
+    my $relation_info = $self->tables->{$type}->RELATIONS->{$rel_type};
 
+    my $table    = $relation_info->{rel_table};
+    my $key_type = $relation_info->{type};
+
+    my @all_values;
+    foreach my $resource ( @$data ) {
+        my $data_type = delete $resource->{type};
+
+        if ( $data_type ne $key_type ) {
+            $doc->raise_error(400, {
+                message => "deleting a relationship of type $key_type, but data has type $data_type"
+            });
+            return PONAPI_CONFLICT_ERROR;
+        }
+
+        my $delete_where = {
+            'id_' . $type     => $id,
+            'id_' . $key_type => $resource->{id},
+        };
+
+        push @all_values, $delete_where;
+    }
+
+    my $rows_modified = 0;
+    my $dbh = $self->dbh;
+    $dbh->begin_work;
+    DELETE:
+    foreach my $where ( @all_values ) {
+        my $stmt = SQL::Composer::Delete->new(
+            from => $table,
+            where => [ %$where ],
+            driver => 'sqlite',
+        );
+
+        my ( $sth, $errstr ) = $self->_db_execute( $stmt );
+        
+        if ( $errstr ) {
+            $doc->raise_error(400, { message => $errstr });
+            last DELETE;
+        }
+        else {
+            $rows_modified += $sth->rows;
+        }
+    }
+
+    if ( $doc->has_errors ) {
+        $dbh->rollback;
+    }
+    else {
+        $dbh->commit;
+    }
+    
+    if ( !$rows_modified ) {
+        return PONAPI_UPDATED_NOTHING;
+    }
+    
     # TODO: add missing login
-
-    return 1;
+    return PONAPI_UPDATED_NORMAL;
 }
 
 
@@ -225,7 +557,7 @@ sub _add_resources {
         @args{qw< document stmt type convert_to_collection req_base >};
 
     my ( $sth, $errstr ) = $self->_db_execute( $stmt );
-    $errstr and return $doc->raise_error({ message => $errstr });
+    $errstr and return $doc->raise_error(400, { message => $errstr });
 
     my $counter = 0;
 
@@ -254,9 +586,9 @@ sub _add_resource_relationships {
     my %include = map { $_ => 1 } @{ $args{include} };
 
     # check for invalid 'include' params
-    my @invalid_includes = grep { !$self->has_relationship($_, $type) } keys %include;
+    my @invalid_includes = grep { !$self->has_relationship($type, $_) } keys %include;
     if ( @invalid_includes ) {
-        $doc->raise_error({ message => "can't include type $_ (no relationship with $type)" })
+        $doc->raise_error(400, { message => "can't include type $_ (no relationship with $type)" })
             for @invalid_includes;
         return;
     }
@@ -293,16 +625,15 @@ sub _add_included {
     my ( $doc, $filter, $fields ) = @args{qw< document filter fields >};
 
     $filter->{id} = $ids;
-    my $filters = $self->_stmt_filters($type, $filter);
 
-    my $stmt = SQL::Composer::Select->new(
-        from    => $type,
-        columns => $self->_stmt_columns({ type => $type, fields => $fields }),
-        where   => [ %{ $filters } ],
+    my $stmt = $self->tables->{$type}->select_stmt($type,
+        type   => $type,
+        filter => $filter,
+        fields => $fields,
     );
 
     my ( $sth, $errstr ) = $self->_db_execute( $stmt );
-    $errstr and return $doc->raise_error({ message => $errstr });
+    $errstr and return $doc->raise_error(400, { message => $errstr });
 
     while ( my $inc = $sth->fetchrow_hashref() ) {
         my $id = delete $inc->{id};
@@ -341,6 +672,7 @@ sub _fetchall_relationships {
             from    => $rel_table,
             columns => [ 'id_' . $rel_type ],
             where   => [ 'id_' . $type => $id ],
+            driver => 'sqlite',
         );
 
         my ( $sth, $errstr ) = $self->_db_execute( $stmt );
@@ -356,7 +688,7 @@ sub _fetchall_relationships {
     }
 
     if ( @errors ) {
-        $doc->raise_error({ message => $_ }) for @errors;
+        $doc->raise_error(400, { message => $_ }) for @errors;
         return;
     }
 
@@ -366,37 +698,19 @@ sub _fetchall_relationships {
 sub _db_execute {
     my ( $self, $stmt ) = @_;
 
-    my $sth = $self->dbh->prepare($stmt->to_sql);
-    my $ret = $sth->execute($stmt->to_bind);
+    my ($sth, $ret);
+    local $@;
+    eval {
+        $sth = $self->dbh->prepare($stmt->to_sql);
+        $ret = $sth->execute($stmt->to_bind);
+        1;
+    } or do {
+        my $e = "$@"||'Unknown error';
+        return undef, $e;
+    };
 
     return ( $sth, ( !$ret ? $DBI::errstr : () ) );
 }
-
-sub _stmt_columns {
-    my $self = shift;
-    my $args = shift;
-    my ( $fields, $type ) = @{$args}{qw< fields type >};
-
-    ref $fields eq 'HASH' and exists $fields->{$type}
-        or return $self->tables->{$type}->COLUMNS;
-
-    my @fields_minus_relationship_keys =
-        grep { !exists $self->tables->{$type}->RELATIONS->{$_} }
-        @{ $fields->{$type} };
-
-    return +[ 'id', @fields_minus_relationship_keys ];
-}
-
-sub _stmt_filters {
-    my ( $self, $type, $filter ) = @_;
-
-    return +{
-        map   { $_ => $filter->{$_} }
-        grep  { exists $filter->{$_} }
-        @{ $self->tables->{$type}->COLUMNS }
-    };
-}
-
 
 __PACKAGE__->meta->make_immutable;
 no Moose; 1;

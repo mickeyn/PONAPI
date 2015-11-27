@@ -1,5 +1,6 @@
 package Test::PONAPI::DAO::Repository::MockDB::Table::Comments;
 use Moose;
+extends 'Test::PONAPI::DAO::Repository::MockDB::Table';
 
 use constant TYPE   => 'comments';
 use constant TABLE  => 'comments';
