@@ -18,10 +18,10 @@ my @TEST_ARGS = ( req_base => '/', type => 'articles' );
 
 my $ERR_ID_MISSING          = "`id` is missing";
 my $ERR_ID_NOT_ALLOWED      = "`id` not allowed";
-my $ERR_BODY_MISSING        = "";
+my $ERR_BODY_MISSING        = "request body is missing";
 my $ERR_BODY_NOT_ALLOWED    = "request body is not allowed";
 my $ERR_RELTYPE_MISSING     = "`relationship type` is missing";
-my $ERR_RELTYPE_NOT_ALLOWED = "";
+my $ERR_RELTYPE_NOT_ALLOWED = "`relationship type` not allowed";
 
 
 subtest '... retrieve all' => sub {
@@ -213,7 +213,7 @@ subtest '... create' => sub {
     foreach my $tuple (
         [
             [ @TEST_ARGS, id => 1 ],
-            "create: 'id' param is not allowed",
+            $ERR_ID_NOT_ALLOWED,
             "id is not allowed"
         ],
         [
@@ -223,25 +223,25 @@ subtest '... create' => sub {
         ],
         [
             [ @TEST_ARGS, rel_type => 'authors' ],
-            "create: 'rel_type' param not allowed",
+            $ERR_RELTYPE_NOT_ALLOWED,
             "rel_type is not allowed"
         ],
         [
             [ @TEST_ARGS ],
-            "create: request body is missing",
+            $ERR_BODY_MISSING,
             "data is missing"
         ],
 
         # Spec says these two need to return 409
         [
             [ @TEST_ARGS, data => { type => "" } ],
-            "create: conflict between the request type and the data type",
+            "conflict between the request type and the data type",
             "data->{type} is missing",
             409
         ],
         [
             [ @TEST_ARGS, data => { type => "fake" } ],
-            "create: conflict between the request type and the data type",
+            "conflict between the request type and the data type",
             "data->{type} is wrong",
             409
         ],
