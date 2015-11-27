@@ -117,13 +117,20 @@ sub create {
     my ( $self, %args ) = @_;
     my ( $doc, $type, $data ) = @args{qw< document type data >};
 
-    my $stmt = SQL::Composer::Insert->new(
-        into   => $type,
-        values => [ %{ $data->{attributes} } ],
-    );
+    my @attributes = exists $data->{attributes} ? %{ $data->{attributes} } : ();
 
-    my ( $sth, $errstr ) = $self->_db_execute( $stmt );
-    $errstr and return $doc->raise_error({ message => $errstr });
+    if ( @attributes ) {
+        my $stmt = SQL::Composer::Insert->new(
+            into   => $type,
+            values => \@attributes,
+        );
+
+        my ( $sth, $errstr ) = $self->_db_execute( $stmt );
+        $errstr and return $doc->raise_error({ message => $errstr });
+    }
+    else {
+        # TODO: what do we do if we don't have attributes?
+    }
 
     return 1;
 }
