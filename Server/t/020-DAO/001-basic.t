@@ -268,7 +268,7 @@ subtest '... update' => sub {
        },
       'jsonapi' => { 'version' => '1.0' },
       'meta'    => {
-        message => q!successfully updated the resource /articles/2 => {"relationships":null,"type":"articles","id":"2","attributes":{"title":"This changes updated"}}!,
+        message => q!successfully updated the resource /articles/2 => {"relationships":null,"type":"articles","id":2,"attributes":{"title":"This changes updated"},"req_base":"/"}!,
       }
       }],
         "...so now it returns a full resource object + meta"

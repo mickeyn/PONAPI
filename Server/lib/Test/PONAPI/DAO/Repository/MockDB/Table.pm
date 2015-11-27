@@ -18,16 +18,26 @@ sub select_stmt {
 }
 
 sub update_stmt {
-    my ($self, $type, $id, $values) = @_;
-    local $@;
-    my $msg = '';
-    my $stmt = eval { SQL::Composer::Update->new(
-        table  => $type,
-        values => [ %$values ],
-        where  => [ id => $id ],
-    ) } or do { $msg = "$@"||'Unknown error' };
+    my ($self, %args) = @_;
 
-    return $stmt, PONAPI_UPDATED_NORMAL, $msg;
+    my $id       = $args{id};
+    my $table    = $args{table}  || $self->TABLE;
+    my $values   = $args{values} || {};
+
+    local $@;
+    my $stmt = eval {
+        SQL::Composer::Update->new(
+            table  => $table,
+            values => [ %$values ],
+            where  => [ id => $id ],
+            driver => 'sqlite',
+        )
+    } or do {
+        my $msg = "$@"||'Unknown error';
+        return undef, PONAPI_ERROR, $msg;
+    };
+
+    return $stmt;
 }
 
 sub _stmt_columns {
