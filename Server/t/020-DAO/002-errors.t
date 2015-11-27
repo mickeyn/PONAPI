@@ -14,7 +14,15 @@ use Test::PONAPI::DAO::Repository::MockDB::Loader;
 my $repository = Test::PONAPI::DAO::Repository::MockDB->new;
 my $dao = PONAPI::DAO->new( repository => $repository );
 
-my @TEST_ARGS = ( req_base => '/', type => 'articles' );
+
+my @TEST_ARGS_BASE = ( req_base => '/'        );
+my @TEST_ARGS_TYPE = ( type     => 'articles' );
+my @TEST_ARGS_ID   = ( id       => 1          );
+
+my @TEST_ARGS_BASE_TYPE    = ( @TEST_ARGS_BASE, @TEST_ARGS_TYPE );
+my @TEST_ARGS_TYPE_ID      = ( @TEST_ARGS_TYPE, @TEST_ARGS_ID );
+my @TEST_ARGS_BASE_TYPE_ID = ( @TEST_ARGS_BASE, @TEST_ARGS_TYPE, @TEST_ARGS_ID );
+
 
 my $ERR_ID_MISSING          = "`id` is missing";
 my $ERR_ID_NOT_ALLOWED      = "`id` not allowed";
@@ -35,23 +43,23 @@ subtest '... retrieve all' => sub {
     {
         local $@;
         my $e;
-        eval { $dao->retrieve_all( req_base => '/' ); 1; } or do { $e = "$@"; };
+        eval { $dao->retrieve_all( @TEST_ARGS_BASE ); 1; } or do { $e = "$@"; };
         like( $e, qr/\QAttribute (type) is required\E/, "dies without a type" )
     }
 
     foreach my $tuple (
         [
-            [ @TEST_ARGS, id => 1 ],
+            [ @TEST_ARGS_BASE_TYPE_ID ],
             $ERR_ID_NOT_ALLOWED,
             "id is not allowed"
         ],
         [
-            [ @TEST_ARGS, data => { id => 1 } ],
+            [ @TEST_ARGS_BASE_TYPE, data => { id => 1 } ],
             $ERR_BODY_NOT_ALLOWED,
             "body is not allowed"
         ],
         [
-            [ @TEST_ARGS, include => [qw/author/] ],
+            [ @TEST_ARGS_BASE_TYPE, include => [qw/author/] ],
             "Types `articles` and `author` are not related",
             "include with unknown types are caught",
             404
@@ -79,23 +87,23 @@ subtest '... retrieve' => sub {
     {
         local $@;
         my $e;
-        eval { $dao->retrieve( req_base => '/' ); 1; } or do { $e = "$@"; };
+        eval { $dao->retrieve( @TEST_ARGS_BASE ); 1; } or do { $e = "$@"; };
         like( $e, qr/\QAttribute (type) is required\E/, "dies without a type" )
     }
 
     foreach my $tuple (
         [
-            [ @TEST_ARGS ],
+            [ @TEST_ARGS_BASE_TYPE ],
             $ERR_ID_MISSING,
             "id is required (missing)"
         ],
         [
-            [ @TEST_ARGS, id => "" ],
+            [ @TEST_ARGS_BASE_TYPE, id => "" ],
             $ERR_ID_MISSING,
             "id is required (empty string)"
         ],
         [
-            [ @TEST_ARGS, id => 1, data => { id => 1 } ],
+            [ @TEST_ARGS_BASE_TYPE_ID, data => { id => 1 } ],
             $ERR_BODY_NOT_ALLOWED,
             "body is not allowed"
         ],
@@ -114,7 +122,7 @@ subtest '... retrieve' => sub {
 
 # Spec says we can either stop processing as soon as we spot an error, or keep going an accumulate·
 # multiple errors.  Currently we do multiple, so testing that here.
-    my $doc = $dao->retrieve( @TEST_ARGS, data => { id => 1 } );
+    my $doc = $dao->retrieve( @TEST_ARGS_BASE_TYPE, data => { id => 1 } );
 
     is_deeply(
         [ sort { $a->{message} cmp $b->{message} } @{ $doc->{errors} } ],
@@ -132,25 +140,24 @@ subtest '... retrieve relationships' => sub {
 # TODO
 #[ [ type => 'fake', id => 1 ], "type \'fake\' not allowed", "DAO itself doesn't give errors for nonexistent types" ],
         [
-            [ @TEST_ARGS ],
+            [ @TEST_ARGS_BASE_TYPE ],
             $ERR_ID_MISSING,
             "id is required (missing)"
         ],
         [
-            [ @TEST_ARGS, id => "" ],
+            [ @TEST_ARGS_BASE_TYPE, id => "" ],
             $ERR_ID_MISSING,
             "id is required (empty string)"
         ],
         [
-            [ @TEST_ARGS, id => 1, data => { id => 1 } ],
+            [ @TEST_ARGS_BASE_TYPE_ID, data => { id => 1 } ],
             $ERR_RELTYPE_MISSING,
             "rel_type is missing"
         ],
 
         [
             [
-                @TEST_ARGS,
-                id       => 1,
+                @TEST_ARGS_BASE_TYPE_ID,
                 rel_type => "comments",
                 data     => { id => 1 }
             ],
@@ -180,7 +187,7 @@ subtest '... retrieve relationships' => sub {
 subtest '... create' => sub {
     {
         my @res = $dao->create(
-            @TEST_ARGS,
+            @TEST_ARGS_BASE_TYPE,
             data => {},
         );
         my $expected = [
@@ -196,7 +203,7 @@ subtest '... create' => sub {
 
     {
         my @res = $dao->create(
-            @TEST_ARGS,
+            @TEST_ARGS_BASE_TYPE,
             data => { type => "not_articles" },
         );
         my $expected = [
@@ -212,35 +219,35 @@ subtest '... create' => sub {
 
     foreach my $tuple (
         [
-            [ @TEST_ARGS, id => 1 ],
+            [ @TEST_ARGS_BASE_TYPE_ID ],
             $ERR_ID_NOT_ALLOWED,
             "id is not allowed"
         ],
         [
-            [ @TEST_ARGS, rel_type => 1 ],
+            [ @TEST_ARGS_BASE_TYPE, rel_type => 1 ],
             "Types `articles` and `1` are not related",
             "bad rel_type", 404
         ],
         [
-            [ @TEST_ARGS, rel_type => 'authors' ],
+            [ @TEST_ARGS_BASE_TYPE, rel_type => 'authors' ],
             $ERR_RELTYPE_NOT_ALLOWED,
             "rel_type is not allowed"
         ],
         [
-            [ @TEST_ARGS ],
+            [ @TEST_ARGS_BASE_TYPE ],
             $ERR_BODY_MISSING,
             "data is missing"
         ],
 
         # Spec says these two need to return 409
         [
-            [ @TEST_ARGS, data => { type => "" } ],
+            [ @TEST_ARGS_BASE_TYPE, data => { type => "" } ],
             "conflict between the request type and the data type",
             "data->{type} is missing",
             409
         ],
         [
-            [ @TEST_ARGS, data => { type => "fake" } ],
+            [ @TEST_ARGS_BASE_TYPE, data => { type => "fake" } ],
             "conflict between the request type and the data type",
             "data->{type} is wrong",
             409
@@ -260,8 +267,7 @@ subtest '... create' => sub {
     }
 
     my %good_create = (
-        req_base => '/',
-        type     => "articles",
+        @TEST_ARGS_BASE_TYPE,
         data     => {
             type => "articles",
             attributes => {
@@ -317,9 +323,9 @@ subtest '... create' => sub {
       )
     {
         my $copy = dclone( \%good_create );
-        my ( $who, $status, $expected, $msg ) = @$tuple;
+        my ( $body, $status, $expected, $msg ) = @$tuple;
 
-        while ( my ( $k, $v ) = each %$who ) {
+        while ( my ( $k, $v ) = each %$body ) {
             if ( ref($v) ) {
                 while ( my ( $k2, $v2 ) = each %$v ) {
                     $copy->{$k}{$k2} = $v2;
@@ -350,18 +356,14 @@ subtest '... create' => sub {
 
 subtest '... update' => sub {
     # Update with a bad/missing id
-    foreach my $tuple (
-        [ { type => articles => id => -99 },   [] ],
-        [ { type => articles => id => 99 },    [] ],
-        [ { type => articles => id => "bad" }, [] ],
-      )
-    {
-        my ( $who, $test ) = @$tuple;
+    foreach my $id ( -99, 99, "bad" ) {
         my @ret = $dao->update(
-            req_base => '/',
-            %$who,
+            @TEST_ARGS_BASE_TYPE,
+            id => $id,
             data => {
-                %$who, attributes => { title => "Nonexistent" },
+                type => 'articles',
+                id   => $id,
+                attributes => { title => "Nonexistent" },
             },
         );
         my $expected = [
@@ -380,13 +382,13 @@ subtest '... update' => sub {
         );
     }
 
-    my %who = ( type => articles => id => 1 );
     # Updating nonexistent attributes
     {
         my @ret = $dao->update(
-            %who,
+            @TEST_ARGS_BASE_TYPE_ID,
             data => {
-                %who, attributes => { not_real => "not there!" },
+                @TEST_ARGS_TYPE_ID,
+                attributes => { not_real => "not there!" },
             },
         );
         is_deeply(
@@ -411,9 +413,9 @@ subtest '... update' => sub {
     # Updating nonexistent relationships
     {
         my @ret = $dao->update(
-            %who,
+            @TEST_ARGS_BASE_TYPE_ID,
             data => {
-                %who,
+                @TEST_ARGS_TYPE_ID,
                 relationships => { not_real => { type => fake => id => 1 } },
             },
         );
@@ -438,18 +440,17 @@ subtest '... update' => sub {
     }
 
     # Update with a bad relationship; should roll back (imp. dependent)
-    my @first_retrieve = $dao->retrieve(%who);
+    my @first_retrieve = $dao->retrieve( @TEST_ARGS_BASE_TYPE_ID );
     my ( $w, @ret ) = ('');
     {
         local $SIG{__WARN__} = sub { $w .= shift };
         @ret = $dao->update(
-            %who,
+            @TEST_ARGS_BASE_TYPE_ID,
             data => {
-                %who,
+                @TEST_ARGS_TYPE_ID,
                 attributes    => { title => "All good" },
                 relationships => {
                     comments => [
-
                         # These two are comments of article 2
                         { type => comments => id => 5 },
                         { type => comments => id => 12 },
@@ -458,7 +459,7 @@ subtest '... update' => sub {
             },
         );
     }
-    my @second_retrieve = $dao->retrieve(%who);
+    my @second_retrieve = $dao->retrieve( @TEST_ARGS_BASE_TYPE_ID );
     is_deeply(
         \@first_retrieve,
         \@second_retrieve,
@@ -472,21 +473,14 @@ subtest '... update' => sub {
 subtest '... explodey repo errors' => sub {
 
     # See that we handle $repository exploding gracefully.
-    my %who = ( type => articles => id => 1 );
     my @all = (
-        [ [qw/retrieve delete/] => [%who] ],
-        [
-            [qw/retrieve_by_relationship retrieve_relationships/] =>
-              [ %who, rel_type => 'comments' ]
-        ],
-        [ [qw/retrieve_all/] => [ type => 'articles' ] ],
-        [ [qw/create/] => [ type => articles => data => {qw/type articles/} ] ],
-        [ [qw/update/] => [ %who, data => {%who} ] ],
-        [
-            [
-                qw/create_relationships update_relationships delete_relationships/
-            ] => [ %who, rel_type => comments => data => [ { 1 => 2 } ] ]
-        ],
+        [ [qw/retrieve_all/]    => [ @TEST_ARGS_BASE_TYPE ] ],
+        [ [qw/retrieve delete/] => [ @TEST_ARGS_BASE_TYPE_ID ] ],
+        [ [qw/create/]          => [ @TEST_ARGS_BASE_TYPE, data => {qw/type articles/} ] ],
+        [ [qw/update/]          => [ @TEST_ARGS_BASE_TYPE_ID, data => { @TEST_ARGS_BASE_TYPE } ] ],
+        [ [qw/retrieve_by_relationship retrieve_relationships/] => [ @TEST_ARGS_BASE_TYPE_ID, rel_type => 'comments' ] ],
+        [ [qw/create_relationships update_relationships delete_relationships/ ]
+            => [ @TEST_ARGS_BASE_TYPE_ID, rel_type => comments => data => [ { 1 => 2 } ] ] ],
     );
 
     my %strict_return_values = map +($_=>1), qw/
@@ -580,23 +574,23 @@ subtest '... explodey repo errors' => sub {
 subtest '... delete' => sub {
     foreach my $tuple (
         [
-            [ type => 'articles' ],
+            [ @TEST_ARGS_BASE_TYPE ],
             "delete: 'id' param is missing",
             "id is missing"
         ],
         [
-            [ type => 'articles', id => 1, rel_type => 1 ],
+            [ @TEST_ARGS_BASE_TYPE_ID, rel_type => 1 ],
             "Types `articles` and `1` are not related",
             "rel_type is not allowed",
             404
         ],
         [
-            [ type => 'articles', id => 1, rel_type => "comments" ],
+            [ @TEST_ARGS_BASE_TYPE_ID, rel_type => "comments" ],
             "delete: 'rel_type' param not allowed",
             "rel_type is not allowed"
         ],
         [
-            [ type => 'articles', id => 1, data => { type => "" } ],
+            [ @TEST_ARGS_BASE_TYPE_ID, data => { type => "" } ],
             "delete: request body is not allowed",
             "data is not allowed"
         ],
@@ -618,22 +612,22 @@ subtest '... delete' => sub {
 subtest '... create_relationships' => sub {
     foreach my $tuple (
         [
-            [ type => 'articles' ],
+            [ @TEST_ARGS_BASE_TYPE ],
             "create_relationships: 'id' param is missing",
             "... id is missing"
         ],
         [
-            [ type => 'articles', id => 1 ],
+            [ @TEST_ARGS_BASE_TYPE_ID ],
             "create_relationships: 'rel_type' param is missing",
             "... rel_type is missing"
         ],
         [
-            [ type => 'articles', id => 1, rel_type => 'authors' ],
+            [ @TEST_ARGS_BASE_TYPE_ID, rel_type => 'authors' ],
             "create_relationships: request body is missing",
             "... data is missing",
         ],
         [
-            [ type => 'articles', id => 1, rel_type => 'authors', data => [{}] ],
+            [ @TEST_ARGS_BASE_TYPE_ID, rel_type => 'authors', data => [{}] ],
             "create_relationships: relationship articles -> authors is one-to-one, can't use create here",
             "... bad relationship",
         ],
@@ -651,16 +645,12 @@ subtest '... create_relationships' => sub {
     # A conflict should return a 409
     # Also testing the rollback here, which is entirely implementation
     # dependent, but mandated by the spec
-    my %who = (
-        type => 'articles',
-        id   => 1,
-    );
-    my @first_retrieve = $dao->retrieve(%who);
+    my @first_retrieve = $dao->retrieve( @TEST_ARGS_BASE_TYPE_ID );
     my $w   = '';
     my @ret = do {
         local $SIG{__WARN__} = sub { $w .= shift };
         $dao->create_relationships(
-            %who,
+            @TEST_ARGS_BASE_TYPE_ID,
             rel_type => 'comments',
             data     => [
                 { type => comments => id => 99 },
@@ -690,7 +680,7 @@ subtest '... create_relationships' => sub {
         "... (DBD error in message as expected)"
     );
 
-    my @second_retrieve = $dao->retrieve(%who);
+    my @second_retrieve = $dao->retrieve( @TEST_ARGS_BASE_TYPE_ID );
     is_deeply(
         \@first_retrieve,
         \@second_retrieve,
@@ -698,7 +688,7 @@ subtest '... create_relationships' => sub {
     );
 
     @ret = $dao->create_relationships(
-        %who,
+        @TEST_ARGS_BASE_TYPE_ID,
         rel_type => 'comments',
         data     => [ { type => fake => id => 99 }, ],
     );
@@ -730,8 +720,7 @@ subtest '... delete_relationships' => sub {
         # should return a 204:
         # http://jsonapi.org/format/#crud-updating-relationship-responses-204
         my @ret = $dao->delete_relationships(
-            type     => 'articles',
-            id       => 1,
+            @TEST_ARGS_BASE_TYPE_ID,
             rel_type => 'comments',
             data     => [ { type => comments => id => 99 }, ],
         );
@@ -758,8 +747,7 @@ subtest '... delete_relationships' => sub {
     {
         # Trying to delete a one-to-one is invalid
         my @ret = $dao->delete_relationships(
-            type     => 'articles',
-            id       => 1,
+            @TEST_ARGS_BASE_TYPE_ID,
             rel_type => 'authors',
             data     => [ { type => people => id => 42 }, ],
         );
