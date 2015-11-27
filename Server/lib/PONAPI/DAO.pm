@@ -111,6 +111,9 @@ sub create {
     _check_no_rel_type ($req);
     _check_has_data    ($req);
 
+    _check_data_has_type($req)
+        and _check_data_type_match($req);
+
     $doc->has_errors or
         eval {
             $self->repository->create( %{ $req } );
@@ -323,12 +326,30 @@ sub _check_no_rel_type  { $_[0]->rel_type and _bad_request( $_[0]->document, "`r
 sub _check_has_data     { $_[0]->data     or  _bad_request( $_[0]->document, "request body is missing"         ) }
 sub _check_no_data      { $_[0]->data     and _bad_request( $_[0]->document, "request body is not allowed"     ) }
 
+sub _check_data_has_type {
+    my $req = shift;
+    $req->data and exists $req->data->{'type'}
+        or return _bad_request( $req->document, "request body: `data` key is missing" );
+    return 1;
+}
+
+sub _check_data_type_match {
+    my $req = shift;
+    $req->data and exists $req->data->{'type'} and $req->data->{'type'} eq $req->type
+        or return $req->document->raise_error( 409, {
+            message => "conflict between the request type and the data type"
+        });
+    return 1;
+}
+
 sub _bad_request {
     $_[0]->raise_error( 400, { message => $_[1] } );
+    return;
 }
 
 sub _server_failure {
     $_[0]->raise_error(500, { message => 'A fatal error has occured, please check server logs' } );
+    return;
 }
 
 sub _dao_response {

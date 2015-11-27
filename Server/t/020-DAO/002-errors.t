@@ -178,24 +178,37 @@ subtest '... retrieve relationships' => sub {
 };
 
 subtest '... create' => sub {
-    my @res = $dao->create(
-        @TEST_ARGS,
-        data => { type => "not_articles" },
-    );
-    my $expected = [
-        409,
-        [],
-        {
-            errors => [
-                {
-                    message => 'create: conflict between the request type and the data type',
-                    status => 409
-                }
-            ],
-            jsonapi => { version => '1.0' }
-        }
-    ];
-    is_deeply( \@res, $expected );
+    {
+        my @res = $dao->create(
+            @TEST_ARGS,
+            data => {},
+        );
+        my $expected = [
+            400,
+            [],
+            {
+                errors  => [ { message => 'request body: `data` key is missing' } ], # TODO: status?
+                jsonapi => { version => '1.0' }
+            }
+        ];
+        is_deeply( \@res, $expected, 'create missing type in data' );
+    }
+
+    {
+        my @res = $dao->create(
+            @TEST_ARGS,
+            data => { type => "not_articles" },
+        );
+        my $expected = [
+            409,
+            [],
+            {
+                errors  => [ { message => 'conflict between the request type and the data type' } ], # TODO: status?
+                jsonapi => { version => '1.0' }
+            }
+        ];
+        is_deeply( \@res, $expected, 'create types conflict' );
+    }
 
     foreach my $tuple (
         [
