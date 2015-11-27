@@ -119,14 +119,10 @@ sub create {
     _check_no_rel_type ($req);
     _check_has_data    ($req);
 
-    _check_data_has_type($req)
-        and _check_data_type_match($req);
-
     # http://jsonapi.org/format/#crud-creating-responses-409
     # We need to return a 409 if $data->{type} ne $req->type
-    if ( !$doc->has_errors && ($req->data->{type}||'') ne $req->type ) {
-        $doc->raise_error(409, { message => "create: conflict between the request type and the data type" });
-    }
+    _check_data_has_type($req)
+        and _check_data_type_match($req);
 
     $doc->has_errors or
         eval {
@@ -215,14 +211,11 @@ sub update {
 
     my $type = $req->type;
     if ( !$doc->has_errors ) {
-        my $data = $req->data;
-
         # http://jsonapi.org/format/#crud-updating-responses-409
         # A server MUST return 409 Conflict when processing a PATCH request in which the
         # resource object's type and id do not match the server's endpoint.
-        if ( %$data && ( ($data->{id}||'') ne $req->id || ($data->{type}||'') ne $type ) ) {
-            $doc->raise_error(409, { message => "update: conflict between the request type/id and the data type/id" });
-        }
+        _check_data_has_type($req)
+            and _check_data_type_match($req);
     }
     else {
         $doc->raise_error(400, { message => "update: request body is missing" });
