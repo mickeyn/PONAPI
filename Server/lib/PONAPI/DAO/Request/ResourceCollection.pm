@@ -5,14 +5,14 @@ use Moose;
 extends 'PONAPI::DAO::Request';
 
 has data => (
-    is => 'ro',
-    isa => 'ArrayRef[HashRef]',
+    is        => 'ro',
+    isa       => 'ArrayRef[HashRef]',
     predicate => 'has_data',
 );
 
 __PACKAGE__->meta->make_immutable;
-
 no Moose; 1;
+
 __END__
 =encoding UTF-8
 
