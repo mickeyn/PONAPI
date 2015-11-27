@@ -209,16 +209,12 @@ sub update {
     _check_no_rel_type ($req);
     _check_has_data    ($req);
 
-    my $type = $req->type;
     if ( !$doc->has_errors ) {
         # http://jsonapi.org/format/#crud-updating-responses-409
         # A server MUST return 409 Conflict when processing a PATCH request in which the
         # resource object's type and id do not match the server's endpoint.
         _check_data_has_type($req)
             and _check_data_type_match($req);
-    }
-    else {
-        _bad_request( $doc, "update: request body is missing" );
     }
 
     $doc->has_errors or
@@ -257,8 +253,8 @@ sub update {
                 if ( $self->respond_to_updates_with_200 ) {
                     $doc->set_status(200);
                     return $self->repository->retrieve(
-                        type => $type,
-                        id   => $req->id,
+                        type     => $req->type,
+                        id       => $req->id,
                         document => $doc,
                     ) if $ret == PONAPI_UPDATED_EXTENDED;
                 }
