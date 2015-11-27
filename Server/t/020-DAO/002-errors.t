@@ -500,9 +500,8 @@ subtest '... explodey repo errors' => sub {
                     {
                         errors => [
                             {
-                                message =>
-'A fatal error has occured, please check server logs',
-                                status => 500
+                                message => 'A fatal error has occured, please check server logs',
+#                                status => 500
                             }
                         ],
                         jsonapi => { version => '1.0' }
@@ -541,9 +540,8 @@ subtest '... explodey repo errors' => sub {
                     {
                         'errors' => [
                             {
-                                'message' =>
-    'A fatal error has occured, please check server logs',
-                                'status' => 500
+                                'message' => 'A fatal error has occured, please check server logs',
+#                                'status'  => 500
                             }
                         ],
                         'jsonapi' => { 'version' => '1.0' }
@@ -691,15 +689,14 @@ subtest '... create_relationships' => sub {
             {
                 errors => [
                     {
-                        message =>
-'creating a relationship of type comments, but data has type fake',
-                        status => 409
+                        message => 'creating a relationship of type comments, but data has type fake',
+#                        status => 409
                     }
                 ],
                 jsonapi => { version => '1.0' }
             }
         ],
-"... discrepancies between the requested rel_type and the data are spotted",
+        "... discrepancies between the requested rel_type and the data are spotted",
     );
 
 };
@@ -725,8 +722,7 @@ subtest '... delete_relationships' => sub {
                         'version' => '1.0'
                     },
                     'meta' => {
-                        'message' =>
-'deleted nothing for the resource /articles/1/comments => [{"id":99}]'
+                        'message' => 'deleted nothing for the resource /articles/1/comments => [{"id":99}]'
                     }
                 }
             ],
@@ -750,9 +746,8 @@ subtest '... delete_relationships' => sub {
                 {
                     'errors' => [
                         {
-                            'status' => 400,
-                            'message' =>
-'Types `articles` and `authors` are one-to-one, invalid delete_relationships',
+                            'message' => 'Types `articles` and `authors` are one-to-one, invalid delete_relationships',
+#                            'status'  => 400,
                         }
                     ],
                     'jsonapi' => {

@@ -218,7 +218,7 @@ sub update {
             and _check_data_type_match($req);
     }
     else {
-        $doc->raise_error(400, { message => "update: request body is missing" });
+        _bad_request( $doc, "update: request body is missing" );
     }
 
     $doc->has_errors or
@@ -402,7 +402,7 @@ sub _prepare_req {
     my ($self, $request_type, @args) = @_;
 
     my $req;
-    
+
     if ( exists $resource_collection{$request_type} ) {
         $req = PONAPI::DAO::Request::ResourceCollection->new(@args)
     }
@@ -975,4 +975,3 @@ Adds a new member to the specified one-to-many relationship.
 See also L</"Return value of update operations">.
 
 =cut
-

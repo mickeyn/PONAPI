@@ -248,7 +248,7 @@ sub _create_relationships {
                 ($sth, $errstr) = $self->_db_execute( $stmt )
             }
         }
-        
+
         if ( $errstr ) {
             $doc->raise_error(400, { message => $errstr });
             if ( $errstr =~ /column \S+ is not unique/ ) {
@@ -257,7 +257,7 @@ sub _create_relationships {
             return PONAPI_ERROR;
         }
     }
-    
+
     return PONAPI_UPDATED_NORMAL;
 }
 
@@ -386,8 +386,8 @@ sub _update_relationships {
         my $clear_ret = $self->_clear_relationships(%args);
         return $clear_ret if $doc->has_errors;
         if ( @$data ) {
-            my ( $column_rel_type, $rel_table ) = 
-                    @{ $self->tables->{$type}->RELATIONS->{$rel_type} }{qw< type rel_table >}; 
+            my ( $column_rel_type, $rel_table ) =
+                    @{ $self->tables->{$type}->RELATIONS->{$rel_type} }{qw< type rel_table >};
 
             foreach my $insert ( @$data ) {
                 my %insert = (%$insert, 'id_' . $type => $id);
@@ -523,7 +523,7 @@ sub delete_relationships {
         );
 
         my ( $sth, $errstr ) = $self->_db_execute( $stmt );
-        
+
         if ( $errstr ) {
             $doc->raise_error(400, { message => $errstr });
             last DELETE;
@@ -539,11 +539,11 @@ sub delete_relationships {
     else {
         $dbh->commit;
     }
-    
+
     if ( !$rows_modified ) {
         return PONAPI_UPDATED_NOTHING;
     }
-    
+
     # TODO: add missing login
     return PONAPI_UPDATED_NORMAL;
 }
