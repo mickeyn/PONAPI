@@ -151,7 +151,14 @@ sub create {
             _server_failure($doc);
         };
 
-    return _dao_response($req);
+    my @headers;
+    if ( !$doc->has_errors ) {
+        my $document = $doc->build;
+        # TODO make less terrible
+        push @headers, Location => "/$document->{data}{type}/$document->{data}{id}";
+    }
+
+    return _dao_response( $req, @headers );
 }
 
 sub create_relationships {
