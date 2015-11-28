@@ -288,7 +288,7 @@ subtest '... update' => sub {
                 },
                 jsonapi => { 'version' => '1.0' },
                 meta    => {
-                    message => q!successfully updated the resource /articles/2 => {"relationships":null,"type":"articles","id":2,"attributes":{"title":"This changes updated"},"req_base":"/"}!,
+                    message => 'successfully updated the resource /articles/2 => {"attributes":{"title":"This changes updated"},"id":2,"relationships":null,"type":"articles"}'
                 }
             }],
         "...so now it returns a full resource object + meta"
@@ -585,7 +585,9 @@ subtest '... create + create_relationship' => sub {
             },
         );
         is_deeply(\@author_update, [202, [], {
-            meta => { message => 'successfully updated the resource /articles/4 => {"relationships":{"authors":null,"comments":[]},"id":"4","type":"articles","attributes":null}' },
+            meta => {
+                message => 'successfully updated the resource /articles/4 => {"attributes":null,"id":"4","relationships":{"authors":null,"comments":[]},"type":"articles"}'
+            },
             jsonapi => { 'version' => '1.0' },
         }], "... clearing out a one-to-one works (using update)");
     }

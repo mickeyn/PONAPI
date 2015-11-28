@@ -9,7 +9,7 @@ use PONAPI::DAO::Request::RelationshipUpdate;
 use PONAPI::DAO::Request::ResourceCollection;
 use PONAPI::Builder::Document;
 
-use JSON::XS qw< encode_json >;
+use JSON::XS ();
 
 has 'repository' => (
     is       => 'ro',
@@ -136,7 +136,7 @@ sub create {
                     message => "successfully created the resource: "
                          . $req->type
                          . " => "
-                         . encode_json( $req->data )
+                         . JSON::XS->new->canonical()->encode( $req->data )
                 );
             }
             1;
@@ -186,7 +186,7 @@ sub create_relationships {
                              . "/"
                              . $req->rel_type
                              . " => "
-                             . encode_json( $req->data )
+                             . JSON::XS->new->canonical()->encode( $req->data )
                 );
             }
             1;
@@ -237,7 +237,7 @@ sub update {
                          . "/"
                          . $req->id
                          . " => "
-                         . encode_json( $req->data );
+                         . JSON::XS->new->canonical()->encode( $req->data );
 
             my $message = "successfully updated the resource $resource";
             if ( $ret == PONAPI_UPDATED_NOTHING ) {
@@ -297,7 +297,7 @@ sub update_relationships {
                          . "/"
                          . $req->rel_type
                          . " => "
-                         . $json->encode( $req->data )
+                         . $json->canonical()->encode( $req->data )
             );
             1;
         } or do {
@@ -361,7 +361,7 @@ sub delete_relationships {
                          . "/"
                          . $req->rel_type
                          . " => "
-                         . encode_json( $req->data );
+                         . JSON::XS->new->canonical()->encode( $req->data );
             my $message  = "successfully deleted the relationship $resource";
 
         # http://jsonapi.org/format/#crud-updating-relationship-responses-204
