@@ -27,8 +27,8 @@ sub retrieve_all {
     my $req  = $self->_prepare_req(retrieve_all => @_);
     my $doc  = $req->document;
 
-    _check_no_id   ($req);
-    _check_no_data ($req);
+    $req->check_no_id;
+    $req->check_no_data;
 
     $doc->has_errors or
         eval {
@@ -49,8 +49,8 @@ sub retrieve {
     my $req  = $self->_prepare_req(retrieve => @_);
     my $doc  = $req->document;
 
-    _check_has_id  ($req);
-    _check_no_data ($req);
+    $req->check_has_id;
+    $req->check_no_data;
 
     $doc->has_errors or
         eval {
@@ -70,9 +70,9 @@ sub retrieve_relationships {
     my $req  = $self->_prepare_req(retrieve_relationships => @_);
     my $doc  = $req->document;
 
-    _check_has_id       ($req);
-    _check_has_rel_type ($req);
-    _check_no_data      ($req);
+    $req->check_has_id;
+    $req->check_has_rel_type;
+    $req->check_no_data;
 
     $doc->has_errors or
         eval {
@@ -92,9 +92,9 @@ sub retrieve_by_relationship {
     my $req  = $self->_prepare_req(retrieve_by_relationship => @_);
     my $doc  = $req->document;
 
-    _check_has_id       ($req);
-    _check_has_rel_type ($req);
-    _check_no_data      ($req);
+    $req->check_has_id;
+    $req->check_has_rel_type;
+    $req->check_no_data;
 
     $doc->has_errors or
         eval {
@@ -115,14 +115,13 @@ sub create {
     my $doc  = $req->document;
 
     # client-generated id needs to be passed in the body
-    _check_no_id       ($req);
-    _check_no_rel_type ($req);
-    _check_has_data    ($req);
+    $req->check_no_id;
+    $req->check_no_rel_type;
+    $req->check_has_data;
 
     # http://jsonapi.org/format/#crud-creating-responses-409
     # We need to return a 409 if $data->{type} ne $req->type
-    _check_data_has_type($req)
-        and _check_data_type_match($req);
+    $req->check_data_has_type and $req->check_data_type_match;
 
     $doc->has_errors or
         eval {
@@ -162,9 +161,9 @@ sub create_relationships {
     my $req  = $self->_prepare_req(create_relationships => @_);
     my $doc  = $req->document;
 
-    _check_has_id       ($req);
-    _check_has_rel_type ($req);
-    _check_has_data     ($req);
+    $req->check_has_id;
+    $req->check_has_rel_type;
+    $req->check_has_data;
 
     $doc->has_errors or
         eval {
@@ -205,16 +204,15 @@ sub update {
     my $req  = $self->_prepare_req(update => @_);
     my $doc  = $req->document;
 
-    _check_has_id      ($req);
-    _check_no_rel_type ($req);
-    _check_has_data    ($req);
+    $req->check_has_id;
+    $req->check_no_rel_type;
+    $req->check_has_data;
 
     if ( !$doc->has_errors ) {
         # http://jsonapi.org/format/#crud-updating-responses-409
         # A server MUST return 409 Conflict when processing a PATCH request in which the
         # resource object's type and id do not match the server's endpoint.
-        _check_data_has_type($req)
-            and _check_data_type_match($req);
+        $req->check_data_has_type and $req->check_data_type_match;
     }
 
     $doc->has_errors or
@@ -278,9 +276,9 @@ sub update_relationships {
     my $req  = $self->_prepare_req(update_relationships => @_);
     my $doc  = $req->document;
 
-    _check_has_id       ($req);
-    _check_has_rel_type ($req);
-    _check_has_data     ($req);
+    $req->check_has_id;
+    $req->check_has_rel_type;
+    $req->check_has_data;
 
     $doc->has_errors or
         eval {
@@ -316,9 +314,9 @@ sub delete : method {
     my $req  = $self->_prepare_req(delete => @_);
     my $doc  = $req->document;
 
-    _check_has_id      ($req);
-    _check_no_rel_type ($req);
-    _check_no_data     ($req);
+    $req->check_has_id;
+    $req->check_no_rel_type;
+    $req->check_no_data;
 
     $doc->has_errors or
         eval {
@@ -344,9 +342,9 @@ sub delete_relationships {
     my $req  = $self->_prepare_req(delete_relationships => @_);
     my $doc  = $req->document;
 
-    _check_has_id       ($req);
-    _check_has_rel_type ($req);
-    _check_has_data     ($req);
+    $req->check_has_id;
+    $req->check_has_rel_type;
+    $req->check_has_data;
 
     $doc->has_errors or
         eval {
@@ -449,34 +447,6 @@ sub _validate_types {
             or $doc->raise_error( 404, { message => "Types `$type` and `$_` are not related" } );
     }
 
-    return;
-}
-
-sub _check_has_id       { $_[0]->has_id       or  _bad_request( $_[0]->document, "`id` is missing"                 ) }
-sub _check_no_id        { $_[0]->has_id       and _bad_request( $_[0]->document, "`id` not allowed"                ) }
-sub _check_has_rel_type { $_[0]->has_rel_type or  _bad_request( $_[0]->document, "`relationship type` is missing"  ) }
-sub _check_no_rel_type  { $_[0]->has_rel_type and _bad_request( $_[0]->document, "`relationship type` not allowed" ) }
-sub _check_has_data     { $_[0]->has_data     or  _bad_request( $_[0]->document, "request body is missing"         ) }
-sub _check_no_data      { $_[0]->has_data     and _bad_request( $_[0]->document, "request body is not allowed"     ) }
-
-sub _check_data_has_type {
-    my $req = shift;
-    $req->data and exists $req->data->{'type'}
-        or return _bad_request( $req->document, "request body: `data` key is missing" );
-    return 1;
-}
-
-sub _check_data_type_match {
-    my $req = shift;
-    $req->data and exists $req->data->{'type'} and $req->data->{'type'} eq $req->type
-        or return $req->document->raise_error( 409, {
-            message => "conflict between the request type and the data type"
-        });
-    return 1;
-}
-
-sub _bad_request {
-    $_[0]->raise_error( 400, { message => $_[1] } );
     return;
 }
 
