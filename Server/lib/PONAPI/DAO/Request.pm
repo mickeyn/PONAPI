@@ -78,7 +78,7 @@ sub check_data_has_type {
     return 1;
 }
 
-sub _check_data_type_match {
+sub check_data_type_match {
     my $self = shift;
 
     $self->data and exists $self->data->{'type'} and $self->data->{'type'} eq $self->type
