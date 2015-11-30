@@ -28,7 +28,7 @@ sub retrieve_all {
     my $doc  = $req->document;
 
     $req->check_no_id;
-    $req->check_no_data;
+    $req->check_no_body;
 
     $doc->has_errors or
         eval {
@@ -50,7 +50,7 @@ sub retrieve {
     my $doc  = $req->document;
 
     $req->check_has_id;
-    $req->check_no_data;
+    $req->check_no_body;
 
     $doc->has_errors or
         eval {
@@ -72,7 +72,7 @@ sub retrieve_relationships {
 
     $req->check_has_id;
     $req->check_has_rel_type;
-    $req->check_no_data;
+    $req->check_no_body;
 
     $doc->has_errors or
         eval {
@@ -94,7 +94,7 @@ sub retrieve_by_relationship {
 
     $req->check_has_id;
     $req->check_has_rel_type;
-    $req->check_no_data;
+    $req->check_no_body;
 
     $doc->has_errors or
         eval {
@@ -117,11 +117,10 @@ sub create {
     # client-generated id needs to be passed in the body
     $req->check_no_id;
     $req->check_no_rel_type;
-    $req->check_has_data;
 
     # http://jsonapi.org/format/#crud-creating-responses-409
     # We need to return a 409 if $data->{type} ne $req->type
-    $req->check_data_has_type and $req->check_data_type_match;
+    $req->check_has_data and $req->check_data_has_type and $req->check_data_type_match;
 
     $doc->has_errors or
         eval {
@@ -316,7 +315,7 @@ sub delete : method {
 
     $req->check_has_id;
     $req->check_no_rel_type;
-    $req->check_no_data;
+    $req->check_no_body;
 
     $doc->has_errors or
         eval {

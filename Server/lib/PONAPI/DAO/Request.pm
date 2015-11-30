@@ -14,6 +14,12 @@ has req_base => (
     required => 1,
 );
 
+has has_body => (
+    is       => 'ro',
+    isa      => 'Bool',
+    required => 1,
+);
+
 has send_doc_self_link => (
     is      => 'ro',
     isa     => 'Bool',
@@ -62,18 +68,18 @@ for ( qw< include sort > ) {
     );
 }
 
-sub check_no_id        { $_[0]->has_id       and $_[0]->_bad_request( "`id` not allowed"                ) }
-sub check_has_id       { $_[0]->has_id       or  $_[0]->_bad_request( "`id` is missing"                 ) }
-sub check_has_rel_type { $_[0]->has_rel_type or  $_[0]->_bad_request( "`relationship type` is missing"  ) }
-sub check_no_rel_type  { $_[0]->has_rel_type and $_[0]->_bad_request( "`relationship type` not allowed" ) }
-sub check_has_data     { $_[0]->has_data     or  $_[0]->_bad_request( "request body is missing"         ) }
-sub check_no_data      { $_[0]->has_data     and $_[0]->_bad_request( "request body is not allowed"     ) }
+sub check_no_id        { $_[0]->has_id       and return $_[0]->_bad_request( "`id` not allowed"                ); 1; }
+sub check_has_id       { $_[0]->has_id       or  return $_[0]->_bad_request( "`id` is missing"                 ); 1; }
+sub check_has_rel_type { $_[0]->has_rel_type or  return $_[0]->_bad_request( "`relationship type` is missing"  ); 1; }
+sub check_no_rel_type  { $_[0]->has_rel_type and return $_[0]->_bad_request( "`relationship type` not allowed" ); 1; }
+sub check_no_body      { $_[0]->has_body     and return $_[0]->_bad_request( "request body is not allowed"     ); 1; }
+sub check_has_data     { $_[0]->has_data     or  return $_[0]->_bad_request( "request body is missing `data`"  ); 1; }
 
 sub check_data_has_type {
     my $self = shift;
 
     $self->data and exists $self->data->{'type'}
-        or return $self->_bad_request( "request body: `data` key is missing" );
+        or return $self->_bad_request( "data: `type` key is missing" );
 
     return 1;
 }

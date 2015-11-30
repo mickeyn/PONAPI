@@ -76,14 +76,16 @@ sub _ponapi_params {
     my @ponapi_query_params = $self->_ponapi_query_params($wr, $req);
 
     # THE BODY CONTENT
-    $wr->(ERR_BAD_REQ) if $req->method eq 'GET' and $req->content_length > 0;
+    my $has_body = !!( $req->content_length > 0 );
+    $wr->(ERR_BAD_REQ) if $req->method eq 'GET' and $has_body;
 
     my $data = $self->_ponapi_data($wr, $req);
 
     my %params = (
         @ponapi_route_params,
         @ponapi_query_params,
-        data => $data,
+        data     => $data,
+        has_body => $has_body,
     );
 
     return \%params;
