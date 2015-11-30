@@ -434,10 +434,10 @@ sub _validate_types {
                 message => "Types `$type` and `$rel_type` are not related"
             });
         }
-        elsif ( $only_one_to_many{$request_type} ) {
+        elsif ( $only_one_to_many{$request_type} and !$repo->has_one_to_many_relationship($type, $rel_type) ) {
             $doc->raise_error(400, {
                 message => "Types `$type` and `$rel_type` are one-to-one, invalid $request_type"
-            }) if !$repo->has_one_to_many_relationship($type, $rel_type);
+            });
         }
     }
 
