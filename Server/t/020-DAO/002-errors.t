@@ -610,6 +610,18 @@ subtest '... delete' => sub {
             404
         ],
         [
+            [ @TEST_ARGS_BASE_TYPE_ID_NO_BODY, rel_type => 0 ],
+            "Types `articles` and `0` are not related",
+            "rel_type is not allowed",
+            404
+        ],
+        [
+            [ @TEST_ARGS_BASE_TYPE_ID_NO_BODY, rel_type => "" ],
+            "Types `articles` and `` are not related",
+            "rel_type is not allowed",
+            404
+        ],
+        [
             [ @TEST_ARGS_BASE_TYPE_ID_NO_BODY, rel_type => "comments" ],
             "`relationship type` not allowed",
             "rel_type is not allowed"

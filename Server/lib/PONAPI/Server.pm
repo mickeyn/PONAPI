@@ -102,21 +102,21 @@ sub _ponapi_route_match {
     $wr->(ERR_BAD_REQ) unless $type;
     $wr->(ERR_BAD_REQ) if $rel_type and $relationships ne 'relationships';
 
-    if ( !$rel_type and $relationships ) {
+    if ( !defined($rel_type) and $relationships ) {
         $rel_type = $relationships;
         undef $relationships;
     }
 
     my $action;
     if ( defined $id ) {
-        $action = 'create_relationships'     if $method eq 'POST'   and $relationships  and $rel_type;
-        $action = 'retrieve'                 if $method eq 'GET'    and !$relationships and !$rel_type;
-        $action = 'retrieve_by_relationship' if $method eq 'GET'    and !$relationships and $rel_type;
-        $action = 'retrieve_relationships'   if $method eq 'GET'    and $relationships  and $rel_type;
-        $action = 'update'                   if $method eq 'PATCH'  and !$relationships and !$rel_type;
-        $action = 'update_relationships'     if $method eq 'PATCH'  and $relationships  and $rel_type;
-        $action = 'delete'                   if $method eq 'DELETE' and !$relationships and !$rel_type;
-        $action = 'delete_relationships'     if $method eq 'DELETE' and $relationships  and $rel_type;
+        $action = 'create_relationships'     if $method eq 'POST'   and $relationships  and defined($rel_type);
+        $action = 'retrieve'                 if $method eq 'GET'    and !$relationships and !defined($rel_type);
+        $action = 'retrieve_by_relationship' if $method eq 'GET'    and !$relationships and defined($rel_type);
+        $action = 'retrieve_relationships'   if $method eq 'GET'    and $relationships  and defined($rel_type);
+        $action = 'update'                   if $method eq 'PATCH'  and !$relationships and !defined($rel_type);
+        $action = 'update_relationships'     if $method eq 'PATCH'  and $relationships  and defined($rel_type);
+        $action = 'delete'                   if $method eq 'DELETE' and !$relationships and !defined($rel_type);
+        $action = 'delete_relationships'     if $method eq 'DELETE' and $relationships  and defined($rel_type);
     }
     else {
         $action = 'retrieve_all'             if $method eq 'GET';
@@ -126,8 +126,8 @@ sub _ponapi_route_match {
     $wr->(ERR_NO_MATCHING_ROUTE) unless $action;
 
     my @ret = ( action => $action, type => $type );
-    defined $id and push @ret => id => $id;
-    $rel_type   and push @ret => rel_type => $rel_type;
+    defined $id       and push @ret => id => $id;
+    defined $rel_type and push @ret => rel_type => $rel_type;
 
     return @ret;
 }
