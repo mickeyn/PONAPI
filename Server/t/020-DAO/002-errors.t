@@ -414,7 +414,7 @@ subtest '... update' => sub {
             @TEST_ARGS_BASE_TYPE_ID_HAS_BODY,
             data => {
                 @TEST_ARGS_TYPE_ID,
-                attributes => { not_real => "not there!" },
+                attributes => { not_real_attr => "not there!" },
             },
         );
         is_deeply(
@@ -442,7 +442,7 @@ subtest '... update' => sub {
             @TEST_ARGS_BASE_TYPE_ID_HAS_BODY,
             data => {
                 @TEST_ARGS_TYPE_ID,
-                relationships => { not_real => { type => fake => id => 1 } },
+                relationships => { not_real_rel => { type => fake => id => 1 } },
             },
         );
         is_deeply(
@@ -453,7 +453,7 @@ subtest '... update' => sub {
                 {
                     errors => [
                         {
-                            message => 'update: unknown relationship articles -> not_real',
+                            message => 'update: unknown relationship articles -> not_real_rel',
                             status => 404
                         }
                     ],

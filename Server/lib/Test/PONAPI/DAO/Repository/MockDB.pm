@@ -69,7 +69,7 @@ sub retrieve_all {
     my $type = $args{type};
     my $doc  = $args{document};
 
-    my $stmt = $self->tables->{$type}->select_stmt($type, %args);
+    my $stmt = $self->tables->{$type}->select_stmt(%args);
     $self->_add_resources( stmt => $stmt, %args );
 }
 
@@ -103,7 +103,7 @@ sub retrieve_by_relationship {
     my $q_type = $rels->[0]{type};
     my $q_ids  = [ map { $_->{id} } @{$rels} ];
 
-    my $stmt = $self->tables->{$q_type}->select_stmt($q_type,
+    my $stmt = $self->tables->{$q_type}->select_stmt(
         type   => $q_type,
         fields => $fields,
         filter => { id => $q_ids },
@@ -133,14 +133,18 @@ sub create {
         return PONAPI_UNKNOWN_RESOURCE_ERROR;
     }
 
+    my ($stmt, $return, $msg) = $table_obj->insert_stmt(
+        table  => $type,
+        values => $attributes,
+    );
+
+    if ( $return && $PONAPI_ERROR_RETURN{$return} ) {
+        $doc->raise_error(400, { message => $msg || 'Unknown error' });
+        return $return;
+    }
+
     my $dbh = $self->dbh;
     $dbh->begin_work;
-
-    my $stmt = SQL::Composer::Insert->new(
-        into   => $type,
-        values => [ %$attributes ],
-        driver => 'sqlite',
-    );
 
     my ( $sth, $errstr ) = $self->_db_execute( $stmt );
     # TODO: 409 Conflict
@@ -188,7 +192,8 @@ sub _create_relationships {
         return PONAPI_ERROR;
     }
 
-    my $all_relations = $self->tables->{$type}->RELATIONS->{$rel_type};
+    my $table_obj     = $self->tables->{$type};
+    my $all_relations = $table_obj->RELATIONS->{$rel_type};
 
     if ( !$all_relations ) {
         $doc->raise_error(400, { message => "create_relationship: unknown relationship $type -> $rel_type" });
@@ -227,11 +232,15 @@ sub _create_relationships {
     }
 
     foreach my $values ( @all_values ) {
-        my $stmt = SQL::Composer::Insert->new(
-            into   => $table,
-            values => [ %$values ],
-            driver => 'sqlite',
+        my ($stmt, $return, $msg) = $table_obj->insert_stmt(
+            table  => $table,
+            values => $values,
         );
+
+        if ( $return && $PONAPI_ERROR_RETURN{$return} ) {
+            $doc->raise_error(400, { message => $msg || 'Unknown error' });
+            return $return;
+        }
 
         my ( $sth, $errstr );
         eval  { ($sth, $errstr) = $self->_db_execute( $stmt ); 1 }
@@ -386,8 +395,9 @@ sub _update_relationships {
         my $clear_ret = $self->_clear_relationships(%args);
         return $clear_ret if $doc->has_errors;
         if ( @$data ) {
+            my $table_obj = $self->tables->{$type};
             my ( $column_rel_type, $rel_table ) =
-                    @{ $self->tables->{$type}->RELATIONS->{$rel_type} }{qw< type rel_table >};
+                    @{ $table_obj->RELATIONS->{$rel_type} }{qw< type rel_table >};
 
             foreach my $insert ( @$data ) {
                 my %insert = (%$insert, 'id_' . $type => $id);
@@ -395,11 +405,16 @@ sub _update_relationships {
                 delete $insert{type};
                 $insert{'id_' . $column_rel_type} = delete $insert{id};
 
-                my $stmt = SQL::Composer::Insert->new(
-                    into   => $rel_table,
-                    values => [ %insert ],
-                    driver => 'sqlite',
+                my ($stmt, $return, $msg) = $table_obj->insert_stmt(
+                    table  => $rel_table,
+                    values => \%insert,
                 );
+
+                if ( $return && $PONAPI_ERROR_RETURN{$return} ) {
+                    $msg ||= 'Unknown error';
+                    $doc->raise_error(400, { message => $msg });
+                    return $return;
+                }
 
                 my ( $sth, $errstr ) = $self->_db_execute( $stmt );
                 if ( $errstr ) {
@@ -448,12 +463,12 @@ sub _clear_relationships {
     my ( $self, %args ) = @_;
     my ( $doc, $type, $id, $rel_type ) = @args{qw< document type id rel_type >};
 
-    my $table = $self->tables->{$type}->RELATIONS->{$rel_type}{rel_table};
+    my $table_obj = $self->tables->{$type};
+    my $table     = $table_obj->RELATIONS->{$rel_type}{rel_table};
 
-    my $stmt = SQL::Composer::Delete->new(
-        from => $table,
-        where => [ 'id_' . $type => $id ],
-        driver => 'sqlite',
+    my $stmt = $table_obj->delete_stmt(
+        table => $table,
+        where => { 'id_' . $type => $id },
     );
 
     my ( $sth, $errstr ) = $self->_db_execute( $stmt );
@@ -469,10 +484,10 @@ sub delete : method {
     my ( $self, %args ) = @_;
     my ( $doc, $type, $id ) = @args{qw< document type id >};
 
-    my $stmt = SQL::Composer::Delete->new(
-        from  => $type,
-        where => [ id => $id ],
-        driver => 'sqlite',
+    my $table_obj = $self->tables->{$type};
+    my $stmt      = $table_obj->delete_stmt(
+        table => $type,
+        where => { id => $id },
     );
 
     my ( $sth, $errstr ) = $self->_db_execute( $stmt );
@@ -487,7 +502,8 @@ sub delete_relationships {
     my ( $self, %args ) = @_;
     my ( $doc, $type, $id, $rel_type, $data ) = @args{qw< document type id rel_type data >};
 
-    my $relation_info = $self->tables->{$type}->RELATIONS->{$rel_type};
+    my $table_obj     = $self->tables->{$type};
+    my $relation_info = $table_obj->RELATIONS->{$rel_type};
 
     my $table    = $relation_info->{rel_table};
     my $key_type = $relation_info->{type};
@@ -516,10 +532,9 @@ sub delete_relationships {
     $dbh->begin_work;
     DELETE:
     foreach my $where ( @all_values ) {
-        my $stmt = SQL::Composer::Delete->new(
-            from => $table,
-            where => [ %$where ],
-            driver => 'sqlite',
+        my $stmt = $table_obj->delete_stmt(
+            table => $table,
+            where => $where,
         );
 
         my ( $sth, $errstr ) = $self->_db_execute( $stmt );
@@ -626,7 +641,7 @@ sub _add_included {
 
     $filter->{id} = $ids;
 
-    my $stmt = $self->tables->{$type}->select_stmt($type,
+    my $stmt = $self->tables->{$type}->select_stmt(
         type   => $type,
         filter => $filter,
         fields => $fields,
@@ -665,14 +680,14 @@ sub _fetchall_relationships {
     for my $name ( keys %{ $self->tables->{$type}->RELATIONS } ) {
         next if keys %type_fields > 0 and !exists $type_fields{$name};
 
+        my $table_obj = $self->tables->{$type};
         my ( $rel_type, $rel_table ) =
-            @{ $self->tables->{$type}->RELATIONS->{$name} }{qw< type rel_table >};
+            @{ $table_obj->RELATIONS->{$name} }{qw< type rel_table >};
 
-        my $stmt = SQL::Composer::Select->new(
-            from    => $rel_table,
-            columns => [ 'id_' . $rel_type ],
-            where   => [ 'id_' . $type => $id ],
-            driver => 'sqlite',
+        my $stmt = $table_obj->select_stmt(
+            type   => $rel_table,
+            filter => { 'id_' . $type => $id },
+            fields => [ 'id_' . $rel_type ],
         );
 
         my ( $sth, $errstr ) = $self->_db_execute( $stmt );
