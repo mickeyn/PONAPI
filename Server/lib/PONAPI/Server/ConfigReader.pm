@@ -25,6 +25,8 @@ sub _build_conf {
 sub read_config {
     my $self = shift;
 
+    $self->_set_server_json_api_version;
+
     $self->_set_server_sorting;
     $self->_set_server_send_header;
     $self->_set_server_self_link;
@@ -47,6 +49,15 @@ sub _set_server_sorting {
         ( grep { $sort_allowed eq $_ } qw< yes true 1 > ) ? 1 :
         ( grep { $sort_allowed eq $_ } qw< no false 0 > ) ? 0 :
         die "[PONAPI Server] server sorting is misconfigured";
+}
+
+sub _set_server_json_api_version {
+    my $self = shift;
+
+    my $spec_version = $self->config->{server}{spec_version}
+        // die "[PONAPI Server] server JSON API version configuration is missing";
+
+    $self->{'ponapi.spec_version'} = $spec_version;
 }
 
 sub _set_server_send_header {
