@@ -13,6 +13,8 @@ BEGIN {
     use_ok('PONAPI::Server');
 }
 
+my $BAD_REQUEST_MSG = "{JSON:API} Bad request";
+
 my @TEST_HEADERS = ( 'Content-Type' => 'application/vnd.api+json' );
 
 subtest '... include errors' => sub {
@@ -37,6 +39,15 @@ subtest '... include errors' => sub {
                 jsonapi => {version => "1.0"}
             },
             "false-value relationships are allowed"
+        );
+    }
+    {
+        my $res = $app->request( GET '/articles/1/relationships//', @TEST_HEADERS );
+        is($res->code, 400, "... error empty-string relationship");
+        is(
+            (decode_json($res->content)||{})->{errors}[0]{message},
+            $BAD_REQUEST_MSG,
+            "empty-string relationships are not allowed"
         );
     }
 

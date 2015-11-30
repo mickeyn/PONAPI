@@ -100,9 +100,12 @@ sub _ponapi_route_match {
     my ( $type, $id, $relationships, $rel_type ) = split '/' => substr($req->path_info,1);
 
     $wr->(ERR_BAD_REQ) unless $type;
-    $wr->(ERR_BAD_REQ) if $rel_type and $relationships ne 'relationships';
+    $wr->(ERR_BAD_REQ) if defined($rel_type) and $relationships ne 'relationships';
 
-    if ( !defined($rel_type) and $relationships ) {
+    if ( defined($rel_type) ) {
+        $wr->(ERR_BAD_REQ) if !length($rel_type);
+    }
+    elsif ( $relationships ) {
         $rel_type = $relationships;
         undef $relationships;
     }
