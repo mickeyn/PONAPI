@@ -17,9 +17,8 @@ sub execute {
 
     if ( $self->is_valid ) {
         eval {
-            my ($ret, @extra) = $repo->retrieve_relationships( %{ $self } );
-
-            return unless $self->_verify_repository_response($ret, @extra);
+            my @ret = $repo->retrieve_relationships( %{ $self } );
+            $self->_verify_repository_response(@ret);
 
             1;
         } or do {

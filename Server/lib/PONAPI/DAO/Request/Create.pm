@@ -23,15 +23,15 @@ sub execute {
 
     if ( $self->is_valid ) {
         eval {
-            my ($ret, @extra) = $repo->create( %{ $self } );
-            return unless $self->_verify_repository_response($ret, @extra);
-
-            $doc->add_meta(
-                message => "successfully created the resource: "
-                         . $self->type
-                         . " => "
-                         . $self->json->encode( $self->data )
-            );
+            my @ret = $repo->create( %{ $self } );
+            if ( $self->_verify_repository_response(@ret) ) {
+                $doc->add_meta(
+                    message => "successfully created the resource: "
+                             . $self->type
+                             . " => "
+                            . $self->json->encode( $self->data )
+                );
+            }
             1;
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL

@@ -41,6 +41,19 @@ my $ERR_BODY_NOT_ALLOWED    = "request body is not allowed";
 my $ERR_RELTYPE_MISSING     = "`relationship type` is missing";
 my $ERR_RELTYPE_NOT_ALLOWED = "`relationship type` not allowed";
 
+sub error_test {
+    my ($ret, $expect, $desc) = @_;
+    
+    my ($status, $headers, $doc) = @$ret;
+    
+    my $errors = $doc->{errors};
+    isa_ok( $errors, 'ARRAY' );
+    is_deeply($headers, [], "... no location headers since it was an error");
+
+    my ($err) = grep { $_->{message} eq $expect->{message} } @{ $errors };
+    is( $err->{message}, $expect->{message}, $desc );
+    is( $err->{status},  $expect->{status}, '... and it has the expected error code' );
+}
 
 subtest '... retrieve all' => sub {
     {
@@ -282,12 +295,11 @@ subtest '... create' => sub {
         my ( $args, $expected_message, $desc, $expected_status ) = @$tuple;
         $expected_status ||= 400;
         my @ret = $dao->create(@$args);
-        my $doc = pop @ret;
-        my $errors = $doc->{errors};
-        isa_ok( $errors, 'ARRAY' );
-        my ($err) = grep { $_->{message} eq $expected_message } @{ $errors };
-        is( $err->{message}, $expected_message, $desc );
-        is( $err->{status}, $expected_status, '... and it has the expected error code' );
+        error_test(
+            \@ret,
+            { message => $expected_message, status => $expected_status },
+            $desc,
+        );
     }
 
     my %good_create = (
@@ -308,7 +320,7 @@ subtest '... create' => sub {
     foreach my $tuple (
         [
             { data => { attributes => {} } },
-            400 => qr/\Qarticles.title may not be NULL\E/,
+            400 => qr/\A(?:DBD\b|Unknown error\z)/,
             "... error on bad create values"
         ],
         [
@@ -320,7 +332,7 @@ subtest '... create' => sub {
                     }
                 }
             },
-            400 => 'Unknown columns passed to create',
+            400 => 'Unknown resource in data: extra',
             "... error on unknown attributes"
         ],
         [
@@ -363,7 +375,7 @@ subtest '... create' => sub {
         my ( $w, @ret ) = ('');
         {
             local $SIG{__WARN__} = sub { $w .= shift };
-            @ret = $dao->create(%$copy);
+            @ret = $dao->create(%{ dclone $copy });
         }
         if ( ref($expected) ) {
             like( $ret[2]->{errors}[0]{message}, $expected, $msg );
@@ -591,7 +603,7 @@ subtest '... explodey repo errors' => sub {
             );
             like(
                 $w,
-                qr/\Q->$method returned an unexpected value\E/,
+                qr/\Qoperation returned an unexpected value\E/,
                 "... and gives a normal warning, too"
             );
         }

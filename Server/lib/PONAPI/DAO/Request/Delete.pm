@@ -18,15 +18,15 @@ sub execute {
 
     if ( $self->is_valid ) {
         eval {
-            my ($ret, @extra) = $repo->delete( %{ $self } );
-            return unless $self->_verify_repository_response($ret, @extra);
-
-            $doc->add_meta(
-                message => "successfully deleted the resource /"
-                         . $self->type
-                         . "/"
-                         . $self->id
-            );
+            my @ret = $repo->delete( %{ $self } );
+            if ( $self->_verify_repository_response(@ret) ) {
+                $doc->add_meta(
+                    message => "successfully deleted the resource /"
+                             . $self->type
+                             . "/"
+                            . $self->id
+                );
+            }
             1;
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
