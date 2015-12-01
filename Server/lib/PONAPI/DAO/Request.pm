@@ -107,9 +107,7 @@ sub check_data_type_match {
     my $self = shift;
 
     $self->data and exists $self->data->{'type'} and $self->data->{'type'} eq $self->type
-        or return $self->document->raise_error( 409, {
-            message => "conflict between the request type and the data type"
-        });
+        or return $self->_bad_request( "conflict between the request type and the data type", 409 );
 
     return 1;
 }
