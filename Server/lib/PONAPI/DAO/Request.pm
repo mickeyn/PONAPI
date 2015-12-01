@@ -105,9 +105,7 @@ sub check_has_data     { $_[0]->has_data     or  return $_[0]->_bad_request( "re
 sub check_data_has_type {
     my $self = shift;
 
-    my @elements = ( ref $self->data eq 'ARRAY' ? @{ $self->data } : $self->data );
-
-    for ( @elements ) {
+    for ( $self->_get_data_elements ) {
         return $self->_bad_request( "conflict between the request type and the data type" )
             unless exists $_->{'type'};
     }
@@ -118,9 +116,7 @@ sub check_data_has_type {
 sub check_data_type_match {
     my $self = shift;
 
-    my @elements = ( ref $self->data eq 'ARRAY' ? @{ $self->data } : $self->data );
-
-    for ( @elements ) {
+    for ( $self->_get_data_elements ) {
         return $self->_bad_request( "conflict between the request type and the data type", 409 )
             unless $_->{'type'} eq $self->type;
     }
@@ -147,8 +143,7 @@ sub validate {
 
     # check relationships in `data` (if exist)
     if ( $self->has_data ) {
-        my @elements = ( ref $self->data eq 'ARRAY' ? @{ $self->data } : $self->data );
-        for my $e ( @elements ) {
+        for my $e ( $self->_get_data_elements ) {
             next unless exists $e->{'relationships'};
             for ( keys %{ $e->{'relationships'} } ) {
                 $self->_bad_request( "Types `$type` and `$_` are not related", 404 )
@@ -158,6 +153,11 @@ sub validate {
     }
 
     return $self;
+}
+
+sub _get_data_elements {
+    my $self = shift;
+    return ( ref $self->data eq 'ARRAY' ? @{ $self->data } : $self->data );
 }
 
 sub _validate_rel_type {
