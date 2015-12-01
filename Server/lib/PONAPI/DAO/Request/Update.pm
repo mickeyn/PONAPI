@@ -28,7 +28,7 @@ sub execute {
         eval {
             my ($ret, @extra) = $repo->update( %{ $self } );
 
-            return unless $self->verify_repository_response($ret, @extra);
+            return unless $self->_verify_repository_response($ret, @extra);
 
             my $resource = "/"
                          . $self->type

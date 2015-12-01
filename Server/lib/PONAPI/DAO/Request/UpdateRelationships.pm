@@ -28,7 +28,7 @@ sub execute {
         eval {
             my ($ret, @extra) = $repo->update_relationships( %{ $self } );
 
-            return unless $self->verify_repository_response($ret, @extra);
+            return unless $self->_verify_repository_response($ret, @extra);
 
             $doc->add_meta(
                 message => "successfully updated the relationship /"

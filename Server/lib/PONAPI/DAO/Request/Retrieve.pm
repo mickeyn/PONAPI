@@ -17,7 +17,7 @@ sub execute {
     if ( $self->is_valid ) {
         eval {
             my ($ret, @extra) = $repo->retrieve( %{ $self } );
-            return unless $self->verify_repository_response($ret, @extra);
+            return unless $self->_verify_repository_response($ret, @extra);
             1;
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL

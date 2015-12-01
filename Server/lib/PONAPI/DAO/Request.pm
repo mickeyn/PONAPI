@@ -4,6 +4,7 @@ use Moose;
 use JSON::XS;
 
 use PONAPI::Builder::Document;
+use PONAPI::DAO::Constants;
 
 has req_base => (
     is       => 'ro',
@@ -170,37 +171,33 @@ sub _server_failure {
     return;
 }
 
-use PONAPI::DAO::Constants;
-use Carp 'croak';
-sub verify_repository_response {
-    my ($self, $response, $extra) = @_;
-    
-    if ( !exists $PONAPI_RETURN{$response} ) {
-        croak "operation returned an unexpected value $response";
-    }
+sub _verify_repository_response {
+    my ( $self, $ret, $extra ) = @_;
 
-    if ( $PONAPI_ERROR_RETURN{$response} ) {
-        my $document = $self->document;
-        if ( $response == PONAPI_CONFLICT_ERROR ) {
+    die "operation returned an unexpected value $ret"
+        unless exists $PONAPI_RETURN{$ret};
+
+    if ( $PONAPI_ERROR_RETURN{$ret} ) {
+        my $doc = $self->document;
+        if ( $ret == PONAPI_CONFLICT_ERROR ) {
             my $msg = $extra->{message} || 'Conflict error in the data';
-            $document->raise_error( 409, { message => $msg } );
+            $doc->raise_error( 409, { message => $msg } );
         }
-        elsif ( $response == PONAPI_UNKNOWN_RELATIONSHIP ) {
+        elsif ( $ret == PONAPI_UNKNOWN_RELATIONSHIP ) {
             my $msg = $extra->{message};
             if ( !$msg ) {
-                my @extra_info = @{$extra}{qw/type rel_type/};
-                $msg  = 'Unknown relationship';
-                $msg .= sprintf(" between types %s and %s", @extra_info)
-                            if @extra_info;
+                $msg  = 'Unknown relationship between types';
+                $msg .= ' ' . $extra->{type} . ' and ' . $extra->{rel_type}
+                    if $extra->{type} and $extra->{rel_type};
             }
-            $document->raise_error( 404, { message => $msg } );
+            $doc->raise_error( 404, { message => $msg } );
         }
         else {
-            $document->raise_error( 400, { message => 'Unknown error' } );
+            $doc->raise_error( 400, { message => 'Unknown error' } );
         }
         return;
     }
-    
+
     return 1;
 }
 

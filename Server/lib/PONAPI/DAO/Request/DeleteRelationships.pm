@@ -27,7 +27,7 @@ sub execute {
     if ( $self->is_valid ) {
         eval {
             my ($ret, @extra) = $repo->delete_relationships( %{ $self } );
-            return unless $self->verify_repository_response($ret, @extra);
+            return unless $self->_verify_repository_response($ret, @extra);
 
             my $resource = "/"
                          . $self->type

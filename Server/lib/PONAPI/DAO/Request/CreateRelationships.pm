@@ -27,7 +27,7 @@ sub execute {
     if ( $self->is_valid ) {
         eval {
             my ($ret, @extra) = $repo->create_relationships( %{ $self } );
-            return unless $self->verify_repository_response($ret, @extra);
+            return unless $self->_verify_repository_response($ret, @extra);
 
             # http://jsonapi.org/format/#crud-updating-responses-409
             if ( $PONAPI_ERROR_RETURN{$ret} ) {
