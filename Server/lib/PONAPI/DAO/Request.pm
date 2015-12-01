@@ -2,11 +2,7 @@ package PONAPI::DAO::Request;
 
 use Moose;
 
-has document => (
-    is       => 'ro',
-    isa      => 'PONAPI::Builder::Document',
-    default  => sub { PONAPI::Builder::Document->new() }
-);
+use PONAPI::Builder::Document;
 
 has req_base => (
     is       => 'ro',
@@ -20,16 +16,29 @@ has has_body => (
     required => 1,
 );
 
+has type => (
+    is       => 'ro',
+    isa      => 'Str',
+    required => 1,
+);
+
 has send_doc_self_link => (
     is      => 'ro',
     isa     => 'Bool',
     default => sub { 0 },
 );
 
-has type => (
+has is_valid => (
+    is      => 'ro',
+    isa     => 'Bool',
+    default => sub { 1 },
+    writer  => 'set_is_valid',
+);
+
+has document => (
     is       => 'ro',
-    isa      => 'Str',
-    required => 1,
+    isa      => 'PONAPI::Builder::Document',
+    default  => sub { PONAPI::Builder::Document->new() }
 );
 
 has id => (
@@ -68,6 +77,16 @@ for ( qw< include sort > ) {
     );
 }
 
+sub response {
+    my ( $self, @headers ) = @_;
+    my $doc = $self->document;
+
+    $doc->add_self_link( $self->req_base )
+        if $self->send_doc_self_link;
+
+    return ( $doc->status, \@headers, $doc->build );
+}
+
 sub check_no_id        { $_[0]->has_id       and return $_[0]->_bad_request( "`id` not allowed"                ); 1; }
 sub check_has_id       { $_[0]->has_id       or  return $_[0]->_bad_request( "`id` is missing"                 ); 1; }
 sub check_has_rel_type { $_[0]->has_rel_type or  return $_[0]->_bad_request( "`relationship type` is missing"  ); 1; }
@@ -95,8 +114,54 @@ sub check_data_type_match {
     return 1;
 }
 
+sub validate {
+    my ( $self, $repo ) = @_;
+    my $type = $self->type;
+
+    # `type` exists in repo
+    $repo->has_type( $type )
+        or $self->_bad_request( "Type `$type` doesn't exist.", 404 );
+
+    # `include` relationships exist
+    for ( @{ $self->include } ) {
+        $repo->has_relationship( $type, $_ )
+            or $self->_bad_request( "Types `$type` and `$_` are not related", 404 );
+    }
+
+    # `rel_type` relationship exists
+    $self->_validate_rel_type( $repo );
+
+    return $self;
+}
+
+sub _validate_rel_type {
+    my ( $self, $repo ) = @_;
+    return unless $self->has_rel_type;
+
+    my $type     = $self->type;
+    my $rel_type = $self->rel_type;
+
+    $self->_bad_request( "Types `$type` and `$rel_type` are not related", 404 )
+        unless $repo->has_relationship( $type, $rel_type );
+}
+
+# in delete_relationships, create_relationships :
+    # elsif ( $only_one_to_many{$request_type} and !$repo->has_one_to_many_relationship($type, $rel_type) ) {
+    #     $doc->raise_error(400, {
+    #         message => "Types `$type` and `$rel_type` are one-to-one, invalid $request_type"
+    #     });
+    # }
+
 sub _bad_request {
-    $_[0]->document->raise_error( 400, { message => $_[1] } );
+    $_[0]->document->raise_error( $_[2]||400, { message => $_[1] } );
+    $_[0]->set_is_valid(0);
+    return;
+}
+
+sub _server_failure {
+    $_[0]->document->raise_error( 500, {
+        message => 'A fatal error has occured, please check server logs'
+    });
     return;
 }
 
