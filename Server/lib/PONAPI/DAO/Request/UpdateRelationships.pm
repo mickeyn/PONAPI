@@ -26,12 +26,9 @@ sub execute {
 
     if ( $self->is_valid ) {
         eval {
-            my $ret = $repo->update_relationships( %{ $self } );
+            my ($ret, @extra) = $repo->update_relationships( %{ $self } );
 
-### ???
-            if ( !exists $PONAPI_UPDATE_RETURN_VALUES{$ret} ) {
-                die ref($repo), "->update_relationships returned an unexpected value";
-            }
+            return unless $self->verify_repository_response($ret, @extra);
 
             $doc->add_meta(
                 message => "successfully updated the relationship /"

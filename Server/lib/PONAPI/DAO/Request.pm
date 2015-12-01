@@ -170,6 +170,39 @@ sub _server_failure {
     return;
 }
 
+use PONAPI::DAO::Constants;
+use Carp 'croak';
+sub verify_repository_response {
+    my ($self, $response, $extra) = @_;
+    
+    if ( !exists $PONAPI_RETURN{$response} ) {
+        croak "operation returned an unexpected value $response";
+    }
+
+    if ( $PONAPI_ERROR_RETURN{$response} ) {
+        my $document = $self->document;
+        if ( $response == PONAPI_CONFLICT_ERROR ) {
+            my $msg = $extra->{message} || 'Conflict error in the data';
+            $document->raise_error( 409, { message => $msg } );
+        }
+        elsif ( $response == PONAPI_UNKNOWN_RELATIONSHIP ) {
+            my $msg = $extra->{message};
+            if ( !$msg ) {
+                my @extra_info = @{$extra}{qw/type rel_type/};
+                $msg  = 'Unknown relationship';
+                $msg .= sprintf(" between types %s and %s", @extra_info)
+                            if @extra_info;
+            }
+            $document->raise_error( 404, { message => $msg } );
+        }
+        else {
+            $document->raise_error( 400, { message => 'Unknown error' } );
+        }
+        return;
+    }
+    
+    return 1;
+}
 
 __PACKAGE__->meta->make_immutable;
 no Moose; 1;

@@ -70,7 +70,7 @@ sub retrieve_all {
     my $doc  = $args{document};
 
     my $stmt = $self->tables->{$type}->select_stmt(%args);
-    $self->_add_resources( stmt => $stmt, %args );
+    return $self->_add_resources( stmt => $stmt, %args );
 }
 
 sub retrieve {
@@ -83,22 +83,39 @@ sub retrieve_relationships {
     my ( $self, %args ) = @_;
     my $doc = $args{document};
 
-    my $rels = $self->_find_resource_relationships(%args)
-        or return;
+    my $rels = $self->_find_resource_relationships(%args);
+    
+    if ( !$rels || !ref $rels ) {
+        $rels ||= PONAPI_ERROR;
+        return $rels;
+    }
+    elsif ( !@$rels ) {
+        $doc->add_null_resource;
+    }
+    else {
+        $doc->convert_to_collection
+            if $self->has_one_to_many_relationship(@args{qw/type rel_type/});
 
-    return $doc->add_resource( %{ $rels->[0] } )
-        if @{$rels} == 1;
-
-    $doc->convert_to_collection;
-    $doc->add_resource( %$_ ) for @{$rels};
+        $doc->add_resource( %$_ ) for @{$rels};
+    }
+    
+    return PONAPI_OK;
 }
 
 sub retrieve_by_relationship {
     my ( $self, %args ) = @_;
-    my ( $doc, $fields, $include ) = @args{qw< document fields include >};
+    my ( $doc, $type, $rel_type, $fields, $include ) = @args{qw< document type rel_type fields include >};
 
-    my $rels = $self->_find_resource_relationships(%args)
-        or return;
+    my $rels = $self->_find_resource_relationships(%args);
+
+    if ( !$rels || !ref($rels) ) {
+        $rels ||= PONAPI_ERROR;
+        return $rels;
+    }
+    elsif ( !@$rels ) {
+        $doc->add_null_resource;
+        return PONAPI_OK;
+    }
 
     my $q_type = $rels->[0]{type};
     my $q_ids  = [ map { $_->{id} } @{$rels} ];
@@ -109,13 +126,13 @@ sub retrieve_by_relationship {
         filter => { id => $q_ids },
     );
 
-    $self->_add_resources(
+    return $self->_add_resources(
         document              => $doc,
         stmt                  => $stmt,
         type                  => $q_type,
         fields                => $fields,
         include               => $include,
-        convert_to_collection => 1,
+        convert_to_collection => $self->has_one_to_many_relationship($type, $rel_type),
     );
 }
 
@@ -129,7 +146,6 @@ sub create {
     my $table_obj = $self->tables->{$type};
     my %columns   = map +($_=>1), @{ $table_obj->COLUMNS };
     if ( grep(exists $columns{$_}, keys %$attributes) != keys %$attributes ) {
-        $doc->raise_error(400, { message => 'Unknown columns passed to create' });
         return PONAPI_UNKNOWN_RESOURCE_ERROR;
     }
 
@@ -139,7 +155,6 @@ sub create {
     );
 
     if ( $return && $PONAPI_ERROR_RETURN{$return} ) {
-        $doc->raise_error(400, { message => $msg || 'Unknown error' });
         return $return;
     }
 
@@ -150,7 +165,6 @@ sub create {
     # TODO: 409 Conflict
     if ( $errstr ) {
         $dbh->rollback;
-        $doc->raise_error(400, { message => $errstr });
         return PONAPI_ERROR;
     }
 
@@ -178,7 +192,7 @@ sub create {
     $doc->add_resource( type => $type, id => $new_id );
 
     $doc->set_status(201);
-    return 1;
+    return PONAPI_OK;
 }
 
 sub _create_relationships {
@@ -186,18 +200,14 @@ sub _create_relationships {
     my ( $doc, $type, $id, $rel_type, $data ) = @args{qw< document type id rel_type data >};
 
     if ( ref($data) ne 'ARRAY' || !@$data ) {
-        $doc->raise_error(400, {
-            message => "create_relationships: Invalid data passed in",
-        });
-        return PONAPI_ERROR;
+        return PONAPI_BAD_DATA;
     }
 
     my $table_obj     = $self->tables->{$type};
     my $all_relations = $table_obj->RELATIONS->{$rel_type};
 
     if ( !$all_relations ) {
-        $doc->raise_error(400, { message => "create_relationship: unknown relationship $type -> $rel_type" });
-        return PONAPI_UNKNOWN_RELATIONSHIP;
+        return PONAPI_UNKNOWN_RELATIONSHIP, { type => $type, rel_type => $rel_type };
     }
 
     my @all_values;
@@ -207,10 +217,7 @@ sub _create_relationships {
         my $key_type = $all_relations->{type};
 
         if ( $data_type ne $key_type ) {
-            $doc->raise_error(400, {
-                message => "creating a relationship of type $key_type, but data has type $data_type"
-            });
-            return PONAPI_CONFLICT_ERROR;
+            return PONAPI_BAD_DATA;
         }
 
         $relationship->{'id_' . $type}     = $id;
@@ -225,10 +232,7 @@ sub _create_relationships {
     my $one_to_one = !$self->has_one_to_many_relationship($type, $rel_type);
 
     if ( $one_to_one && @all_values > 1 ) {
-        $doc->raise_error(400, {
-            message => "Trying to update a one-on-one relationship multiple times",
-        });
-        return PONAPI_ERROR;
+        return PONAPI_BAD_DATA, { msg => "..." };
     }
 
     foreach my $values ( @all_values ) {
@@ -238,7 +242,6 @@ sub _create_relationships {
         );
 
         if ( $return && $PONAPI_ERROR_RETURN{$return} ) {
-            $doc->raise_error(400, { message => $msg || 'Unknown error' });
             return $return;
         }
 
@@ -259,7 +262,6 @@ sub _create_relationships {
         }
 
         if ( $errstr ) {
-            $doc->raise_error(400, { message => $errstr });
             if ( $errstr =~ /column \S+ is not unique/ ) {
                 return PONAPI_CONFLICT_ERROR;
             }
@@ -267,7 +269,7 @@ sub _create_relationships {
         }
     }
 
-    return PONAPI_UPDATED_NORMAL;
+    return PONAPI_CREATED_NORMAL;
 }
 
 sub create_relationships {
@@ -282,15 +284,14 @@ sub create_relationships {
     or do {
         my $e = "$@"||'Unknown error';
         $ret = PONAPI_ERROR;
-        $doc->raise_error(400, {message => $e});
     };
 
-    if ( $doc->has_errors ) {
+    if ( $PONAPI_ERROR_RETURN{$ret} ) {
         $dbh->rollback;
+        return $ret;
     }
-    else {
-        $dbh->commit;
-    }
+
+    $dbh->commit;
 
     return $ret;
 
@@ -311,11 +312,11 @@ sub update {
     or do {
         my $e = "$@"||'Unknown error';
         $ret = PONAPI_ERROR;
-        $doc->raise_error(400, {message => $e});
     };
 
-    if ( $doc->has_errors ) {
+    if ( $PONAPI_ERROR_RETURN{$ret} ) {
         $dbh->rollback;
+        return $ret;
     }
     else {
         $dbh->commit;
@@ -333,8 +334,7 @@ sub _update {
 
     foreach my $rel_type ( keys %$relationships ) {
         next if $self->has_relationship($type, $rel_type);
-        $doc->raise_error(400, { message => "update: unknown relationship $type -> $rel_type" });
-        return PONAPI_UNKNOWN_RELATIONSHIP;
+        return PONAPI_UNKNOWN_RELATIONSHIP, { type => $type, rel_type => $rel_type };
     }
     return PONAPI_ERROR if $doc->has_errors;
 
@@ -350,14 +350,12 @@ sub _update {
         );
 
         $return = $extra_return if defined $extra_return;
-        if ( $PONAPI_ERROR_RETURN{$return} || !$stmt ) {
-            $doc->raise_error(400, { message => $msg || 'Unknown error' });
+        if ( $PONAPI_ERROR_RETURN{$return} ) {
             return $return;
         }
 
         my ( $sth, $errstr ) = $self->_db_execute( $stmt );
         if ( $errstr ) {
-            $doc->raise_error(400, { message => $errstr });
             return PONAPI_ERROR;
         }
 
@@ -412,13 +410,11 @@ sub _update_relationships {
 
                 if ( $return && $PONAPI_ERROR_RETURN{$return} ) {
                     $msg ||= 'Unknown error';
-                    $doc->raise_error(400, { message => $msg });
                     return $return;
                 }
 
                 my ( $sth, $errstr ) = $self->_db_execute( $stmt );
                 if ( $errstr ) {
-                    $doc->raise_error(400, { message => $errstr });
                     return PONAPI_ERROR;
                 }
             }
@@ -442,11 +438,11 @@ sub update_relationships {
     or do {
         my $e = "$@"||'Unknown error';
         $ret = PONAPI_ERROR;
-        $doc->raise_error(400, {message => $e});
     };
 
-    if ( $doc->has_errors ) {
+    if ( $PONAPI_ERROR_RETURN{$ret} ) {
         $dbh->rollback;
+        return $ret;
     }
     else {
         $dbh->commit;
@@ -473,7 +469,6 @@ sub _clear_relationships {
 
     my ( $sth, $errstr ) = $self->_db_execute( $stmt );
     if ( $errstr ) {
-        $doc->raise_error(400, { message => $errstr });
         return PONAPI_ERROR;
     }
 
@@ -491,11 +486,11 @@ sub delete : method {
     );
 
     my ( $sth, $errstr ) = $self->_db_execute( $stmt );
-    $errstr and return $doc->raise_error(400, { message => $errstr });
+    $errstr and return PONAPI_ERROR;
 
     # TODO: Should this also clear relationships?
 
-    return 1;
+    return PONAPI_OK;
 }
 
 sub delete_relationships {
@@ -513,10 +508,7 @@ sub delete_relationships {
         my $data_type = delete $resource->{type};
 
         if ( $data_type ne $key_type ) {
-            $doc->raise_error(400, {
-                message => "deleting a relationship of type $key_type, but data has type $data_type"
-            });
-            return PONAPI_CONFLICT_ERROR;
+            return PONAPI_CONFLICT_ERROR, { type => $key_type, rel_type => $data_type };
         }
 
         my $delete_where = {
@@ -526,6 +518,8 @@ sub delete_relationships {
 
         push @all_values, $delete_where;
     }
+
+    my $ret = PONAPI_UPDATED_NORMAL;
 
     my $rows_modified = 0;
     my $dbh = $self->dbh;
@@ -540,7 +534,7 @@ sub delete_relationships {
         my ( $sth, $errstr ) = $self->_db_execute( $stmt );
 
         if ( $errstr ) {
-            $doc->raise_error(400, { message => $errstr });
+            $ret = PONAPI_ERROR;
             last DELETE;
         }
         else {
@@ -548,7 +542,7 @@ sub delete_relationships {
         }
     }
 
-    if ( $doc->has_errors ) {
+    if ( $PONAPI_ERROR_RETURN{$ret} ) {
         $dbh->rollback;
     }
     else {
@@ -556,11 +550,11 @@ sub delete_relationships {
     }
 
     if ( !$rows_modified ) {
-        return PONAPI_UPDATED_NOTHING;
+        $ret = PONAPI_UPDATED_NOTHING;
     }
 
     # TODO: add missing login
-    return PONAPI_UPDATED_NORMAL;
+    return $ret;
 }
 
 
@@ -572,26 +566,25 @@ sub _add_resources {
         @args{qw< document stmt type convert_to_collection req_base >};
 
     my ( $sth, $errstr ) = $self->_db_execute( $stmt );
-    $errstr and return $doc->raise_error(400, { message => $errstr });
+    $errstr and return PONAPI_ERROR;
 
-    my $counter = 0;
+    if ( $convert_to_collection ) {
+        $doc->convert_to_collection;
+    }
 
     while ( my $row = $sth->fetchrow_hashref() ) {
-        if ( $counter == 1 && $convert_to_collection ) {
-            $doc->convert_to_collection;
-        }
         my $id = delete $row->{id};
         my $rec = $doc->add_resource( type => $type, id => $id );
         $rec->add_attribute( $_ => $row->{$_} ) for keys %{$row};
         $rec->add_self_link( $req_base );
 
-        $self->_add_resource_relationships($rec, %args);
-        $doc->has_errors and return;
-
-        $counter++;
+        my $ret = $self->_add_resource_relationships($rec, %args);
+        return $ret if $PONAPI_ERROR_RETURN{$ret};
     }
-
+    
     $doc->has_resources or $doc->add_null_resource;
+    
+    return PONAPI_OK;
 }
 
 sub _add_resource_relationships {
@@ -601,11 +594,9 @@ sub _add_resource_relationships {
     my %include = map { $_ => 1 } @{ $args{include} };
 
     # check for invalid 'include' params
-    my @invalid_includes = grep { !$self->has_relationship($type, $_) } keys %include;
-    if ( @invalid_includes ) {
-        $doc->raise_error(400, { message => "can't include type $_ (no relationship with $type)" })
-            for @invalid_includes;
-        return;
+    foreach my $rel_type ( keys %include ) {
+        next if $self->has_relationship($type, $rel_type);
+        return PONAPI_UNKNOWN_RELATIONSHIP, { type => $type, rel_type => $rel_type };
     }
 
     my $rels = $self->_fetchall_relationships(
@@ -614,7 +605,8 @@ sub _add_resource_relationships {
         document => $doc,
         fields   => $args{fields},
     );
-    $rels or return;
+    $rels or return PONAPI_OK;
+    return $rels if $PONAPI_ERROR_RETURN{$rels};
 
     for my $r ( keys %$rels ) {
         my $relationship = $rels->{$r};
@@ -633,6 +625,8 @@ sub _add_resource_relationships {
             %args                                 # filters / fields / etc.
         ) if exists $include{$r};
     }
+
+    return PONAPI_OK;
 }
 
 sub _add_included {
@@ -648,7 +642,7 @@ sub _add_included {
     );
 
     my ( $sth, $errstr ) = $self->_db_execute( $stmt );
-    $errstr and return $doc->raise_error(400, { message => $errstr });
+    $errstr and return PONAPI_ERROR;
 
     while ( my $inc = $sth->fetchrow_hashref() ) {
         my $id = delete $inc->{id};
@@ -661,13 +655,13 @@ sub _find_resource_relationships {
     my ( $self, %args ) = @_;
     my ( $doc, $rel_type ) = @args{qw< document rel_type >};
 
-    my $rels = $self->_fetchall_relationships(%args)
-        or return;
+    my $rels = $self->_fetchall_relationships(%args) || PONAPI_ERROR;
+
+    return $rels if $PONAPI_ERROR_RETURN{$rels};
 
     return $rels->{$rel_type} if exists $rels->{$rel_type};
 
-    $doc->add_null_resource();
-    return;
+    return [];
 }
 
 sub _fetchall_relationships {
@@ -692,19 +686,13 @@ sub _fetchall_relationships {
 
         my ( $sth, $errstr ) = $self->_db_execute( $stmt );
         if ( $errstr ) {
-            push @errors => $errstr;
-            next;
+            return PONAPI_ERROR;
         }
 
         $ret{$name} = +[
             map +{ type => $rel_type, id => @$_ },
             @{ $sth->fetchall_arrayref() }
         ];
-    }
-
-    if ( @errors ) {
-        $doc->raise_error(400, { message => $_ }) for @errors;
-        return;
     }
 
     return \%ret;

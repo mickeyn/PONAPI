@@ -23,20 +23,15 @@ sub execute {
 
     if ( $self->is_valid ) {
         eval {
-            my $ret = $repo->create( %{ $self } );
+            my ($ret, @extra) = $repo->create( %{ $self } );
+            return unless $self->verify_repository_response($ret, @extra);
 
-            if ( $doc->has_errors || $PONAPI_ERROR_RETURN{$ret} ) {
-                $doc->set_status(409) if $ret == PONAPI_CONFLICT_ERROR;
-                $doc->set_status(404) if $ret == PONAPI_UNKNOWN_RELATIONSHIP;
-            }
-            else {
-                $doc->add_meta(
-                    message => "successfully created the resource: "
-                             . $self->type
-                             . " => "
-                             . $self->json->encode( $self->data )
-                );
-            }
+            $doc->add_meta(
+                message => "successfully created the resource: "
+                         . $self->type
+                         . " => "
+                         . $self->json->encode( $self->data )
+            );
             1;
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL

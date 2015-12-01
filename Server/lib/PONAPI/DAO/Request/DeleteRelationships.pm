@@ -26,12 +26,8 @@ sub execute {
 
     if ( $self->is_valid ) {
         eval {
-            my $ret = $repo->delete_relationships( %{ $self } );
-
-### ???
-            if ( !exists $PONAPI_UPDATE_RETURN_VALUES{$ret} ) {
-                die ref($repo), "->delete_relationships returned an unexpected value";
-            }
+            my ($ret, @extra) = $repo->delete_relationships( %{ $self } );
+            return unless $self->verify_repository_response($ret, @extra);
 
             my $resource = "/"
                          . $self->type

@@ -19,7 +19,8 @@ sub execute {
         $doc->convert_to_collection;
 
         eval {
-            $repo->retrieve_all( %{ $self } );
+            my ($ret, @extra) = $repo->retrieve_all( %{ $self } );
+            return unless $self->verify_repository_response($ret, @extra);
             1;
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL

@@ -26,18 +26,9 @@ sub execute {
 
     if ( $self->is_valid ) {
         eval {
-            my $ret = $repo->update( %{ $self } );
+            my ($ret, @extra) = $repo->update( %{ $self } );
 
-### ???
-            if ( !exists $PONAPI_UPDATE_RETURN_VALUES{$ret} ) {
-                die ref($repo), "->update returned an unexpected value";
-            }
-
-            if ( $PONAPI_ERROR_RETURN{$ret} ) {
-                $doc->set_status(409) if $ret == PONAPI_CONFLICT_ERROR;
-                $doc->set_status(404) if $ret == PONAPI_UNKNOWN_RELATIONSHIP;
-                return 1; # return from eval
-            }
+            return unless $self->verify_repository_response($ret, @extra);
 
             my $resource = "/"
                          . $self->type

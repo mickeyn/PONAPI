@@ -18,7 +18,9 @@ sub execute {
 
     if ( $self->is_valid ) {
         eval {
-            $repo->delete( %{ $self } );
+            my ($ret, @extra) = $repo->delete( %{ $self } );
+            return unless $self->verify_repository_response($ret, @extra);
+
             $doc->add_meta(
                 message => "successfully deleted the resource /"
                          . $self->type

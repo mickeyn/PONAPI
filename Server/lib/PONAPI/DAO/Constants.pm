@@ -1,7 +1,10 @@
 package PONAPI::DAO::Constants;
 
+my $constants;
 BEGIN {
-    my $constants = {
+    $constants = {
+        PONAPI_OK               => 200,
+    
         PONAPI_CREATED_EXTENDED => 500,
         PONAPI_CREATED_NORMAL   => 501,
 
@@ -13,23 +16,27 @@ BEGIN {
         PONAPI_CONFLICT_ERROR   => 901,
         PONAPI_UNKNOWN_RESOURCE_ERROR => 902,
         PONAPI_UNKNOWN_RELATIONSHIP => 903,
+        PONAPI_BAD_DATA             => 904,
     };
 
     require constant; constant->import($constants);
     require Exporter; our @ISA = qw(Exporter);
     our @EXPORT = ( keys %$constants,
         qw/
+            %PONAPI_RETURN
             %PONAPI_ERROR_RETURN
             %PONAPI_UPDATE_RETURN_VALUES
         /,
     );
 }
 
-our (%PONAPI_UPDATE_RETURN_VALUES, %PONAPI_ERROR_RETURN);
+our (%PONAPI_UPDATE_RETURN_VALUES, %PONAPI_ERROR_RETURN, %PONAPI_RETURN);
+%PONAPI_RETURN = map +($_=>1), values %$constants;
 $PONAPI_ERROR_RETURN{+PONAPI_CONFLICT_ERROR}            = 1;
 $PONAPI_ERROR_RETURN{+PONAPI_ERROR}                     = 1;
 $PONAPI_ERROR_RETURN{+PONAPI_UNKNOWN_RESOURCE_ERROR}    = 1;
 $PONAPI_ERROR_RETURN{+PONAPI_UNKNOWN_RELATIONSHIP}      = 1;
+$PONAPI_ERROR_RETURN{+PONAPI_BAD_DATA}                  = 1;
 
 $PONAPI_UPDATE_RETURN_VALUES{+PONAPI_UPDATED_EXTENDED}  = 1;
 $PONAPI_UPDATE_RETURN_VALUES{+PONAPI_UPDATED_NORMAL}    = 1;
