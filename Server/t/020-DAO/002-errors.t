@@ -343,7 +343,7 @@ subtest '... create' => sub {
                     }
                 }
             },
-            404 => 'create_relationship: unknown relationship articles -> nope',
+            404 => 'Types `articles` and `nope` are not related',
             "... error on unknown relationships"
         ],
         [
@@ -353,7 +353,7 @@ subtest '... create' => sub {
                       { authors => { type => comments => id => 5 } }
                 }
             },
-            409 => 'creating a relationship of type people, but data has type comments',
+            409 => 'Bad data in request',
             "... error on relationship conflicts"
         ],
       )
@@ -464,7 +464,7 @@ subtest '... update' => sub {
                 {
                     errors => [
                         {
-                            message => 'update: unknown relationship articles -> not_real_rel',
+                            message => 'Types `articles` and `not_real_rel` are not related',
                             status => 404
                         }
                     ],
@@ -621,20 +621,20 @@ subtest '... delete' => sub {
         ],
         [
             [ @TEST_ARGS_BASE_TYPE_ID_NO_BODY, rel_type => 1 ],
-            "Types `articles` and `1` are not related",
+            "`relationship type` not allowed",
             "rel_type is not allowed",
             404
         ],
         [
             [ @TEST_ARGS_BASE_TYPE_ID_NO_BODY, rel_type => 0 ],
-            "Types `articles` and `0` are not related",
-            "rel_type is not allowed",
+            "`relationship type` not allowed",
+            "rel_type is not allowed (false rel_type value)",
             404
         ],
         [
             [ @TEST_ARGS_BASE_TYPE_ID_NO_BODY, rel_type => "" ],
-            "Types `articles` and `` are not related",
-            "rel_type is not allowed",
+            "`relationship type` not allowed",
+            'rel_type is not allowed (not allowed rel_type "")',
             404
         ],
         [
