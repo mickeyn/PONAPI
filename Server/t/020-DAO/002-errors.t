@@ -279,16 +279,15 @@ subtest '... create' => sub {
         ],
       )
     {
-        my ( $args, $expected, $desc, $status ) = @$tuple;
+        my ( $args, $expected_message, $desc, $expected_status ) = @$tuple;
+        $expected_status ||= 400;
         my @ret = $dao->create(@$args);
         my $doc = pop @ret;
-        $status ||= 400;
-        is_deeply(
-            \@ret,
-            [ $status || 400, [] ],
-            "errors come back as $status + empty extra headers"
-        );
-        is( $doc->{errors}[0]{message}, $expected, $desc );
+        my $errors = $doc->{errors};
+        isa_ok( $errors, 'ARRAY' );
+        my ($err) = grep { $_->{message} eq $expected_message } @{ $errors };
+        is( $err->{message}, $expected_message, $desc );
+        is( $err->{status}, $expected_status, '... and it has the expected error code' );
     }
 
     my %good_create = (

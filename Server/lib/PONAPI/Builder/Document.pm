@@ -163,8 +163,7 @@ sub build {
     if ( $self->has_errors_builder ) {
         my $errors = $self->errors_builder->build;
         if ( $errors ) {
-            my $status = $self->status;
-            $_->{status} //= $status for @$errors;
+            $_->{status} //= $self->status for @$errors;
         }
         return +{
             jsonapi => +{ version => "1.0" },

@@ -23,9 +23,6 @@ sub raise_error {
     my $self   = shift;
     my $status = shift;
 
-    # sets status only if not already set to error code
-    $self->set_status($status) if $self->status < 400;
-
     # XXX:
     # we could check the args here and look for
     # a `level` key which would tell us if we
@@ -36,7 +33,15 @@ sub raise_error {
     # I am not sure.
     # - SL
 
-    $self->find_root->errors_builder->add_error( @_ );
+    $self->find_root->errors_builder->add_error( @_, status => $status );
+
+    # set given status, on multiple errors use 500/400
+    if ( $self->has_errors > 1 and $self->status < 500 ) {
+        $self->set_status( ($status >= 500 ? 500 : 400) );
+    }
+    else {
+        $self->set_status($status);
+    }
 
     # we don't return value to allow condition
     # check when returned from validation methods
