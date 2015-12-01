@@ -93,7 +93,11 @@ subtest '... basic server test' => sub {
         ok( $res->is_success, 'Successful request' );
         test_response_headers($res);
         my $expect = '{"data":[{"relationships":{"authors":{"data":{"type":"people","id":42},"links":{"related":"/articles/1/authors","self":"/articles/1/relationships/authors"}}},"type":"articles","id":"1","attributes":{"created":"2015-05-22 14:56:29","body":"The shortest article. Ever.","status":"ok","updated":"2015-05-22 14:56:29","title":"JSON API paints my bikeshed!"},"links":{"self":"/articles/1"}},{"relationships":{"authors":{"data":{"type":"people","id":88},"links":{"related":"/articles/2/authors","self":"/articles/2/relationships/authors"}},"comments":{"data":[{"type":"comments","id":5},{"type":"comments","id":12}],"links":{"related":"/articles/2/comments","self":"/articles/2/relationships/comments"}}},"type":"articles","id":"2","attributes":{"created":"2015-06-22 14:56:29","body":"The 2nd shortest article. Ever.","status":"ok","updated":"2015-06-22 14:56:29","title":"A second title"},"links":{"self":"/articles/2"}},{"relationships":{"authors":{"data":{"type":"people","id":91},"links":{"related":"/articles/3/authors","self":"/articles/3/relationships/authors"}}},"type":"articles","id":"3","attributes":{"created":"2015-07-22 14:56:29","body":"The 3rd shortest article. Ever.","status":"pending approval","updated":"2015-07-22 14:56:29","title":"a third one"},"links":{"self":"/articles/3"}}],"jsonapi":{"version":"1.0"},"links":{"self":"/articles"}}';
-        is($res->content, $expect, "...content is as expected");
+        is_deeply(
+            decode_json $res->content,
+            decode_json $expect,
+            "...content is as expected"
+        );
     }
 
     {
