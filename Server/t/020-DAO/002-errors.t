@@ -353,7 +353,7 @@ subtest '... create' => sub {
                       { authors => { type => comments => id => 5 } }
                 }
             },
-            409 => 'Bad data in request',
+            400 => 'Bad data in request',
             "... error on relationship conflicts"
         ],
       )
@@ -749,13 +749,13 @@ subtest '... create_relationships' => sub {
     is_deeply(
         \@ret,
         [
-            409,
+            400,
             [],
             {
                 errors => [
                     {
-                        message => 'creating a relationship of type comments, but data has type fake',
-                        status => 409
+                        message => 'Bad data in request',
+                        status => 400
                     }
                 ],
                 jsonapi => { version => '1.0' }
