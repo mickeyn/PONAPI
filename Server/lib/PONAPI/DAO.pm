@@ -3,8 +3,6 @@ package PONAPI::DAO;
 
 use Moose;
 
-use PONAPI::DAO::Repository;
-
 use PONAPI::DAO::Request::Retrieve;
 use PONAPI::DAO::Request::RetrieveAll;
 use PONAPI::DAO::Request::RetrieveRelationships;
