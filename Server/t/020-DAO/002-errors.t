@@ -549,7 +549,12 @@ subtest '... explodey repo errors' => sub {
 
             # Let's also test that all the methods detect unknown types
             $w = '';
-            @ret = $dao->$method( @$arguments, type => 'fake' );
+            my %modified_arguments = @{ dclone $arguments };
+            $modified_arguments{type} = 'fake';
+            my $data = $modified_arguments{data} || [];
+            $data = [ $data ] if ref($data) ne 'ARRAY';
+            $_->{type} = 'fake' for @$data;
+            @ret = $dao->$method( %modified_arguments );
             is( $ret[0], 404, "... bad types in $method lead to a 404" );
             ok(
                 scalar(
@@ -666,7 +671,7 @@ subtest '... create_relationships' => sub {
         ],
         [
             [ @TEST_ARGS_BASE_TYPE_ID_HAS_BODY, rel_type => 'authors', data => [{}] ],
-            "Types `articles` and `authors` are one-to-one, invalid create_relationships",
+            "Types `articles` and `authors` are one-to-one",
             "... bad relationship",
         ],
       )
@@ -796,7 +801,7 @@ subtest '... delete_relationships' => sub {
                 {
                     'errors' => [
                         {
-                            'message' => 'Types `articles` and `authors` are one-to-one, invalid delete_relationships',
+                            'message' => 'Types `articles` and `authors` are one-to-one',
                             'status'  => 400,
                         }
                     ],
