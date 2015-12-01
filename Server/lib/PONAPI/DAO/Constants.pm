@@ -5,9 +5,6 @@ BEGIN {
     $constants = {
         PONAPI_OK               => 200,
 
-        PONAPI_CREATED_EXTENDED => 500,
-        PONAPI_CREATED_NORMAL   => 501,
-
         PONAPI_UPDATED_EXTENDED => 100,
         PONAPI_UPDATED_NORMAL   => 101,
         PONAPI_UPDATED_NOTHING  => 102,
