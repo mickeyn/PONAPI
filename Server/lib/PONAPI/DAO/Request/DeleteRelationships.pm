@@ -5,6 +5,7 @@ use Moose;
 use PONAPI::DAO::Constants;
 
 extends 'PONAPI::DAO::Request';
+with 'PONAPI::DAO::Request::Role::UpdateLike';
 
 has data => (
     is        => 'ro',
@@ -26,27 +27,12 @@ sub execute {
 
     if ( $self->is_valid ) {
         eval {
-            my ($ret, @extra) = $repo->delete_relationships( %{ $self } );
-            return unless $self->_verify_repository_response($ret, @extra);
+            my @ret = $repo->delete_relationships( %{ $self } );
 
-            my $resource = "/"
-                         . $self->type
-                         . "/"
-                         . $self->id
-                         . "/"
-                         . $self->rel_type
-                         . " => "
-                         . $self->json->encode( $self->data );
-            my $message  = "successfully deleted the relationship $resource";
-
-            # http://jsonapi.org/format/#crud-updating-relationship-responses-204
-            if ( $ret == PONAPI_UPDATED_NOTHING ) {
-                $doc->set_status(204);
-                $message = "deleted nothing for the resource $resource"
+            if ( $self->_verify_repository_response(@ret) ) {
+                $self->_add_success_meta(@ret)
+                    if $self->_verify_update_response($repo, @ret);
             }
-
-            $doc->add_meta( message => $message );
-
             1;
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL

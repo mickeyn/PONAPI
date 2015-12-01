@@ -296,7 +296,7 @@ subtest '... update' => sub {
                 },
                 jsonapi => { 'version' => '1.0' },
                 meta    => {
-                    message => 'successfully updated the resource /articles/2 => {"attributes":{"title":"This changes updated"},"id":2,"relationships":null,"type":"articles"}'
+                    message => 'successfully modified /articles/2 => {"attributes":{"title":"This changes updated"},"id":2,"relationships":null,"type":"articles"}'
                 }
             }],
         "...so now it returns a full resource object + meta"
@@ -314,11 +314,11 @@ subtest '... delete_relationships' => sub {
     is_deeply(
         \@res,
          [
-            200,
+            202,
             [],
             {
               jsonapi => { version => '1.0' },
-              meta    => { message => 'successfully deleted the relationship /articles/2/comments => [{"id":5}]' }
+              meta    => { message => 'successfully modified /articles/2/comments => [{"id":5}]' }
             }
          ],
          "... can delete as expected",
@@ -515,11 +515,11 @@ subtest '... create + create_relationship' => sub {
         data => [],
     );
     is_deeply( \@update_rel, [
-            200,
+            202,
             [],
             {
               jsonapi => { version => '1.0' },
-              meta    => { message => "successfully updated the relationship /articles/$article_id/comments => []" }
+              meta    => { message => "successfully modified /articles/$article_id/comments => []" }
             }
           ], "... update_relationships cleared comments" );
 
@@ -577,8 +577,8 @@ subtest '... create + create_relationship' => sub {
             rel_type => "authors",
             data     => undef,
         );
-        is_deeply(\@author_update_rel, [200, [], {
-            meta => { message => 'successfully updated the relationship /articles/4/authors => null' },
+        is_deeply(\@author_update_rel, [202, [], {
+            meta => { message => 'successfully modified /articles/4/authors => null' },
             jsonapi => { 'version' => '1.0' },
         }], "... clearing out a one-to-one works (using update_relationships)");
 
@@ -596,7 +596,7 @@ subtest '... create + create_relationship' => sub {
         );
         is_deeply(\@author_update, [202, [], {
             meta => {
-                message => 'successfully updated the resource /articles/4 => {"attributes":null,"id":"4","relationships":{"authors":null,"comments":[]},"type":"articles"}'
+                message => 'successfully modified /articles/4 => {"attributes":null,"id":"4","relationships":{"authors":null,"comments":[]},"type":"articles"}'
             },
             jsonapi => { 'version' => '1.0' },
         }], "... clearing out a one-to-one works (using update)");

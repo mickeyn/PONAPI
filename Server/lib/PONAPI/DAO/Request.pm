@@ -169,7 +169,7 @@ sub _server_failure {
 sub _verify_repository_response {
     my ( $self, $ret, $extra ) = @_;
 
-    die "operation returned an unexpected value $ret"
+    die "operation returned an unexpected value"
         unless exists $PONAPI_RETURN{$ret};
 
     if ( $PONAPI_ERROR_RETURN{$ret} ) {
@@ -187,6 +187,20 @@ sub _verify_repository_response {
             }
             $doc->raise_error( 404, { message => $msg } );
         }
+        elsif ( $ret == PONAPI_UNKNOWN_RESOURCE_IN_DATA ) {
+            my $msg = $extra->{message};
+            if ( !$msg ) {
+                $msg  = "Unknown resource in data";
+                $msg .= ': ' . join ", ", @{ $extra->{resources} }
+                    if @{ $extra->{resources} || [] };
+            }
+            $doc->raise_error( 400, { message => $msg } );
+        }
+        elsif ( $ret == PONAPI_BAD_DATA ) {
+            my $msg = $extra->{message} || 'Bad data in request';
+            $doc->raise_error( 400, { message => $msg } );
+        }
+        # TODO other error codes!
         else {
             $doc->raise_error( 400, { message => 'Unknown error' } );
         }
@@ -194,6 +208,30 @@ sub _verify_repository_response {
     }
 
     return 1;
+}
+
+sub _get_resource_for_meta {
+    my ($self) = @_;
+    my $doc = $self->document;
+
+    my $self_link = $doc->get_self_link;
+
+    if ( !$self_link ) {
+        $self_link = join "/", grep defined, '', @{$self}{qw/type id rel_type/};
+    }
+
+    my $resource = $self_link
+                 . " => "
+                 . $self->json->encode( $self->data );
+
+    return $resource;
+}
+sub _add_success_meta {
+    my ($self) = @_;
+    
+    $self->document->add_meta(
+        message => 'successful operation on ' . $self->_get_resource_for_meta,
+    );
 }
 
 __PACKAGE__->meta->make_immutable;

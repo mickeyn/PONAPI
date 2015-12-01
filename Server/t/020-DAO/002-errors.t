@@ -717,8 +717,8 @@ subtest '... create_relationships' => sub {
     );
     like(
         $msg,
-        qr/DBD::SQLite::st execute failed: column id_comments is not unique/,
-        "... (DBD error in message as expected)"
+        qr/Conflict error in the data/,
+        "... no DBD error in message as expected"
     );
 
     my @second_retrieve = $dao->retrieve( @TEST_ARGS_BASE_TYPE_ID_NO_BODY );
@@ -776,7 +776,7 @@ subtest '... delete_relationships' => sub {
                         'version' => '1.0'
                     },
                     'meta' => {
-                        'message' => 'deleted nothing for the resource /articles/1/comments => [{"id":99}]'
+                        'message' => 'modified nothing for /articles/1/comments => [{"id":99}]'
                     }
                 }
             ],

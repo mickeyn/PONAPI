@@ -9,7 +9,7 @@ sub _invalid_attributes {
 
     return if $table ne $self->TABLE; # Someone is doing something nasty
     my %columns   = map +($_=>1), @{ $self->COLUMNS };
-    return 1 if grep(exists $columns{$_}, keys %$attributes) != keys %$attributes;
+    return 1 if grep !exists $columns{$_}, keys %$attributes;
     return;
 }
 
@@ -21,7 +21,7 @@ sub insert_stmt {
 
     if ( $self->_invalid_attributes($table => $values) ) {
         my $msg = 'Unknown columns passed to create';
-        return undef, PONAPI_UNKNOWN_RESOURCE_ERROR, $msg;
+        return undef, PONAPI_UNKNOWN_RESOURCE_IN_DATA, {message=>$msg};
     }
 
     my $stmt = SQL::Composer::Insert->new(
@@ -72,7 +72,7 @@ sub update_stmt {
 
     if ( $self->_invalid_attributes($table => $values) ) {
         my $msg = 'Unknown columns passed to update';
-        return undef, PONAPI_UNKNOWN_RESOURCE_ERROR, $msg;
+        return undef, PONAPI_UNKNOWN_RESOURCE_IN_DATA, {message => $msg};
     }
 
     local $@;
@@ -85,7 +85,7 @@ sub update_stmt {
         )
     } or do {
         my $msg = "$@"||'Unknown error';
-        return undef, PONAPI_ERROR, $msg;
+        return undef, PONAPI_ERROR, {message => $msg};
     };
 
     return $stmt;

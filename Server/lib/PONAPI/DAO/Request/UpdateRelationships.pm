@@ -5,6 +5,7 @@ use Moose;
 use PONAPI::DAO::Constants;
 
 extends 'PONAPI::DAO::Request';
+with 'PONAPI::DAO::Request::Role::UpdateLike';
 
 has data => (
     is        => 'ro',
@@ -26,20 +27,12 @@ sub execute {
 
     if ( $self->is_valid ) {
         eval {
-            my ($ret, @extra) = $repo->update_relationships( %{ $self } );
+            my @ret = $repo->update_relationships( %{ $self } );
 
-            return unless $self->_verify_repository_response($ret, @extra);
-
-            $doc->add_meta(
-                message => "successfully updated the relationship /"
-                         . $self->type
-                         . "/"
-                         . $self->id
-                         . "/"
-                         . $self->rel_type
-                         . " => "
-                         . $self->json->encode( $self->data )
-            );
+            if ( $self->_verify_repository_response(@ret) ) {
+                $self->_add_success_meta(@ret)
+                    if $self->_verify_update_response($repo, @ret);
+            }
             1;
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL

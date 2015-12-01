@@ -2,11 +2,9 @@ package PONAPI::DAO::Request::Update;
 
 use Moose;
 
-use PONAPI::DAO::Constants;
-
 extends 'PONAPI::DAO::Request';
 
-with 'PONAPI::DAO::Request::Role::HasUpdates200';
+with 'PONAPI::DAO::Request::Role::UpdateLike';
 
 sub BUILD {
     my $self = shift;
@@ -26,39 +24,12 @@ sub execute {
 
     if ( $self->is_valid ) {
         eval {
-            my ($ret, @extra) = $repo->update( %{ $self } );
+            my @ret = $repo->update( %{ $self } );
 
-            return unless $self->_verify_repository_response($ret, @extra);
-
-            my $resource = "/"
-                         . $self->type
-                         . "/"
-                         . $self->id
-                         . " => "
-                         .$self->json->encode( $self->data );
-
-            my $message = "successfully updated the resource $resource";
-            if ( $ret == PONAPI_UPDATED_NOTHING ) {
-                $doc->set_status(404);
-                $message = "updated nothing for the resource $resource"
+            if ( $self->_verify_repository_response(@ret) ) {
+                $self->_add_success_meta(@ret)
+                    if $self->_verify_update_response($repo, @ret);
             }
-
-            $doc->add_meta( message => $message );
-
-            unless ( $doc->has_errors or $doc->has_status ) {
-                if ( $self->respond_to_updates_with_200 ) {
-                    $doc->set_status(200);
-                    return $repo->retrieve(
-                        type     => $self->type,
-                        id       => $self->id,
-                        document => $doc,
-                    ) if $ret == PONAPI_UPDATED_EXTENDED;
-                }
-                else {
-                    $doc->set_status(202);
-                }
-            }
-
             1;
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL

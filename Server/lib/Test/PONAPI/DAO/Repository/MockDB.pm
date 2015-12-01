@@ -145,17 +145,20 @@ sub create {
 
     my $table_obj = $self->tables->{$type};
     my %columns   = map +($_=>1), @{ $table_obj->COLUMNS };
-    if ( grep(exists $columns{$_}, keys %$attributes) != keys %$attributes ) {
-        return PONAPI_UNKNOWN_RESOURCE_ERROR;
+    my @unknown   = grep !exists $columns{$_}, keys %$attributes;
+    if ( @unknown ) {
+        return PONAPI_UNKNOWN_RESOURCE_IN_DATA, {
+            resources => \@unknown,
+        };
     }
 
-    my ($stmt, $return, $msg) = $table_obj->insert_stmt(
+    my ($stmt, $return, $extra) = $table_obj->insert_stmt(
         table  => $type,
         values => $attributes,
     );
 
     if ( $return && $PONAPI_ERROR_RETURN{$return} ) {
-        return $return;
+        return $return, $extra;
     }
 
     my $dbh = $self->dbh;
@@ -236,13 +239,13 @@ sub _create_relationships {
     }
 
     foreach my $values ( @all_values ) {
-        my ($stmt, $return, $msg) = $table_obj->insert_stmt(
+        my ($stmt, $return, $extra) = $table_obj->insert_stmt(
             table  => $table,
             values => $values,
         );
 
         if ( $return && $PONAPI_ERROR_RETURN{$return} ) {
-            return $return;
+            return $return, $extra;
         }
 
         my ( $sth, $errstr );
@@ -269,7 +272,7 @@ sub _create_relationships {
         }
     }
 
-    return PONAPI_CREATED_NORMAL;
+    return PONAPI_UPDATED_NORMAL;
 }
 
 sub create_relationships {
@@ -403,14 +406,14 @@ sub _update_relationships {
                 delete $insert{type};
                 $insert{'id_' . $column_rel_type} = delete $insert{id};
 
-                my ($stmt, $return, $msg) = $table_obj->insert_stmt(
+                my ($stmt, $return, $extra) = $table_obj->insert_stmt(
                     table  => $rel_table,
                     values => \%insert,
                 );
 
                 if ( $return && $PONAPI_ERROR_RETURN{$return} ) {
-                    $msg ||= 'Unknown error';
-                    return $return;
+                    $extra->{message} ||= 'Unknown error';
+                    return $return, $extra;
                 }
 
                 my ( $sth, $errstr ) = $self->_db_execute( $stmt );

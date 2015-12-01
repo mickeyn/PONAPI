@@ -5,6 +5,7 @@ use Moose;
 use PONAPI::DAO::Constants;
 
 extends 'PONAPI::DAO::Request';
+with 'PONAPI::DAO::Request::Role::UpdateLike';
 
 has data => (
     is        => 'ro',
@@ -26,24 +27,10 @@ sub execute {
 
     if ( $self->is_valid ) {
         eval {
-            my ($ret, @extra) = $repo->create_relationships( %{ $self } );
-            return unless $self->_verify_repository_response($ret, @extra);
-
-            # http://jsonapi.org/format/#crud-updating-responses-409
-            if ( $PONAPI_ERROR_RETURN{$ret} ) {
-                $doc->set_status(409) if $ret == PONAPI_CONFLICT_ERROR;
-            }
-            else {
-                $doc->add_meta(
-                    message => "successfully created the relationship /"
-                             . $self->type
-                             . "/"
-                             . $self->id
-                             . "/"
-                             . $self->rel_type
-                             . " => "
-                             . $self->json->encode( $self->data )
-                );
+            my @ret = $repo->create_relationships( %{ $self } );
+            if ( $self->_verify_repository_response(@ret) ) {
+                $self->_add_success_meta(@ret)
+                    if $self->_verify_update_response($repo, @ret);
             }
             1;
         } or do {
