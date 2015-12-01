@@ -84,7 +84,7 @@ sub retrieve_relationships {
     my $doc = $args{document};
 
     my $rels = $self->_find_resource_relationships(%args);
-    
+
     if ( !$rels || !ref $rels ) {
         $rels ||= PONAPI_ERROR;
         return $rels;
@@ -98,7 +98,7 @@ sub retrieve_relationships {
 
         $doc->add_resource( %$_ ) for @{$rels};
     }
-    
+
     return PONAPI_OK;
 }
 
@@ -581,9 +581,9 @@ sub _add_resources {
         my $ret = $self->_add_resource_relationships($rec, %args);
         return $ret if $PONAPI_ERROR_RETURN{$ret};
     }
-    
+
     $doc->has_resources or $doc->add_null_resource;
-    
+
     return PONAPI_OK;
 }
 

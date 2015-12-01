@@ -4,7 +4,7 @@ my $constants;
 BEGIN {
     $constants = {
         PONAPI_OK               => 200,
-    
+
         PONAPI_CREATED_EXTENDED => 500,
         PONAPI_CREATED_NORMAL   => 501,
 
