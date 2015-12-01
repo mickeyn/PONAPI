@@ -43,9 +43,9 @@ my $ERR_RELTYPE_NOT_ALLOWED = "`relationship type` not allowed";
 
 sub error_test {
     my ($ret, $expect, $desc) = @_;
-    
+
     my ($status, $headers, $doc) = @$ret;
-    
+
     my $errors = $doc->{errors};
     isa_ok( $errors, 'ARRAY' );
     is_deeply($headers, [], "... no location headers since it was an error");
@@ -332,7 +332,7 @@ subtest '... create' => sub {
                     }
                 }
             },
-            400 => 'Unknown resource in data: extra',
+            400 => 'Unknown resource in data',
             "... error on unknown attributes"
         ],
         [
