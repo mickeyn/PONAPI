@@ -105,8 +105,12 @@ sub check_has_data     { $_[0]->has_data     or  return $_[0]->_bad_request( "re
 sub check_data_has_type {
     my $self = shift;
 
-    $self->data and exists $self->data->{'type'}
-        or return $self->_bad_request( "data: `type` key is missing" );
+    my @elements = ( ref $self->data eq 'ARRAY' ? @{ $self->data } : $self->data );
+
+    for ( @elements ) {
+        return $self->_bad_request( "conflict between the request type and the data type" )
+            unless exists $_->{'type'};
+    }
 
     return 1;
 }
@@ -114,8 +118,12 @@ sub check_data_has_type {
 sub check_data_type_match {
     my $self = shift;
 
-    $self->data and exists $self->data->{'type'} and $self->data->{'type'} eq $self->type
-        or return $self->_bad_request( "conflict between the request type and the data type", 409 );
+    my @elements = ( ref $self->data eq 'ARRAY' ? @{ $self->data } : $self->data );
+
+    for ( @elements ) {
+        return $self->_bad_request( "conflict between the request type and the data type", 409 )
+            unless $_->{'type'} eq $self->type;
+    }
 
     return 1;
 }
