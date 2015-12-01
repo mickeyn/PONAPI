@@ -6,10 +6,7 @@ use PONAPI::DAO::Constants;
 
 extends 'PONAPI::DAO::Request';
 
-has 'respond_to_updates_with_200' => (
-    is  => 'ro',
-    isa => 'Bool',
-);
+with 'PONAPI::DAO::Request::Role::HasUpdates200';
 
 sub BUILD {
     my $self = shift;
