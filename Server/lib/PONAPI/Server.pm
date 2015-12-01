@@ -39,8 +39,6 @@ sub call {
     return $self->_error_response( $ponapi_params->{__error__} )
         if $ponapi_params->{__error__};
 
-    $ponapi_params->{respond_to_updates_with_200}
-        = $self->{'ponapi.respond_to_updates_with_200'};
     $ponapi_params->{req_base} =
         $self->{'ponapi.relative_links'} eq 'full' ? "".$req->base : '/';
 
@@ -87,6 +85,7 @@ sub _ponapi_params {
         @ponapi_query_params,
         data     => $data,
         has_body => $has_body,
+        respond_to_updates_with_200 => $self->{'ponapi.respond_to_updates_with_200'},
     );
 
     return \%params;

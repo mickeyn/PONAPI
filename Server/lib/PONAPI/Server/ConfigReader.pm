@@ -44,8 +44,8 @@ sub read_config {
 sub _set_server_respond_to_updates_status {
     my $self = shift;
 
-    $self->{'ponapi.respond_to_updates_with_200'}
-        = $self->config->{server}{respond_to_updates_with_200};
+    $self->{'ponapi.respond_to_updates_with_200'} =
+        $self->config->{server}{respond_to_updates_with_200};
 }
 
 sub _set_server_sorting {
