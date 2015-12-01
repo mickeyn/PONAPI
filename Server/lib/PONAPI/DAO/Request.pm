@@ -151,21 +151,16 @@ sub _validate_rel_type {
         unless $repo->has_relationship( $type, $rel_type );
 }
 
-# in delete_relationships, create_relationships :
-    # elsif ( $only_one_to_many{$request_type} and !$repo->has_one_to_many_relationship($type, $rel_type) ) {
-    #     $doc->raise_error(400, {
-    #         message => "Types `$type` and `$rel_type` are one-to-one, invalid $request_type"
-    #     });
-    # }
-
 sub _bad_request {
-    $_[0]->document->raise_error( $_[2]||400, { message => $_[1] } );
-    $_[0]->set_is_valid(0);
+    my ( $self, $message, $status ) = @_;
+    $self->document->raise_error( $status||400, { message => $message } );
+    $self->set_is_valid(0);
     return;
 }
 
 sub _server_failure {
-    $_[0]->document->raise_error( 500, {
+    my $self = shift;
+    $self->document->raise_error( 500, {
         message => 'A fatal error has occured, please check server logs'
     });
     return;
