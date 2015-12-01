@@ -242,19 +242,19 @@ subtest '... update' => sub {
     delete $updated->{data}{attributes}{updated};
     is_deeply($updated, $backup, "... successfully 'restored' the comment");
 
-    my $new_dao    = PONAPI::DAO->new( repository => $repository, respond_to_updates_with_200 => 1 );
-    my @update_200 = $new_dao->update( @TEST_ARGS_HAS_BODY, @TEST_ARGS_BASE, type => comments => id => 12, data => { type => comments => id => 12, attributes => { body => "This changes nothing extra" } } );
+    my @update_200 = $dao->update( @TEST_ARGS_HAS_BODY, @TEST_ARGS_BASE, type => comments => id => 12, data => { type => comments => id => 12, attributes => { body => "This changes nothing extra" } }, respond_to_updates_with_200 => 1 );
     is($update_200[0], 200, "... can set the DAO to return 200 on updates");
     ok( exists $doc->{meta} && !exists $doc->{data}, "... which has a meta and no data, because it has no side effects");
 
-    @update_200 = $new_dao->update(
+    @update_200 = $dao->update(
         @TEST_ARGS_BASE_TYPE_ID_HAS_BODY,
         data => {
             @TEST_ARGS_TYPE_ID,
             attributes => {
                 title => "This changes updated"
             }
-        }
+        },
+        respond_to_updates_with_200 => 1,
     );
     my $new_updated = delete $update_200[2]->{data}{attributes}{updated};
     isnt($new_updated, $backup_updated, "... the updated date auto-changed,");

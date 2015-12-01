@@ -39,6 +39,13 @@ sub read_config {
     return %{$self};
 }
 
+sub _set_server_respond_to_updates_status {
+    my $self = shift;
+
+    $self->{'ponapi.respond_to_updates_with_200'}
+        = $self->config->{server}{respond_to_updates_with_200};
+}
+
 sub _set_server_sorting {
     my $self = shift;
 
@@ -95,7 +102,6 @@ sub _load_repository {
 
     $self->{'ponapi.DAO'} = PONAPI::DAO->new(
         repository                  => $repository,
-        respond_to_updates_with_200 => $conf->{respond_to_updates_with_200},
     );
 }
 
