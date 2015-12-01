@@ -30,7 +30,7 @@ sub execute {
 
 ### ???
             if ( !exists $PONAPI_UPDATE_RETURN_VALUES{$ret} ) {
-                die ref($self->repository), "->update returned an unexpected value";
+                die ref($repo), "->update returned an unexpected value";
             }
 
             if ( $PONAPI_ERROR_RETURN{$ret} ) {
@@ -44,7 +44,7 @@ sub execute {
                          . "/"
                          . $self->id
                          . " => "
-                         . JSON::XS->new->canonical()->encode( $self->data );
+                         .$self->json->encode( $self->data );
 
             my $message = "successfully updated the resource $resource";
             if ( $ret == PONAPI_UPDATED_NOTHING ) {
@@ -72,7 +72,7 @@ sub execute {
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
             warn "$@";
-            _server_failure($doc);
+            $self->_server_failure;
         };
     }
 

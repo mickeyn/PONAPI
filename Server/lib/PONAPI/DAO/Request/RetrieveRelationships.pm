@@ -22,7 +22,7 @@ sub execute {
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
             warn "$@";
-            _server_failure( $self->document );
+            $self->_server_failure;
         };
     }
 

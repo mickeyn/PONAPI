@@ -9,7 +9,7 @@ extends 'PONAPI::DAO::Request';
 sub BUILD {
     my $self = shift;
 
-    $self->check_has_no_id;
+    $self->check_no_id;
     $self->check_no_rel_type;
 
     # http://jsonapi.org/format/#crud-creating-responses-409
@@ -34,14 +34,14 @@ sub execute {
                     message => "successfully created the resource: "
                              . $self->type
                              . " => "
-                             . JSON::XS->new->canonical()->encode( $self->data )
+                             . $self->json->encode( $self->data )
                 );
             }
             1;
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
             warn "$@";
-            _server_failure( $self->document );
+            $self->_server_failure;
         };
     }
 

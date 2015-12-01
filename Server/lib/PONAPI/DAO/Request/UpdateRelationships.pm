@@ -33,7 +33,6 @@ sub execute {
                 die ref($repo), "->update_relationships returned an unexpected value";
             }
 
-            my $json = JSON::XS->new->allow_nonref->utf8;
             $doc->add_meta(
                 message => "successfully updated the relationship /"
                          . $self->type
@@ -42,13 +41,13 @@ sub execute {
                          . "/"
                          . $self->rel_type
                          . " => "
-                         . $json->canonical()->encode( $self->data )
+                         . $self->json->encode( $self->data )
             );
             1;
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
             warn "$@";
-            _server_failure($doc);
+            $self->_server_failure;
         };
     }
 

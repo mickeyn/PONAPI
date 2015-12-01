@@ -16,7 +16,7 @@ sub BUILD {
     my $self = shift;
 
     $self->check_has_id;
-    $self->check_no_rel_type;
+    $self->check_has_rel_type;
     $self->check_has_data;
 }
 
@@ -26,11 +26,11 @@ sub execute {
 
     if ( $self->is_valid ) {
         eval {
-            my $ret = $self->repository->delete_relationships( %{ $self } );
+            my $ret = $repo->delete_relationships( %{ $self } );
 
 ### ???
             if ( !exists $PONAPI_UPDATE_RETURN_VALUES{$ret} ) {
-                die ref($self->repository), "->delete_relationships returned an unexpected value";
+                die ref($repo), "->delete_relationships returned an unexpected value";
             }
 
             my $resource = "/"
@@ -40,7 +40,7 @@ sub execute {
                          . "/"
                          . $self->rel_type
                          . " => "
-                         . JSON::XS->new->canonical()->encode( $self->data );
+                         . $self->json->encode( $self->data );
             my $message  = "successfully deleted the relationship $resource";
 
             # http://jsonapi.org/format/#crud-updating-relationship-responses-204
@@ -55,7 +55,7 @@ sub execute {
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
             warn "$@";
-            _server_failure($doc);
+            $self->_server_failure;
         };
     }
 

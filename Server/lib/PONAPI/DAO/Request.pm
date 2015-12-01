@@ -1,6 +1,7 @@
 package PONAPI::DAO::Request;
 
 use Moose;
+use JSON::XS;
 
 use PONAPI::Builder::Document;
 
@@ -51,6 +52,12 @@ has rel_type => (
     is        => 'ro',
     isa       => 'Str',
     predicate => 'has_rel_type',
+);
+
+has json => (
+    is      => 'ro',
+    isa     => 'JSON::XS',
+    default => sub { JSON::XS->new->allow_nonref->utf8->canonical },
 );
 
 for ( qw< data fields filter page > ) {

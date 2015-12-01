@@ -30,7 +30,7 @@ sub execute {
 
 # ???
             if ( !exists $PONAPI_UPDATE_RETURN_VALUES{$ret} ) {
-                die ref($self->repository), "->create_relationships returned an unexpected value";
+                die ref($repo), "->create_relationships returned an unexpected value";
             }
 
             # http://jsonapi.org/format/#crud-updating-responses-409
@@ -46,14 +46,14 @@ sub execute {
                              . "/"
                              . $self->rel_type
                              . " => "
-                             . JSON::XS->new->canonical()->encode( $self->data )
+                             . $self->json->encode( $self->data )
                 );
             }
             1;
         } or do {
             # NOTE: this probably needs to be more sophisticated - SL
             warn "$@";
-            _server_failure($doc);
+            $self->_server_failure;
         };
     }
 
