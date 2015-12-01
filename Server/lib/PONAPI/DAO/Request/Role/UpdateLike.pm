@@ -8,6 +8,16 @@ has 'respond_to_updates_with_200' => (
     isa => 'Bool',
 );
 
+has 'update_nothing_status' => (
+    is      => 'ro',
+    isa     => 'Int',
+    # http://jsonapi.org/format/#crud-updating-relationship-responses-204
+    # Basically, we return a 204, UNLESS it's an ->update() call, in which
+    # case it has to return a 404:
+    # http://jsonapi.org/format/#crud-updating-responses-404 
+    default => sub { 204 },
+);
+
 sub _verify_update_response {
     my ($self, $repo, $ret, @extra) = @_;
 
@@ -39,7 +49,8 @@ override _add_success_meta => sub {
 
     my $message = "successfully modified $resource";
     if ( $return_status == PONAPI_UPDATED_NOTHING ) {
-        $self->document->set_status(204);
+        my $status = $self->update_nothing_status;
+        $self->document->set_status($status);
         $message = "modified nothing for $resource"
     }
 

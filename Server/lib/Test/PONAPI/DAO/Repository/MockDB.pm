@@ -315,7 +315,6 @@ sub update {
 
     if ( $PONAPI_ERROR_RETURN{$ret} ) {
         $dbh->rollback;
-        return $ret;
     }
     else {
         $dbh->commit;
@@ -365,7 +364,7 @@ sub _update {
 
     if ( %$relationships ) {
         foreach my $rel_type ( keys %$relationships ) {
-            my $ret = $self->_update_relationships(
+            my $return = $self->_update_relationships(
                 document => $doc,
                 type     => $type,
                 id       => $id,

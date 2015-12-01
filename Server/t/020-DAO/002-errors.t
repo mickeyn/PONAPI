@@ -436,7 +436,7 @@ subtest '... update' => sub {
                 {
                     errors => [
                         {
-                            message => 'Unknown columns passed to update',
+                            message => 'Unknown resource in data',
                             status  => 400
                         }
                     ],
