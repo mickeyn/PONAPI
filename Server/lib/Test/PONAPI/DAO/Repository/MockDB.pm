@@ -147,9 +147,7 @@ sub create {
     my %columns   = map +($_=>1), @{ $table_obj->COLUMNS };
     my @unknown   = grep !exists $columns{$_}, keys %$attributes;
     if ( @unknown ) {
-        return PONAPI_UNKNOWN_RESOURCE_IN_DATA, {
-            resources => \@unknown,
-        };
+        return PONAPI_UNKNOWN_RESOURCE_IN_DATA;
     }
 
     my ($stmt, $return, $extra) = $table_obj->insert_stmt(
@@ -183,7 +181,7 @@ sub create {
             data     => $rel_data,
         );
 
-        if ( $doc->has_errors ) {
+        if ( $ret && $PONAPI_ERROR_RETURN{$ret} ) {
             $dbh->rollback;
             return $ret;
         }
@@ -209,8 +207,8 @@ sub _create_relationships {
     my $table_obj     = $self->tables->{$type};
     my $all_relations = $table_obj->RELATIONS->{$rel_type};
 
-    if ( !$all_relations ) {
-        return PONAPI_UNKNOWN_RELATIONSHIP, { type => $type, rel_type => $rel_type };
+    if ( !%{ $all_relations || {} } ) {
+        return PONAPI_UNKNOWN_RELATIONSHIP;
     }
 
     my @all_values;
@@ -229,13 +227,11 @@ sub _create_relationships {
         push @all_values, $relationship;
     }
 
-    return PONAPI_ERROR if $doc->has_errors;
-
     my $table = $all_relations->{rel_table};
     my $one_to_one = !$self->has_one_to_many_relationship($type, $rel_type);
 
     if ( $one_to_one && @all_values > 1 ) {
-        return PONAPI_BAD_DATA, { msg => "..." };
+        return PONAPI_BAD_DATA;
     }
 
     foreach my $values ( @all_values ) {
@@ -337,9 +333,8 @@ sub _update {
 
     foreach my $rel_type ( keys %$relationships ) {
         next if $self->has_relationship($type, $rel_type);
-        return PONAPI_UNKNOWN_RELATIONSHIP, { type => $type, rel_type => $rel_type };
+        return PONAPI_UNKNOWN_RELATIONSHIP;
     }
-    return PONAPI_ERROR if $doc->has_errors;
 
     my $return = PONAPI_UPDATED_NORMAL;
     if ( %$attributes ) {
@@ -370,20 +365,20 @@ sub _update {
 
     if ( %$relationships ) {
         foreach my $rel_type ( keys %$relationships ) {
-            $self->_update_relationships(
+            my $ret = $self->_update_relationships(
                 document => $doc,
                 type     => $type,
                 id       => $id,
                 rel_type => $rel_type,
                 data     => $relationships->{$rel_type},
             );
-            if ( $doc->has_errors ) {
-                return PONAPI_ERROR;
+            if ( $return && $PONAPI_ERROR_RETURN{$return} ) {
+                return $return;
             }
         }
     }
 
-    return $doc->has_errors ? PONAPI_ERROR : $return;
+    return $return;
 }
 
 sub _update_relationships {
@@ -394,7 +389,7 @@ sub _update_relationships {
         $data = [ keys(%$data) ? $data : () ] if ref($data) eq 'HASH';
 
         my $clear_ret = $self->_clear_relationships(%args);
-        return $clear_ret if $doc->has_errors;
+        return $clear_ret if $clear_ret && $PONAPI_ERROR_RETURN{$clear_ret};
         if ( @$data ) {
             my $table_obj = $self->tables->{$type};
             my ( $column_rel_type, $rel_table ) =
@@ -445,7 +440,6 @@ sub update_relationships {
 
     if ( $PONAPI_ERROR_RETURN{$ret} ) {
         $dbh->rollback;
-        return $ret;
     }
     else {
         $dbh->commit;
@@ -511,7 +505,7 @@ sub delete_relationships {
         my $data_type = delete $resource->{type};
 
         if ( $data_type ne $key_type ) {
-            return PONAPI_CONFLICT_ERROR, { type => $key_type, rel_type => $data_type };
+            return PONAPI_CONFLICT_ERROR;
         }
 
         my $delete_where = {
@@ -549,12 +543,10 @@ sub delete_relationships {
         $dbh->rollback;
     }
     else {
+        $ret = PONAPI_UPDATED_NOTHING if !$rows_modified;
         $dbh->commit;
     }
 
-    if ( !$rows_modified ) {
-        $ret = PONAPI_UPDATED_NOTHING;
-    }
 
     # TODO: add missing login
     return $ret;
