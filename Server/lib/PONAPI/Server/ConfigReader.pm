@@ -3,6 +3,8 @@ package PONAPI::Server::ConfigReader;
 use Moose;
 use MooseX::Types::Path::Class;
 
+use PONAPI::DAO;
+
 has dir => (
     is       => 'ro',
     isa      => 'Path::Class::Dir',
@@ -100,9 +102,7 @@ sub _load_repository {
     my $repository = Module::Runtime::use_module( $conf->{class} )->new( @{ $conf->{args} } )
         || die "[PONAPI Server] failed to create a repository object\n";
 
-    $self->{'ponapi.DAO'} = PONAPI::DAO->new(
-        repository                  => $repository,
-    );
+    $self->{'ponapi.DAO'} = PONAPI::DAO->new( repository => $repository );
 }
 
 

@@ -9,7 +9,6 @@ use Path::Class::File  ();
 use YAML::XS           ();
 use JSON::XS           qw{ decode_json encode_json };
 
-use PONAPI::DAO;
 use PONAPI::Server::ConfigReader;
 
 use parent 'Plack::Component';
