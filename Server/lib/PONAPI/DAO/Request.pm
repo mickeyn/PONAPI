@@ -145,6 +145,18 @@ sub validate {
     # `rel_type` relationship exists
     $self->_validate_rel_type( $repo );
 
+    # check relationships in `data` (if exist)
+    if ( $self->has_data ) {
+        my @elements = ( ref $self->data eq 'ARRAY' ? @{ $self->data } : $self->data );
+        for my $e ( @elements ) {
+            next unless exists $e->{'relationships'};
+            for ( keys %{ $e->{'relationships'} } ) {
+                $self->_bad_request( "Types `$type` and `$_` are not related", 404 )
+                    unless $repo->has_relationship( $type, $_ );
+            }
+        }
+    }
+
     return $self;
 }
 
@@ -219,14 +231,10 @@ sub _verify_repository_response {
 }
 
 sub _get_resource_for_meta {
-    my ($self) = @_;
-    my $doc = $self->document;
+    my $self = shift;
 
-    my $self_link = $doc->get_self_link;
-
-    if ( !$self_link ) {
-        $self_link = join "/", grep defined, '', @{$self}{qw/type id rel_type/};
-    }
+    my $self_link = $self->document->get_self_link
+        // ( join "/" => grep defined, '', @{$self}{qw/type id rel_type/} );
 
     my $resource = $self_link
                  . " => "
@@ -234,9 +242,10 @@ sub _get_resource_for_meta {
 
     return $resource;
 }
+
 sub _add_success_meta {
-    my ($self) = @_;
-    
+    my $self = shift;
+
     $self->document->add_meta(
         message => 'successful operation on ' . $self->_get_resource_for_meta,
     );
