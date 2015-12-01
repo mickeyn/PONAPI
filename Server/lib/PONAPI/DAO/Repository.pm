@@ -29,7 +29,7 @@ PONAPI::DAO::Repository -- Interface role for PONAPI::DAO repositories.
     package My::PONAPI::Repository {
         use Moose;
         with 'PONAPI::DAO::Repository';
-        
+
         sub has_type { ... }
 
         ...

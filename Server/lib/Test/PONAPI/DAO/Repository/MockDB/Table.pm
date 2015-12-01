@@ -15,7 +15,7 @@ sub _invalid_attributes {
 
 sub insert_stmt {
     my ($self, %args) = @_;
-    
+
     my $table = $args{table};
     my $values = $args{values};
 
@@ -23,13 +23,13 @@ sub insert_stmt {
         my $msg = 'Unknown columns passed to create';
         return undef, PONAPI_UNKNOWN_RESOURCE_ERROR, $msg;
     }
-    
+
     my $stmt = SQL::Composer::Insert->new(
         into   => $table,
         values => [ %$values ],
         driver => 'sqlite',
     );
-    
+
     return $stmt;
 }
 
@@ -123,4 +123,3 @@ sub _stmt_filters {
 __PACKAGE__->meta->make_immutable;
 no Moose; 1;
 __END__
-
