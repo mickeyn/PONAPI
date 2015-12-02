@@ -225,15 +225,6 @@ sub _verify_repository_response {
             }
             $doc->raise_error( 404, { detail => $msg } );
         }
-        elsif ( $ret == PONAPI_UNKNOWN_RESOURCE_IN_DATA ) {
-            my $msg = $extra->{detail};
-            if ( !$msg ) {
-                $msg  = "Unknown resource in data";
-                $msg .= ': ' . join ", ", @{ $extra->{resources} }
-                    if @{ $extra->{resources} || [] };
-            }
-            $doc->raise_error( 400, { detail => $msg } );
-        }
         elsif ( $ret == PONAPI_BAD_DATA ) {
             my $msg = $extra->{detail} || 'Bad data in request';
             $doc->raise_error( 400, { detail => $msg } );

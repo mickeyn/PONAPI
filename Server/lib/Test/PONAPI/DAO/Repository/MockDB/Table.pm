@@ -4,25 +4,11 @@ use SQL::Composer;
 
 use PONAPI::DAO::Constants;
 
-sub _invalid_attributes {
-    my ($self, $table, $attributes) = @_;
-
-    return if $table ne $self->TABLE; # Someone is doing something nasty
-    my %columns   = map +($_=>1), @{ $self->COLUMNS };
-    return 1 if grep !exists $columns{$_}, keys %$attributes;
-    return;
-}
-
 sub insert_stmt {
     my ($self, %args) = @_;
 
     my $table = $args{table};
     my $values = $args{values};
-
-    if ( $self->_invalid_attributes($table => $values) ) {
-        my $msg = 'Unknown columns passed to create';
-        return undef, PONAPI_UNKNOWN_RESOURCE_IN_DATA, { detail => $msg };
-    }
 
     my $stmt = SQL::Composer::Insert->new(
         into   => $table,
@@ -69,11 +55,6 @@ sub update_stmt {
     my $id          = $args{id};
     my $table       = $args{table};
     my $values      = $args{values} || {};
-
-    if ( $self->_invalid_attributes($table => $values) ) {
-        my $msg = 'Unknown columns passed to update';
-        return undef, PONAPI_UNKNOWN_RESOURCE_IN_DATA, { detail => $msg };
-    }
 
     local $@;
     my $stmt = eval {

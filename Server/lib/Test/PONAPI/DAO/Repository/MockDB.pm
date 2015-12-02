@@ -156,12 +156,6 @@ sub create {
     my $relationships = delete $data->{relationships} || {};
 
     my $table_obj = $self->tables->{$type};
-    my %columns   = map +($_=>1), @{ $table_obj->COLUMNS };
-    my @unknown   = grep !exists $columns{$_}, keys %$attributes;
-    if ( @unknown ) {
-        return PONAPI_UNKNOWN_RESOURCE_IN_DATA;
-    }
-
     my ($stmt, $return, $extra) = $table_obj->insert_stmt(
         table  => $type,
         values => $attributes,
