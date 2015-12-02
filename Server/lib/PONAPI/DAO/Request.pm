@@ -216,15 +216,6 @@ sub _verify_repository_response {
             my $msg = $extra->{detail} || 'Conflict error in the data';
             $doc->raise_error( 409, { detail => $msg } );
         }
-        elsif ( $ret == PONAPI_UNKNOWN_RELATIONSHIP ) {
-            my $msg = $extra->{detail};
-            if ( !$msg ) {
-                $msg  = 'Unknown relationship between types';
-                $msg .= ' ' . $extra->{type} . ' and ' . $extra->{rel_type}
-                    if $extra->{type} and $extra->{rel_type};
-            }
-            $doc->raise_error( 404, { detail => $msg } );
-        }
         elsif ( $ret == PONAPI_BAD_DATA ) {
             my $msg = $extra->{detail} || 'Bad data in request';
             $doc->raise_error( 400, { detail => $msg } );

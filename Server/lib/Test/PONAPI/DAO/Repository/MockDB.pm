@@ -213,10 +213,6 @@ sub _create_relationships {
     my $table_obj     = $self->tables->{$type};
     my $all_relations = $table_obj->RELATIONS->{$rel_type};
 
-    if ( !%{ $all_relations || {} } ) {
-        return PONAPI_UNKNOWN_RELATIONSHIP;
-    }
-
     my @all_values;
     foreach my $orig ( @$data ) {
         my $relationship = { %$orig };
@@ -334,11 +330,6 @@ sub _update {
 
     # TODO this needs to be part of $data's validation in Request.pm
     my ($attributes, $relationships) = map $_||{}, @{ $data }{qw/ attributes relationships /};
-
-    foreach my $rel_type ( keys %$relationships ) {
-        next if $self->has_relationship($type, $rel_type);
-        return PONAPI_UNKNOWN_RELATIONSHIP;
-    }
 
     my $return = PONAPI_UPDATED_NORMAL;
     if ( %$attributes ) {
@@ -591,12 +582,6 @@ sub _add_resource_relationships {
     my $doc  = $rec->find_root;
     my $type = $rec->type;
     my %include = map { $_ => 1 } @{ $args{include} };
-
-    # check for invalid 'include' params
-    foreach my $rel_type ( keys %include ) {
-        next if $self->has_relationship($type, $rel_type);
-        return PONAPI_UNKNOWN_RELATIONSHIP, { type => $type, rel_type => $rel_type };
-    }
 
     my $rels = $self->_fetchall_relationships(
         type     => $type,

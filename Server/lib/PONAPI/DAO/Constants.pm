@@ -11,8 +11,7 @@ BEGIN {
 
         PONAPI_ERROR            => 900,
         PONAPI_CONFLICT_ERROR   => 901,
-        PONAPI_UNKNOWN_RELATIONSHIP => 903,
-        PONAPI_BAD_DATA             => 904,
+        PONAPI_BAD_DATA         => 904,
     };
 
     require constant; constant->import($constants);
@@ -30,7 +29,6 @@ our (%PONAPI_UPDATE_RETURN_VALUES, %PONAPI_ERROR_RETURN, %PONAPI_RETURN);
 %PONAPI_RETURN = map +($_=>1), values %$constants;
 $PONAPI_ERROR_RETURN{+PONAPI_CONFLICT_ERROR}            = 1;
 $PONAPI_ERROR_RETURN{+PONAPI_ERROR}                     = 1;
-$PONAPI_ERROR_RETURN{+PONAPI_UNKNOWN_RELATIONSHIP}      = 1;
 $PONAPI_ERROR_RETURN{+PONAPI_BAD_DATA}                  = 1;
 
 $PONAPI_UPDATE_RETURN_VALUES{+PONAPI_UPDATED_EXTENDED}  = 1;
@@ -81,14 +79,6 @@ Some error occurred.
 
 A data conflict occurred; this can happen when creating or updating a
 relationship to a resource that has a unique constraint.
-
-=head2 PONAPI_UNKNOWN_RESOURCE_ERROR
-
-The request included references to an unknown resource.
-
-=head2 PONAPI_UNKNOWN_RELATIONSHIP
-
-The request included references to an unknown relationship.
 
 =head2 PONAPI_CREATED_NORMAL
 
