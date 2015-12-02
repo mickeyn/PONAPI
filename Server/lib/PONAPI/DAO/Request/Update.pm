@@ -6,7 +6,7 @@ extends 'PONAPI::DAO::Request';
 with 'PONAPI::DAO::Request::Role::UpdateLike';
 
 has '+update_nothing_status' => (
-    # http://jsonapi.org/format/#crud-updating-responses-404 
+    # http://jsonapi.org/format/#crud-updating-responses-404
     default => sub { 404 },
 );
 

@@ -43,7 +43,6 @@ my $ERR_RELTYPE_NOT_ALLOWED = "`relationship type` not allowed";
 
 sub error_test {
     my ($ret, $expect, $desc) = @_;
-
     my ($status, $headers, $doc) = @$ret;
 
     my $errors = $doc->{errors};
@@ -711,13 +710,13 @@ subtest '... create_relationships' => sub {
             ],
         );
     };
-    
+
     error_test(
         \@ret,
         { detail => "Conflict error in the data", status => 409 },
         "... no DBD error in detail as expected",
     );
-    
+
     my @second_retrieve = $dao->retrieve( @TEST_ARGS_BASE_TYPE_ID_NO_BODY );
     is_deeply(
         \@first_retrieve,
