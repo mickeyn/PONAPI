@@ -178,18 +178,20 @@ sub _validate_rel_type {
 
 sub _validate_data_attributes {
     my ( $self, $repo ) = @_;
+    my $type = $self->type;
 
     for my $e ( $self->_get_data_elements ) {
         next unless exists $e->{attributes};
-        $repo->type_has_fields( $self->type, [ keys %{ $e->{'attributes'} } ] )
+        $repo->type_has_fields( $type, [ keys %{ $e->{'attributes'} } ] )
             or $self->_bad_request(
-                'Type `' . $self->type . '` does not have at least one of the attributes in data'
+                "Type `$type` does not have at least one of the attributes in data"
             );
     }
 }
 
 sub _validate_data_relationships {
     my ( $self, $repo ) = @_;
+    my $type = $self->type;
 
     for my $e ( $self->_get_data_elements ) {
         my $relationships = $e->{'relationships'};
@@ -197,18 +199,18 @@ sub _validate_data_relationships {
 
         if ( %$relationships ) {
             for my $rel_type ( keys %$relationships ) {
-                if ( !$repo->has_relationship( $self->type, $rel_type ) ) {
+                if ( !$repo->has_relationship( $type, $rel_type ) ) {
                     $self->_bad_request(
-                        'Types `' . $self->type . "` and `$rel_type` are not related",
+                        "Types `$type` and `$rel_type` are not related",
                         404
                     );
                 }
-                elsif ( !$repo->has_one_to_many_relationship($self->type, $rel_type)
+                elsif ( !$repo->has_one_to_many_relationship( $type, $rel_type )
                         and ref $relationships->{$rel_type} eq 'ARRAY'
                         and @{ $relationships->{$rel_type} } > 1
                 ) {
                     $self->_bad_request(
-                        'Types `' . $self->type . "` and `$rel_type` are one-to-one, but got multiple values"
+                        "Types `$type` and `$rel_type` are one-to-one, but got multiple values"
                     );
                 }
             }
