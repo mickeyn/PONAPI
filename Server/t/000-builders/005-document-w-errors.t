@@ -11,8 +11,8 @@ BEGIN {
 }
 
 my $ERROR = {
-    message => "an error has occured",
-    status  => 555,
+    detail => "an error has occured",
+    status => 555,
 };
 
 subtest '... creating a document with errors' => sub {

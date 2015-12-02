@@ -66,7 +66,7 @@ has '_relationships' => (
 );
 
 sub add_relationship {
-    my ($self, $key, $resource) = @_;
+    my ($self, $key, $resource, $collection) = @_;
 
     $self->raise_error( 400,
         title => 'Relationship key conflict, an attribute already exists for key: ' . $key
@@ -79,7 +79,11 @@ sub add_relationship {
 
     my $builder = $self->has_relationship_for($key)
         ? $self->_get_relationship($key)
-        : PONAPI::Builder::Relationship->new( parent => $self, name => $key );
+        : PONAPI::Builder::Relationship->new(
+            parent     => $self,
+            name       => $key,
+            collection => $collection,
+          );
 
     $builder->add_resource( $_ ) foreach @resources;
 

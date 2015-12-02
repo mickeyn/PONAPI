@@ -3,6 +3,8 @@ package PONAPI::Server::ConfigReader;
 use Moose;
 use MooseX::Types::Path::Class;
 
+use PONAPI::DAO;
+
 has dir => (
     is       => 'ro',
     isa      => 'Path::Class::Dir',
@@ -25,6 +27,8 @@ sub _build_conf {
 sub read_config {
     my $self = shift;
 
+    $self->_set_server_json_api_version;
+
     $self->_set_server_sorting;
     $self->_set_server_send_header;
     $self->_set_server_self_link;
@@ -35,6 +39,13 @@ sub read_config {
     $self->{'ponapi.qr_mediatype'} = qr{application/vnd\.api\+json};
 
     return %{$self};
+}
+
+sub _set_server_respond_to_updates_status {
+    my $self = shift;
+
+    $self->{'ponapi.respond_to_updates_with_200'} =
+        $self->config->{server}{respond_to_updates_with_200};
 }
 
 sub _set_server_sorting {
@@ -49,8 +60,20 @@ sub _set_server_sorting {
         die "[PONAPI Server] server sorting is misconfigured";
 }
 
+sub _set_server_json_api_version {
+    my $self = shift;
+
+    my $spec_version = $self->config->{server}{spec_version}
+        // die "[PONAPI Server] server JSON API version configuration is missing";
+
+    $self->{'ponapi.spec_version'} = $spec_version;
+}
+
 sub _set_server_send_header {
     my $self = shift;
+
+    $self->{'ponapi.spec_version'} = $self->config->{server}{spec_version}
+        // die "[PONAPI Server] server spec version is not configured";
 
     $self->{'ponapi.send_version_header'} =
         ( grep { $self->config->{server}{send_version_header} eq $_ } qw< yes true 1 > ) ? 1 : 0;

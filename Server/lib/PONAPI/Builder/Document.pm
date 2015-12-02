@@ -11,11 +11,13 @@ with 'PONAPI::Builder',
      'PONAPI::Builder::Role::HasMeta';
 
 has status => (
-    init_arg => undef,
-    is       => 'ro',
-    isa      => 'Num',
-    default  => sub { 200 },
-    writer   => 'set_status',
+    init_arg  => undef,
+    is        => 'ro',
+    isa       => 'Num',
+    default   => sub { 200 },
+    writer    => 'set_status',
+    lazy      => 1,
+    predicate => 'has_status',
 );
 
 has '_included' => (
@@ -113,12 +115,17 @@ sub has_errors {
     return 0;
 }
 
-sub add_self_link {
-    my ( $self, $base ) = @_;
+sub get_self_link {
+    my ($self, $base) = @_;
     $self->_has_resource_builders or return; # ???
     my $rec = $self->_get_resource_builder(0)->build;
     my $link = $rec->{type} . ( $self->is_collection ? '' : '/' . $rec->{id} );
-    $self->links_builder->add_link( self => ( $base ? $base : '/' ) . $link );
+    return ( $base ? $base : '/' ) . $link;
+}
+sub add_self_link {
+    my ( $self, $base ) = @_;
+    my $link = $self->get_self_link;
+    $self->links_builder->add_link( self => $link );
     return $self;
 }
 
@@ -159,9 +166,13 @@ sub build {
     }
 
     if ( $self->has_errors_builder ) {
+        my $errors = $self->errors_builder->build;
+        if ( $errors ) {
+            $_->{status} //= $self->status for @$errors;
+        }
         return +{
             jsonapi => +{ version => "1.0" },
-            errors  => $self->errors_builder->build,
+            errors  => $errors,
         };
     }
 

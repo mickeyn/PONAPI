@@ -9,7 +9,6 @@ use Path::Class::File  ();
 use YAML::XS           ();
 use JSON::XS           qw{ decode_json encode_json };
 
-use PONAPI::DAO;
 use PONAPI::Server::ConfigReader;
 
 use parent 'Plack::Component';
@@ -70,21 +69,23 @@ sub _ponapi_params {
     $self->_ponapi_check_headers($wr, $req);
 
     # THE PATH --> route matching
-    my ( $action, $type, $id, $rel_type ) = $self->_ponapi_route_match($wr, $req);
+    my @ponapi_route_params = $self->_ponapi_route_match($wr, $req);
 
     # THE QUERY
     my @ponapi_query_params = $self->_ponapi_query_params($wr, $req);
 
     # THE BODY CONTENT
+    my $has_body = !!( $req->content_length > 0 );
+    $wr->(ERR_BAD_REQ) if $req->method eq 'GET' and $has_body;
+
     my $data = $self->_ponapi_data($wr, $req);
 
     my %params = (
-        action   => $action,
-        type     => $type,
-        id       => $id,
-        rel_type => $rel_type,
-        data     => $data,
+        @ponapi_route_params,
         @ponapi_query_params,
+        data     => $data,
+        has_body => $has_body,
+        respond_to_updates_with_200 => $self->{'ponapi.respond_to_updates_with_200'},
     );
 
     return \%params;
@@ -99,23 +100,26 @@ sub _ponapi_route_match {
     my ( $type, $id, $relationships, $rel_type ) = split '/' => substr($req->path_info,1);
 
     $wr->(ERR_BAD_REQ) unless $type;
-    $wr->(ERR_BAD_REQ) if $rel_type and $relationships ne 'relationships';
+    $wr->(ERR_BAD_REQ) if defined($rel_type) and $relationships ne 'relationships';
 
-    if ( !$rel_type and $relationships ) {
+    if ( defined($rel_type) ) {
+        $wr->(ERR_BAD_REQ) if !length($rel_type);
+    }
+    elsif ( $relationships ) {
         $rel_type = $relationships;
         undef $relationships;
     }
 
     my $action;
     if ( defined $id ) {
-        $action = 'create_relationships'     if $method eq 'POST'   and $relationships  and $rel_type;
-        $action = 'retrieve'                 if $method eq 'GET'    and !$relationships and !$rel_type;
-        $action = 'retrieve_by_relationship' if $method eq 'GET'    and !$relationships and $rel_type;
-        $action = 'retrieve_relationships'   if $method eq 'GET'    and $relationships  and $rel_type;
-        $action = 'update'                   if $method eq 'PATCH'  and !$relationships and !$rel_type;
-        $action = 'update_relationships'     if $method eq 'PATCH'  and $relationships  and $rel_type;
-        $action = 'delete'                   if $method eq 'DELETE' and !$relationships and !$rel_type;
-        $action = 'delete_relationships'     if $method eq 'DELETE' and $relationships  and $rel_type;
+        $action = 'create_relationships'     if $method eq 'POST'   and $relationships  and defined($rel_type);
+        $action = 'retrieve'                 if $method eq 'GET'    and !$relationships and !defined($rel_type);
+        $action = 'retrieve_by_relationship' if $method eq 'GET'    and !$relationships and defined($rel_type);
+        $action = 'retrieve_relationships'   if $method eq 'GET'    and $relationships  and defined($rel_type);
+        $action = 'update'                   if $method eq 'PATCH'  and !$relationships and !defined($rel_type);
+        $action = 'update_relationships'     if $method eq 'PATCH'  and $relationships  and defined($rel_type);
+        $action = 'delete'                   if $method eq 'DELETE' and !$relationships and !defined($rel_type);
+        $action = 'delete_relationships'     if $method eq 'DELETE' and $relationships  and defined($rel_type);
     }
     else {
         $action = 'retrieve_all'             if $method eq 'GET';
@@ -124,7 +128,11 @@ sub _ponapi_route_match {
 
     $wr->(ERR_NO_MATCHING_ROUTE) unless $action;
 
-    return ( $action, $type, $id||'', $rel_type||'' );
+    my @ret = ( action => $action, type => $type );
+    defined $id       and push @ret => id => $id;
+    defined $rel_type and push @ret => rel_type => $rel_type;
+
+    return @ret;
 }
 
 sub _ponapi_check_headers {
@@ -191,7 +199,7 @@ sub _ponapi_query_params {
 
 sub _ponapi_data {
     my ( $self, $wr, $req ) = @_;
-    $req->method eq 'GET' and return;
+    $req->method eq 'GET' and return +{};
 
     my $body = decode_json( $req->content );
 
@@ -218,7 +226,7 @@ sub _error_response {
 
     return $self->_response( $args->[0], [], +{
         jsonapi => { version => $self->{'ponapi.spec_version'} },
-        errors  => [ { message => $args->[1] } ],
+        errors  => [ { detail => $args->[1] } ],
     });
 }
 
