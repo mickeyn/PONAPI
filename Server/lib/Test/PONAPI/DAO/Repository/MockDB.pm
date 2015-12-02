@@ -2,6 +2,7 @@ package Test::PONAPI::DAO::Repository::MockDB;
 use Moose;
 
 use DBI;
+use DBD::SQLite::Constants qw/:result_codes/;;
 use SQL::Composer;
 
 use Test::PONAPI::DAO::Repository::MockDB::Loader;
@@ -244,24 +245,23 @@ sub _create_relationships {
             return $return, $extra;
         }
 
-        my ( $sth, $errstr );
-        eval  { ($sth, $errstr) = $self->_db_execute( $stmt ); 1 }
-        or do { ($sth, $errstr) = ('', "$@"||"Unknown error");   };
+        my ( $sth, $errstr, $err_id );
+        eval  { ($sth, $errstr, $err_id) = $self->_db_execute( $stmt ); 1; }
+        or do { ($sth, $errstr, $err_id) = ('', "$@"||"Unknown error", $DBI::err) };
 
-        if ( $errstr ) {
-            if ( $one_to_one ) {
-                $stmt = SQL::Composer::Update->new(
-                    table  => $table,
-                    values => [ %$values ],
-                    where  => [ 'id_' . $type => $id ],
-                    driver => 'sqlite',
-                );
-                ($sth, $errstr) = $self->_db_execute( $stmt )
-            }
+        if ( $errstr && $one_to_one ) {
+            # Can't quite do ::Upsert
+            $stmt = SQL::Composer::Update->new(
+                table  => $table,
+                values => [ %$values ],
+                where  => [ 'id_' . $type => $id ],
+                driver => 'sqlite',
+            );
+            ($sth, $errstr, $err_id) = $self->_db_execute( $stmt );
         }
 
         if ( $errstr ) {
-            if ( $errstr =~ /column \S+ is not unique/ ) {
+            if ( ($err_id||-1) == SQLITE_CONSTRAINT ) {
                 return PONAPI_CONFLICT_ERROR;
             }
             return PONAPI_ERROR;
@@ -703,10 +703,10 @@ sub _db_execute {
         1;
     } or do {
         my $e = "$@"||'Unknown error';
-        return undef, $e;
+        return undef, $e, $DBI::err;
     };
 
-    return ( $sth, ( !$ret ? $DBI::errstr : () ) );
+    return ( $sth, ( !$ret ? ($DBI::errstr, $DBI::err) : () ) );
 }
 
 __PACKAGE__->meta->make_immutable;
