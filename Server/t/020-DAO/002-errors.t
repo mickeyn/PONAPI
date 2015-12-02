@@ -364,6 +364,20 @@ subtest '... create' => sub {
             {
                 data => {
                     relationships => {
+                        authors => [
+                            { type => people => id => 42 },
+                            { type => people => id => 43 },
+                        ]
+                    }
+                }
+            },
+            400 => 'Types `articles` and `authors` are one-to-one, but got multiple values',
+            "... error on unknown relationships"
+        ],
+        [
+            {
+                data => {
+                    relationships => {
                         nope => { type => people => id => 42 }
                     }
                 }

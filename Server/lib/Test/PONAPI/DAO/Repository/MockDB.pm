@@ -206,10 +206,6 @@ sub _create_relationships {
     my ( $self, %args ) = @_;
     my ( $doc, $type, $id, $rel_type, $data ) = @args{qw< document type id rel_type data >};
 
-    if ( ref($data) ne 'ARRAY' || !@$data ) {
-        return PONAPI_BAD_DATA;
-    }
-
     my $table_obj     = $self->tables->{$type};
     my $all_relations = $table_obj->RELATIONS->{$rel_type};
 
@@ -231,10 +227,6 @@ sub _create_relationships {
 
     my $table = $all_relations->{rel_table};
     my $one_to_one = !$self->has_one_to_many_relationship($type, $rel_type);
-
-    if ( $one_to_one && @all_values > 1 ) {
-        return PONAPI_BAD_DATA;
-    }
 
     foreach my $values ( @all_values ) {
         my ($stmt, $return, $extra) = $table_obj->insert_stmt(
@@ -294,9 +286,6 @@ sub create_relationships {
     $dbh->commit;
 
     return $ret;
-
-    # TODO: check type can have To-Many relationships or error
-
     # TODO: add missing login
 }
 

@@ -161,10 +161,18 @@ sub validate {
                 $repo->type_has_fields($type, [keys %{$e->{'attributes'}}])
                     or $self->_bad_request( "Type `$type` does not have at least one of the attributes in data" );
             }
-            if ( exists $e->{'relationships'} ) {
-                for ( keys %{ $e->{'relationships'} } ) {
-                    $self->_bad_request( "Types `$type` and `$_` are not related", 404 )
-                        unless $repo->has_relationship( $type, $_ );
+            my $relationships = $e->{'relationships'} || {};
+            if ( %$relationships ) {
+                for my $rel_type ( keys %$relationships ) {
+                    if ( !$repo->has_relationship( $type, $rel_type ) ) {
+                        $self->_bad_request( "Types `$type` and `$rel_type` are not related", 404 );
+                    }
+                    elsif ( !$repo->has_one_to_many_relationship($type, $rel_type) ) {
+                        my $rel_data = $relationships->{$rel_type} || {};
+                        $rel_data = [ $rel_data ] if ref($rel_data) ne 'ARRAY';
+
+                        $self->_bad_request( "Types `$type` and `$rel_type` are one-to-one, but got multiple values" ) if @$rel_data > 1;
+                    }
                 }
             }
         }
