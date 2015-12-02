@@ -406,7 +406,7 @@ sub _update_relationships {
                 );
 
                 if ( $return && $PONAPI_ERROR_RETURN{$return} ) {
-                    $extra->{message} ||= 'Unknown error';
+                    $extra->{detail} ||= 'Unknown error';
                     return $return, $extra;
                 }
 

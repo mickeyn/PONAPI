@@ -172,8 +172,8 @@ sub _validate_rel_type {
 }
 
 sub _bad_request {
-    my ( $self, $message, $status ) = @_;
-    $self->document->raise_error( $status||400, { message => $message } );
+    my ( $self, $detail, $status ) = @_;
+    $self->document->raise_error( $status||400, { detail => $detail } );
     $self->set_is_valid(0);
     return;
 }
@@ -181,7 +181,7 @@ sub _bad_request {
 sub _server_failure {
     my $self = shift;
     $self->document->raise_error( 500, {
-        message => 'A fatal error has occured, please check server logs'
+        detail => 'A fatal error has occured, please check server logs'
     });
     return;
 }
@@ -195,34 +195,34 @@ sub _verify_repository_response {
     if ( $PONAPI_ERROR_RETURN{$ret} ) {
         my $doc = $self->document;
         if ( $ret == PONAPI_CONFLICT_ERROR ) {
-            my $msg = $extra->{message} || 'Conflict error in the data';
-            $doc->raise_error( 409, { message => $msg } );
+            my $msg = $extra->{detail} || 'Conflict error in the data';
+            $doc->raise_error( 409, { detail => $msg } );
         }
         elsif ( $ret == PONAPI_UNKNOWN_RELATIONSHIP ) {
-            my $msg = $extra->{message};
+            my $msg = $extra->{detail};
             if ( !$msg ) {
                 $msg  = 'Unknown relationship between types';
                 $msg .= ' ' . $extra->{type} . ' and ' . $extra->{rel_type}
                     if $extra->{type} and $extra->{rel_type};
             }
-            $doc->raise_error( 404, { message => $msg } );
+            $doc->raise_error( 404, { detail => $msg } );
         }
         elsif ( $ret == PONAPI_UNKNOWN_RESOURCE_IN_DATA ) {
-            my $msg = $extra->{message};
+            my $msg = $extra->{detail};
             if ( !$msg ) {
                 $msg  = "Unknown resource in data";
                 $msg .= ': ' . join ", ", @{ $extra->{resources} }
                     if @{ $extra->{resources} || [] };
             }
-            $doc->raise_error( 400, { message => $msg } );
+            $doc->raise_error( 400, { detail => $msg } );
         }
         elsif ( $ret == PONAPI_BAD_DATA ) {
-            my $msg = $extra->{message} || 'Bad data in request';
-            $doc->raise_error( 400, { message => $msg } );
+            my $msg = $extra->{detail} || 'Bad data in request';
+            $doc->raise_error( 400, { detail => $msg } );
         }
         # TODO other error codes!
         else {
-            $doc->raise_error( 400, { message => 'Unknown error' } );
+            $doc->raise_error( 400, { detail => 'Unknown error' } );
         }
         return;
     }
@@ -247,7 +247,7 @@ sub _add_success_meta {
     my $self = shift;
 
     $self->document->add_meta(
-        message => 'successful operation on ' . $self->_get_resource_for_meta,
+        detail => 'successful operation on ' . $self->_get_resource_for_meta,
     );
 }
 

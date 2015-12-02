@@ -14,7 +14,7 @@ has 'update_nothing_status' => (
     # http://jsonapi.org/format/#crud-updating-relationship-responses-204
     # Basically, we return a 204, UNLESS it's an ->update() call, in which
     # case it has to return a 404:
-    # http://jsonapi.org/format/#crud-updating-responses-404 
+    # http://jsonapi.org/format/#crud-updating-responses-404
     default => sub { 204 },
 );
 
@@ -23,7 +23,7 @@ sub _verify_update_response {
 
     die "update-like operation returned an unexpected value"
         unless exists $PONAPI_UPDATE_RETURN_VALUES{$ret};
-    
+
     my $doc = $self->document;
     return if $doc->has_errors or $doc->has_status;
 
@@ -38,7 +38,7 @@ sub _verify_update_response {
     else {
         $doc->set_status(202);
     }
-    
+
     return 1;
 };
 
@@ -47,14 +47,14 @@ override _add_success_meta => sub {
 
     my $resource = $self->_get_resource_for_meta;
 
-    my $message = "successfully modified $resource";
+    my $detail = "successfully modified $resource";
     if ( $return_status == PONAPI_UPDATED_NOTHING ) {
         my $status = $self->update_nothing_status;
         $self->document->set_status($status);
-        $message = "modified nothing for $resource"
+        $detail = "modified nothing for $resource"
     }
 
-    $self->document->add_meta( message => $message );
+    $self->document->add_meta( detail => $detail );
 };
 
 no PONAPI::DAO::Constants;

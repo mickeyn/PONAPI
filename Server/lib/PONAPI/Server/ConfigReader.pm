@@ -73,7 +73,7 @@ sub _set_server_send_header {
     my $self = shift;
 
     $self->{'ponapi.spec_version'} = $self->config->{server}{spec_version}
-        || die "[PONAPI Server] server spec version is not configured";
+        // die "[PONAPI Server] server spec version is not configured";
 
     $self->{'ponapi.send_version_header'} =
         ( grep { $self->config->{server}{send_version_header} eq $_ } qw< yes true 1 > ) ? 1 : 0;

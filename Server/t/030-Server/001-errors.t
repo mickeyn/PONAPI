@@ -33,8 +33,8 @@ subtest '... include errors' => sub {
             decode_json $res->content,
             {
                 errors => [{
-                    status  => 404,
-                    message => "Types `articles` and `0` are not related"
+                    status => 404,
+                    detail => "Types `articles` and `0` are not related"
                 }],
                 jsonapi => {version => "1.0"}
             },
@@ -45,7 +45,7 @@ subtest '... include errors' => sub {
         my $res = $app->request( GET '/articles/1/relationships//', @TEST_HEADERS );
         is($res->code, 400, "... error empty-string relationship");
         is(
-            (decode_json($res->content)||{})->{errors}[0]{message},
+            (decode_json($res->content)||{})->{errors}[0]{detail},
             $BAD_REQUEST_MSG,
             "empty-string relationships are not allowed"
         );

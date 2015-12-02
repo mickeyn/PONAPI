@@ -21,9 +21,9 @@ sub execute {
             my @ret = $repo->delete( %{ $self } );
             if ( $self->_verify_repository_response(@ret) ) {
                 $doc->add_meta(
-                    message => "successfully deleted the resource /"
-                             . $self->type
-                             . "/"
+                    detail => "successfully deleted the resource /"
+                            . $self->type
+                            . "/"
                             . $self->id
                 );
             }

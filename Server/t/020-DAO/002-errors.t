@@ -50,8 +50,8 @@ sub error_test {
     isa_ok( $errors, 'ARRAY' );
     is_deeply($headers, [], "... no location headers since it was an error");
 
-    my ($err) = grep { $_->{message} eq $expect->{message} } @{ $errors };
-    is( $err->{message}, $expect->{message}, $desc );
+    my ($err) = grep { $_->{detail} eq $expect->{detail} } @{ $errors };
+    is( $err->{detail}, $expect->{detail}, $desc );
     is( $err->{status},  $expect->{status}, '... and it has the expected error code' );
 }
 
@@ -101,7 +101,7 @@ subtest '... retrieve all' => sub {
         my $doc = $res[2];
         $status ||= 400;
         is( $res[0], $status, "... $status on error" );
-        is( $doc->{errors}[0]{message}, $expected, $desc );
+        is( $doc->{errors}[0]{detail}, $expected, $desc );
         is( scalar( @{ $doc->{errors} } ), 1, "... and that's the only error" );
     }
 };
@@ -150,17 +150,17 @@ subtest '... retrieve' => sub {
             [ 400, [] ],
             "errors come back as 400s + empty extra headers"
         );
-        is( $doc->{errors}[0]{message}, $expected, $desc );
+        is( $doc->{errors}[0]{detail}, $expected, $desc );
     }
 
 # Spec says we can either stop processing as soon as we spot an error, or keep going an accumulate·
 # multiple errors.  Currently we do multiple, so testing that here.
     my $doc = $dao->retrieve( @TEST_ARGS_BASE_TYPE_HAS_BODY, data => { id => 1 } );
     is_deeply(
-        [ sort { $a->{message} cmp $b->{message} } @{ $doc->{errors} } ],
+        [ sort { $a->{detail} cmp $b->{detail} } @{ $doc->{errors} } ],
         [
-            { message => $ERR_ID_MISSING,       status => 400 },
-            { message => $ERR_BODY_NOT_ALLOWED, status => 400 },
+            { detail => $ERR_ID_MISSING,       status => 400 },
+            { detail => $ERR_BODY_NOT_ALLOWED, status => 400 },
         ],
         "DAO can result multiple error objects for one request",
     );
@@ -204,7 +204,7 @@ subtest '... retrieve relationships' => sub {
                 "errors come back as 400s + empty extra headers"
             );
             is(
-                $doc->{errors}[0]{message},
+                $doc->{errors}[0]{detail},
                 $expected,
                 "$desc $method"
             );
@@ -225,7 +225,7 @@ subtest '... create' => sub {
             {
                 errors  => [
                     {
-                        message => 'request body is missing `data`',
+                        detail => 'request body is missing `data`',
                         status => 400
                     }
                 ],
@@ -245,7 +245,7 @@ subtest '... create' => sub {
             {
                 errors  => [
                     {
-                        message => 'conflict between the request type and the data type',
+                        detail => 'conflict between the request type and the data type',
                         status => 409,
                     }
                 ],
@@ -292,12 +292,12 @@ subtest '... create' => sub {
         ],
       )
     {
-        my ( $args, $expected_message, $desc, $expected_status ) = @$tuple;
+        my ( $args, $expected_detail, $desc, $expected_status ) = @$tuple;
         $expected_status ||= 400;
         my @ret = $dao->create(@$args);
         error_test(
             \@ret,
-            { message => $expected_message, status => $expected_status },
+            { detail => $expected_detail, status => $expected_status },
             $desc,
         );
     }
@@ -378,11 +378,11 @@ subtest '... create' => sub {
             @ret = $dao->create(%{ dclone $copy });
         }
         if ( ref($expected) ) {
-            like( $ret[2]->{errors}[0]{message}, $expected, $msg );
+            like( $ret[2]->{errors}[0]{detail}, $expected, $msg );
             like( $w, $expected, "... and the warning matches" );
         }
         else {
-            is( $ret[2]->{errors}[0]{message}, $expected, $msg );
+            is( $ret[2]->{errors}[0]{detail}, $expected, $msg );
             is( $w, '', "... with no warnings" );
         }
         is( $ret[0], $status, "... and with the expected status" );
@@ -408,10 +408,10 @@ subtest '... update' => sub {
             [],
             {
                 jsonapi => { version => '1.0' },
-                meta    => { message => '' },
+                meta    => { detail  => '' },
             }
         ];
-        $ret[2]->{meta}{message} = '';
+        $ret[2]->{meta}{detail} = '';
         is_deeply(
             \@ret,
             $expected,
@@ -436,8 +436,8 @@ subtest '... update' => sub {
                 {
                     errors => [
                         {
-                            message => 'Unknown resource in data',
-                            status  => 400
+                            detail => 'Unknown resource in data',
+                            status => 400
                         }
                     ],
                     jsonapi => { version => '1.0' }
@@ -464,7 +464,7 @@ subtest '... update' => sub {
                 {
                     errors => [
                         {
-                            message => 'Types `articles` and `not_real_rel` are not related',
+                            detail => 'Types `articles` and `not_real_rel` are not related',
                             status => 404
                         }
                     ],
@@ -547,7 +547,7 @@ subtest '... explodey repo errors' => sub {
                     {
                         errors => [
                             {
-                                message => 'A fatal error has occured, please check server logs',
+                                detail => 'A fatal error has occured, please check server logs',
                                 status => 500
                             }
                         ],
@@ -569,7 +569,7 @@ subtest '... explodey repo errors' => sub {
             is( $ret[0], 404, "... bad types in $method lead to a 404" );
             ok(
                 scalar(
-                    grep( $_->{message} eq 'Type `fake` doesn\'t exist.',
+                    grep( $_->{detail} eq 'Type `fake` doesn\'t exist.',
                         @{ $ret[2]->{errors} } )
                 ),
                 "... and returns an error document explaining why"
@@ -592,8 +592,8 @@ subtest '... explodey repo errors' => sub {
                     {
                         'errors' => [
                             {
-                                'message' => 'A fatal error has occured, please check server logs',
-                                'status'  => 500
+                                'detail' => 'A fatal error has occured, please check server logs',
+                                'status' => 500
                             }
                         ],
                         'jsonapi' => { 'version' => '1.0' }
@@ -658,7 +658,7 @@ subtest '... delete' => sub {
             [ $status, [] ],
             "... errors come back as $status + empty extra headers"
         );
-        is( $doc->{errors}[0]{message}, $expected, "... $desc" );
+        is( $doc->{errors}[0]{detail}, $expected, "... $desc" );
     }
 };
 
@@ -692,7 +692,7 @@ subtest '... create_relationships' => sub {
         my $doc = $res[2];
         $status ||= 400;
         is( $res[0], $status, "... $status on error" );
-        is( $doc->{errors}[0]{message}, $expected, $desc);
+        is( $doc->{errors}[0]{detail}, $expected, $desc);
     }
 
 
@@ -714,7 +714,7 @@ subtest '... create_relationships' => sub {
             ],
         );
     };
-    my $msg = delete $ret[2]->{errors}[0]{message};
+    my $msg = delete $ret[2]->{errors}[0]{detail};
     is_deeply(
         \@ret,
         [
@@ -730,7 +730,7 @@ subtest '... create_relationships' => sub {
     like(
         $msg,
         qr/Conflict error in the data/,
-        "... no DBD error in message as expected"
+        "... no DBD error in detail as expected"
     );
 
     my @second_retrieve = $dao->retrieve( @TEST_ARGS_BASE_TYPE_ID_NO_BODY );
@@ -754,7 +754,7 @@ subtest '... create_relationships' => sub {
             {
                 errors => [
                     {
-                        message => 'Bad data in request',
+                        detail => 'Bad data in request',
                         status => 400
                     }
                 ],
@@ -788,7 +788,7 @@ subtest '... delete_relationships' => sub {
                         'version' => '1.0'
                     },
                     'meta' => {
-                        'message' => 'modified nothing for /articles/1/comments => [{"id":99}]'
+                        'detail' => 'modified nothing for /articles/1/comments => [{"id":99}]'
                     }
                 }
             ],
@@ -812,8 +812,8 @@ subtest '... delete_relationships' => sub {
                 {
                     'errors' => [
                         {
-                            'message' => 'Types `articles` and `authors` are one-to-one',
-                            'status'  => 400,
+                            'detail' => 'Types `articles` and `authors` are one-to-one',
+                            'status' => 400,
                         }
                     ],
                     'jsonapi' => {

@@ -57,7 +57,7 @@ PONAPI::DAO - Interface to a JSON API.
     my $dao = PONAPI::DAO->new( repository => $repository );
 
     my ($status, $doc) = $dao->retrieve( type => $type, id => $id );
-    die "retrieve failed; status $status, $doc->{errors}[0]{message}"
+    die "retrieve failed; status $status, $doc->{errors}[0]{detail}"
         if $doc->{errors};
 
     use Data::Dumper;
@@ -183,7 +183,7 @@ the document to be encoded.
 
     if ( $doc->{errors} ) {
         die "Welp! Got some errors: ", join "\n",
-                map $_->{message}, @{ $doc->{errors} };
+                map $_->{detail}, @{ $doc->{errors} };
     }
 
     say $doc->{data}{attributes}{title};

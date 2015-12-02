@@ -26,9 +26,9 @@ sub execute {
             my @ret = $repo->create( %{ $self } );
             if ( $self->_verify_repository_response(@ret) ) {
                 $doc->add_meta(
-                    message => "successfully created the resource: "
-                             . $self->type
-                             . " => "
+                    detail => "successfully created the resource: "
+                            . $self->type
+                            . " => "
                             . $self->json->encode( $self->data )
                 );
             }
