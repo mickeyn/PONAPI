@@ -6,6 +6,7 @@ use warnings;
 use Scalar::Util qw[ blessed ];
 
 use Test::More;
+use JSON::XS;
 
 use PONAPI::DAO;
 use Test::PONAPI::DAO::Repository::MockDB;
@@ -163,6 +164,31 @@ subtest '... retrieve' => sub {
         ],
         "DAO can result multiple error objects for one request",
     );
+
+    # Retrieve with nonexistent stuff
+    foreach my $tuple (
+        [
+            { include => [qw/nope/],          },
+            { detail => "Types `people` and `nope` are not related", status => 404, },
+        ],
+        [
+            { fields => {nope => ['nope']},   },
+            { detail => "Type `nope` doesn\'t exist.", status => 404, },
+        ],
+        [
+            { fields => {people => ['nope']}, },
+            { detail => "Type `people` does not have at least one of the requested fields", status => 400, },
+        ],
+    )
+    {
+        my ($args, $expect) = @$tuple;
+        my @ret = $dao->retrieve( @TEST_ARGS_BASE_TYPE_HAS_BODY, type => 'people', id => 42, %$args );
+        error_test(
+            \@ret,
+            $expect,
+            "... catched bad retrieve with ", encode_json($args),
+        );
+    }
 };
 
 
@@ -331,7 +357,7 @@ subtest '... create' => sub {
                     }
                 }
             },
-            400 => 'Unknown resource in data',
+            400 => 'Type `articles` does not have at least one of the attributes in data',
             "... error on unknown attributes"
         ],
         [
@@ -435,7 +461,7 @@ subtest '... update' => sub {
                 {
                     errors => [
                         {
-                            detail => 'Unknown resource in data',
+                            detail => 'Type `articles` does not have at least one of the attributes in data',
                             status => 400
                         }
                     ],

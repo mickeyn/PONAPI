@@ -138,16 +138,34 @@ sub validate {
             or $self->_bad_request( "Types `$type` and `$_` are not related", 404 );
     }
 
+    if ( $self->has_fields ) {
+        my $fields = $self->fields || {};
+        foreach my $fields_type ( keys %$fields ) {
+            if (! $repo->has_type( $fields_type ) ) {
+                $self->_bad_request( "Type `$fields_type` doesn't exist.", 404 );
+            }
+            else {
+                $repo->type_has_fields($fields_type, $fields->{$fields_type})
+                    or $self->_bad_request( "Type `$fields_type` does not have at least one of the requested fields" );
+            }
+        }
+    }
+
     # `rel_type` relationship exists
     $self->_validate_rel_type( $repo );
 
     # check relationships in `data` (if exist)
     if ( $self->has_data ) {
         for my $e ( $self->_get_data_elements ) {
-            next unless exists $e->{'relationships'};
-            for ( keys %{ $e->{'relationships'} } ) {
-                $self->_bad_request( "Types `$type` and `$_` are not related", 404 )
-                    unless $repo->has_relationship( $type, $_ );
+            if ( %{ $e->{'attributes'} || {} } ) {
+                $repo->type_has_fields($type, [keys %{$e->{'attributes'}}])
+                    or $self->_bad_request( "Type `$type` does not have at least one of the attributes in data" );
+            }
+            if ( exists $e->{'relationships'} ) {
+                for ( keys %{ $e->{'relationships'} } ) {
+                    $self->_bad_request( "Types `$type` and `$_` are not related", 404 )
+                        unless $repo->has_relationship( $type, $_ );
+                }
             }
         }
     }

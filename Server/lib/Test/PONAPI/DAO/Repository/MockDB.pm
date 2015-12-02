@@ -65,6 +65,17 @@ sub has_one_to_many_relationship {
     return;
 }
 
+sub type_has_fields {
+    my ($self, $type, $fields) = @_;
+
+    # Check for invalid 'fields'
+    my $table_obj = $self->tables->{$type};
+    my %columns   = map +($_=>1), @{ $table_obj->COLUMNS };
+    
+    return 1 unless grep !exists $columns{$_}, @$fields;
+    return;
+}
+
 sub retrieve_all {
     my ( $self, %args ) = @_;
     my $type = $args{type};
