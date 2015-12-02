@@ -641,7 +641,8 @@ sub _add_included {
     while ( my $inc = $sth->fetchrow_hashref() ) {
         my $id = delete $inc->{id};
         $doc->add_included( type => $type, id => $id )
-            ->add_attributes( %{$inc} );
+            ->add_attributes( %{$inc} )
+            ->add_self_link( $args{req_base} );
     }
 }
 

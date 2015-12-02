@@ -8,6 +8,7 @@ use Plack::Test;
 
 use HTTP::Request::Common;
 
+use Data::Dumper;
 use JSON::XS;
 
 BEGIN {
@@ -115,17 +116,41 @@ subtest '... basic server test' => sub {
     }
 
     {
-        my $res = $app->request( GET '/articles/1', %CT );
+        my $res = $app->request( GET '/articles/1?include=authors', %CT );
         ok( $res->is_success, 'Successful request' );
         test_response_headers($res);
 
-        my $content = decode_json $res->content;
-        my $expect;
+        my $content  = decode_json($res->content);
+        my $included = $content->{included}->[0];
+        my $expect = {
+            id         => 42,
+            type       => 'people',
+            attributes => {
+                name       => 'John',
+                age        => 80,
+                gender     => 'male',
+            },
+            links      => {
+                self => '/people/42',
+            },
+        };
         is_deeply(
-            $content,
-            $article_1,
-            "... content is as expected"
+            $included,
+            $expect,
+            "... included is as expected"
         );
+
+        my $link = $included->{links}{self};
+        my $retrieve_res = $app->request( GET $link, %CT );
+
+        my $retrieve_content = decode_json $retrieve_res->content;
+        my %test = map +($_ => $retrieve_content->{data}{$_}), qw/type id attributes links/;
+
+        is_deeply(
+            \%test,
+            $included,
+            "... and the included data is the same we fetch"
+        ) or diag(Dumper($retrieve_content));
     }
 
 

@@ -489,7 +489,8 @@ subtest '... create + create_relationship' => sub {
                            attributes
                                  => { body => 'Great insight' },
                            id    => 13,
-                           type  => 'comments'
+                           type  => 'comments',
+                           links => { self => '/comments/13' },
                          },
                          {
                            attributes
@@ -499,7 +500,8 @@ subtest '... create + create_relationship' => sub {
                                       name   => 'Doof'
                                     },
                            id    => 92,
-                           type  => 'people'
+                           type  => 'people',
+                           links => { self => '/people/92' },
                          }
                        ],
            jsonapi  => { version => '1.0' }
