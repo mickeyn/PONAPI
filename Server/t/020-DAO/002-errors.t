@@ -651,14 +651,11 @@ subtest '... delete' => sub {
     {
         my ( $args, $expected, $desc, $status ) = @$tuple;
         my @ret = $dao->delete(@$args);
-        my $doc = pop @ret;
-        $status ||= 400;
-        is_deeply(
+        error_test(
             \@ret,
-            [ $status, [] ],
-            "... errors come back as $status + empty extra headers"
+            { detail => $expected, status => $status||400 },
+            "... $desc",
         );
-        is( $doc->{errors}[0]{detail}, $expected, "... $desc" );
     }
 };
 
@@ -714,25 +711,13 @@ subtest '... create_relationships' => sub {
             ],
         );
     };
-    my $msg = delete $ret[2]->{errors}[0]{detail};
-    is_deeply(
+    
+    error_test(
         \@ret,
-        [
-            409,
-            [],
-            {
-                errors  => [ { status => 409 } ],
-                jsonapi => { version => '1.0' }
-            }
-        ],
-        "... relationship conflict returns a 409"
+        { detail => "Conflict error in the data", status => 409 },
+        "... no DBD error in detail as expected",
     );
-    like(
-        $msg,
-        qr/Conflict error in the data/,
-        "... no DBD error in detail as expected"
-    );
-
+    
     my @second_retrieve = $dao->retrieve( @TEST_ARGS_BASE_TYPE_ID_NO_BODY );
     is_deeply(
         \@first_retrieve,
@@ -746,24 +731,11 @@ subtest '... create_relationships' => sub {
         data     => [ { type => fake => id => 99 }, ],
     );
 
-    is_deeply(
+    error_test(
         \@ret,
-        [
-            400,
-            [],
-            {
-                errors => [
-                    {
-                        detail => 'Bad data in request',
-                        status => 400
-                    }
-                ],
-                jsonapi => { version => '1.0' }
-            }
-        ],
+        { detail => 'Bad data in request', status => 400 },
         "... discrepancies between the requested rel_type and the data are spotted",
     );
-
 };
 
 
@@ -804,24 +776,10 @@ subtest '... delete_relationships' => sub {
             data     => [ { type => people => id => 42 }, ],
         );
 
-        is_deeply(
+        error_test(
             \@ret,
-            [
-                400,
-                [],
-                {
-                    'errors' => [
-                        {
-                            'detail' => 'Types `articles` and `authors` are one-to-one',
-                            'status' => 400,
-                        }
-                    ],
-                    'jsonapi' => {
-                        'version' => '1.0'
-                    }
-                }
-            ],
-            "... can't delete_relationships on a one-to-one"
+            { detail => 'Types `articles` and `authors` are one-to-one', status => 400 },
+            "... can't delete_relationships on a one-to-one",
         );
     }
 
