@@ -66,7 +66,10 @@ sub update_stmt {
         )
     } or do {
         my $msg = "$@"||'Unknown error';
-        return undef, PONAPI_ERROR, { detail => $msg };
+        PONAPI::Exception->throw(
+            sql_error => "Failed to compose an update with the given values",
+            internal => $msg,
+        );
     };
 
     return $stmt;

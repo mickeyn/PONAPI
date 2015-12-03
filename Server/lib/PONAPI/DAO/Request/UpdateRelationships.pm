@@ -26,18 +26,16 @@ sub execute {
     my $doc = $self->document;
 
     if ( $self->is_valid ) {
+        local $@;
         eval {
             my @ret = $repo->update_relationships( %{ $self } );
 
-            if ( $self->_verify_repository_response(@ret) ) {
-                $self->_add_success_meta(@ret)
-                    if $self->_verify_update_response($repo, @ret);
-            }
+            $self->_add_success_meta(@ret)
+                if $self->_verify_update_response($repo, @ret);
             1;
         } or do {
-            # NOTE: this probably needs to be more sophisticated - SL
-            warn "$@";
-            $self->_server_failure;
+            my $e = $@;
+            $self->_handle_error($e);
         };
     }
 

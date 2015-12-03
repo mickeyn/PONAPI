@@ -42,6 +42,14 @@ my $ERR_BODY_NOT_ALLOWED    = "request body is not allowed";
 my $ERR_RELTYPE_MISSING     = "`relationship type` is missing";
 my $ERR_RELTYPE_NOT_ALLOWED = "`relationship type` not allowed";
 
+my $SERVER_ERROR = [ 500, [], {
+    errors => [{
+        detail => 'A fatal error has occured, please check server logs',
+        status => 500
+    }],
+    jsonapi => { version => '1.0' }
+}];
+
 sub error_test {
     my ($ret, $expect, $desc) = @_;
     my ($status, $headers, $doc) = @$ret;
@@ -50,8 +58,15 @@ sub error_test {
     isa_ok( $errors, 'ARRAY' );
     is_deeply($headers, [], "... no location headers since it was an error");
 
-    my ($err) = grep { $_->{detail} eq $expect->{detail} } @{ $errors };
-    is( $err->{detail}, $expect->{detail}, $desc );
+    my $expect_is_re = ref($expect->{detail}) eq ref(qr//);
+
+    my ($err) = grep {
+        $expect_is_re
+            ? $_->{detail} =~ $expect->{detail}
+            : $_->{detail} eq $expect->{detail}
+    } @$errors;
+    my $test = $expect_is_re ? \&like : \&is;
+    $test->( $err->{detail}, $expect->{detail}, $desc );
     is( $err->{status},  $expect->{status}, '... and it has the expected error code' );
 }
 
@@ -345,7 +360,7 @@ subtest '... create' => sub {
     foreach my $tuple (
         [
             { data => { attributes => {} } },
-            400 => qr/\A(?:DBD\b|Unknown error\z)/,
+            409 => qr/\A(?:DBD|SQL error: Table constraint failed:)/,
             "... error on bad create values"
         ],
         [
@@ -392,7 +407,7 @@ subtest '... create' => sub {
                       { authors => { type => comments => id => 5 } }
                 }
             },
-            400 => 'Bad data in request',
+            400 => 'Bad request data: Data has type `comments`, but we were expecting `people`',
             "... error on relationship conflicts"
         ],
       )
@@ -527,7 +542,7 @@ subtest '... update' => sub {
                 relationships => {
                     comments => [
                         # These two are comments of article 2
-                        { type => comments => id => 5 },
+                        { type => comments => id => 5  },
                         { type => comments => id => 12 },
                     ],
                 },
@@ -540,7 +555,7 @@ subtest '... update' => sub {
         \@second_retrieve,
         "... changes are rolled back"
     );
-    is( $ret[0], 400, "... the update had the correct error status" );
+    is( $ret[0], 409, "... the update had the correct error status" );
     ok( exists $ret[2]->{errors}, "... and an errors member" );
     ok( $w,                       "... and we gave a perl warning, too" );
 };
@@ -580,22 +595,29 @@ subtest '... explodey repo errors' => sub {
             };
             is_deeply(
                 \@ret,
-                [
-                    500,
-                    [],
-                    {
-                        errors => [
-                            {
-                                detail => 'A fatal error has occured, please check server logs',
-                                status => 500
-                            }
-                        ],
-                        jsonapi => { version => '1.0' }
-                    }
-                ],
+                $SERVER_ERROR,
                 "... expected PONAPI response for error on $method"
             );
             like( $w, $expected_re, "... expected perl error from $method" );
+
+            # See that we catch people using PONAPI::DAO::Exception without
+            # an exception type
+            ($w, @ret) = ('');
+            my $msg = "my great exception!";
+            @ret = do {
+                no warnings 'redefine';
+                local $SIG{__WARN__} = sub { $w .= shift };
+                local *$glob = sub {
+                    PONAPI::DAO::Exception->throw(message => $msg)
+                };
+                $dao->$method(@$arguments);
+            };
+            is_deeply(
+                \@ret,
+                $SERVER_ERROR,
+                "... we catch exceptions without types",
+            );
+            like($w, qr/\A\Q$msg\E/, "... and make them warn");
 
             # Let's also test that all the methods detect unknown types
             $w = '';
@@ -625,19 +647,7 @@ subtest '... explodey repo errors' => sub {
             }
             is_deeply(
                 \@ret,
-                [
-                    500,
-                    [],
-                    {
-                        'errors' => [
-                            {
-                                'detail' => 'A fatal error has occured, please check server logs',
-                                'status' => 500
-                            }
-                        ],
-                        'jsonapi' => { 'version' => '1.0' }
-                    }
-                ],
+                $SERVER_ERROR,
                 "... Bad ->$method implementations are detected"
             );
             like(
@@ -753,7 +763,7 @@ subtest '... create_relationships' => sub {
 
     error_test(
         \@ret,
-        { detail => "Conflict error in the data", status => 409 },
+        { detail => qr/SQL error: Table constraint failed:/, status => 409 },
         "... no DBD error in detail as expected",
     );
 
@@ -772,7 +782,7 @@ subtest '... create_relationships' => sub {
 
     error_test(
         \@ret,
-        { detail => 'Bad data in request', status => 400 },
+        { detail => 'Bad request data: Data has type `fake`, but we were expecting `comments`', status => 400 },
         "... discrepancies between the requested rel_type and the data are spotted",
     );
 };

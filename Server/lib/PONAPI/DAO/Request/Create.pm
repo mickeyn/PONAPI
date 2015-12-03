@@ -21,30 +21,29 @@ sub execute {
     my ( $self, $repo ) = @_;
     my $doc = $self->document;
 
+    my @headers;
     if ( $self->is_valid ) {
+        local $@;
         eval {
-            my @ret = $repo->create( %{ $self } );
-            if ( $self->_verify_repository_response(@ret) ) {
-                $doc->add_meta(
-                    detail => "successfully created the resource: "
-                            . $self->type
-                            . " => "
-                            . $self->json->encode( $self->data )
-                );
-            }
+            $repo->create( %{ $self } );
+            $doc->add_meta(
+                detail => "successfully created the resource: "
+                        . $self->type
+                        . " => "
+                        . $self->json->encode( $self->data )
+            );
+
+            my $document  = $doc->build;
+            my $self_link = $document->{data}{links}{self};
+            $self_link  //= "/$document->{data}{type}/$document->{data}{id}";
+
+            push @headers, Location => $self_link;
+
             1;
         } or do {
-            # NOTE: this probably needs to be more sophisticated - SL
-            warn "$@";
-            $self->_server_failure;
+            my $e = $@;
+            $self->_handle_error($e);
         };
-    }
-
-    my @headers;
-    if ( !$doc->has_errors ) {
-        # TODO make less terrible
-        my $document = $doc->build;
-        push @headers, Location => "/$document->{data}{type}/$document->{data}{id}";
     }
 
     return $self->response( @headers );
