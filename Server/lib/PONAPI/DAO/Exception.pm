@@ -20,14 +20,12 @@ has status => (
 
 has bad_request_data => (
     is        => 'ro',
-    isa       => 'Str',
-    predicate => 'has_bad_request_data',
+    isa       => 'Bool',
 );
 
 has sql_error => (
     is        => 'ro',
-    isa       => 'Str',
-    predicate => 'has_sql_error',
+    isa       => 'Bool',
 );
 
 # Picked from Throwable::Error

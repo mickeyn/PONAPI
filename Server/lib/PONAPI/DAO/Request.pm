@@ -159,15 +159,14 @@ sub _handle_error {
         }
     }
 
-    my $doc    = $self->document;
     my $status = $e->status;
     if ( $e->sql_error ) {
         my $msg = $e->message;
-        $doc->raise_error( $status, { detail => "SQL error: $msg" });
+        $self->_bad_request( "SQL error: $msg", $status );
     }
     elsif ( $e->bad_request_data ) {
         my $msg = $e->message;
-        $doc->raise_error( $status, { detail => "Bad request data: $msg" } );
+        $self->_bad_request( "Bad request data: $msg", $status );
     }
     else {
         # Unknown error..?
