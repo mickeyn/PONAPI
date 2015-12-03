@@ -5,7 +5,9 @@ use Moose;
 use PONAPI::DAO::Constants;
 
 extends 'PONAPI::DAO::Request';
-with 'PONAPI::DAO::Request::Role::UpdateLike';
+
+with 'PONAPI::DAO::Request::Role::UpdateLike',
+     'PONAPI::DAO::Request::Role::HasDataMethods';
 
 has data => (
     is        => 'ro',
@@ -22,15 +24,15 @@ sub BUILD {
 }
 
 sub execute {
-    my ( $self, $repo ) = @_;
+    my $self = shift;
     my $doc = $self->document;
 
     if ( $self->is_valid ) {
         local $@;
         eval {
-            my @ret = $repo->create_relationships( %{ $self } );
+            my @ret = $self->repository->create_relationships( %{ $self } );
             $self->_add_success_meta(@ret)
-                    if $self->_verify_update_response($repo, @ret);
+                if $self->_verify_update_response(@ret);
             1;
         } or do {
             my $e = $@;
@@ -42,16 +44,16 @@ sub execute {
 }
 
 sub _validate_rel_type {
-    my ( $self, $repo ) = @_;
+    my $self = shift;
     return unless $self->has_rel_type;
 
     my $type     = $self->type;
     my $rel_type = $self->rel_type;
 
-    if ( !$repo->has_relationship( $type, $rel_type ) ) {
+    if ( !$self->repository->has_relationship( $type, $rel_type ) ) {
         $self->_bad_request( "Types `$type` and `$rel_type` are not related", 404 );
     }
-    elsif ( !$repo->has_one_to_many_relationship( $type, $rel_type ) ) {
+    elsif ( !$self->repository->has_one_to_many_relationship( $type, $rel_type ) ) {
         $self->_bad_request( "Types `$type` and `$rel_type` are one-to-one" );
     }
 }

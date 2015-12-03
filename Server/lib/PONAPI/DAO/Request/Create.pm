@@ -6,6 +6,9 @@ use PONAPI::DAO::Constants;
 
 extends 'PONAPI::DAO::Request';
 
+with 'PONAPI::DAO::Request::Role::HasDataAttribute',
+     'PONAPI::DAO::Request::Role::HasDataMethods';
+
 sub BUILD {
     my $self = shift;
 
@@ -18,14 +21,14 @@ sub BUILD {
 }
 
 sub execute {
-    my ( $self, $repo ) = @_;
+    my $self = shift;
     my $doc = $self->document;
 
     my @headers;
     if ( $self->is_valid ) {
         local $@;
         eval {
-            $repo->create( %{ $self } );
+            $self->repository->create( %{ $self } );
             $doc->add_meta(
                 detail => "successfully created the resource: "
                         . $self->type

@@ -3,13 +3,15 @@ package PONAPI::DAO::Request::Update;
 use Moose;
 
 extends 'PONAPI::DAO::Request';
-with 'PONAPI::DAO::Request::Role::UpdateLike';
+
+with 'PONAPI::DAO::Request::Role::UpdateLike',
+     'PONAPI::DAO::Request::Role::HasDataAttribute',
+     'PONAPI::DAO::Request::Role::HasDataMethods';
 
 has '+update_nothing_status' => (
     # http://jsonapi.org/format/#crud-updating-responses-404
     default => sub { 404 },
 );
-
 
 sub BUILD {
     my $self = shift;
@@ -24,16 +26,17 @@ sub BUILD {
 }
 
 sub execute {
-    my ( $self, $repo ) = @_;
+    my $self = shift;
     my $doc = $self->document;
 
     if ( $self->is_valid ) {
         local $@;
         eval {
-            my @ret = $repo->update( %{ $self } );
+            my @ret = $self->repository->update( %{ $self } );
 
             $self->_add_success_meta(@ret)
-                if $self->_verify_update_response($repo, @ret);
+                if $self->_verify_update_response(@ret);
+
             1;
         } or do {
             my $e = $@;

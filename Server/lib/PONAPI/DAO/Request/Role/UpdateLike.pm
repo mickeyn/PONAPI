@@ -20,7 +20,7 @@ has 'update_nothing_status' => (
 );
 
 sub _verify_update_response {
-    my ($self, $repo, $ret, @extra) = @_;
+    my ( $self, $ret, @extra ) = @_;
 
     PONAPI::DAO::Exception->throw(
         internal => "update-like operation returned an unexpected value"
@@ -31,7 +31,7 @@ sub _verify_update_response {
 
     if ( $self->respond_to_updates_with_200 ) {
         $doc->set_status(200);
-        $repo->retrieve(
+        $self->repository->retrieve(
             type     => $self->type,
             id       => $self->id,
             document => $doc,

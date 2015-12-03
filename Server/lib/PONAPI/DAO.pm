@@ -35,9 +35,12 @@ sub _action {
     my $self         = shift;
     my $action_class = shift;
 
-    $action_class->new(@_)
-        ->validate ( $self->repository )
-        ->execute  ( $self->repository );
+    my $ponapi_parameters = @_ == 1 ? $_[0] : +{ @_ };
+    $ponapi_parameters->{repository} = $self->repository;
+
+    $action_class->new($ponapi_parameters)
+        ->validate()
+        ->execute();
 }
 
 

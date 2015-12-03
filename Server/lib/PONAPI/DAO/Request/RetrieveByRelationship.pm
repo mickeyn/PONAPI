@@ -4,6 +4,12 @@ use Moose;
 
 extends 'PONAPI::DAO::Request';
 
+with 'PONAPI::DAO::Request::Role::HasFields',
+     'PONAPI::DAO::Request::Role::HasFilter',
+     'PONAPI::DAO::Request::Role::HasInclude',
+     'PONAPI::DAO::Request::Role::HasPage',
+     'PONAPI::DAO::Request::Role::HasSort';
+
 sub BUILD {
     my $self = shift;
 
@@ -13,12 +19,12 @@ sub BUILD {
 }
 
 sub execute {
-    my ( $self, $repo ) = @_;
+    my $self = shift;
 
     if ( $self->is_valid ) {
         local $@;
         eval {
-            $repo->retrieve_by_relationship( %{ $self } );
+            $self->repository->retrieve_by_relationship( %{ $self } );
             1;
         } or do {
             my $e = $@;

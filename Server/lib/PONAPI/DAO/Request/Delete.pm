@@ -13,18 +13,18 @@ sub BUILD {
 }
 
 sub execute {
-    my ( $self, $repo ) = @_;
+    my $self = shift;
     my $doc = $self->document;
 
     if ( $self->is_valid ) {
         local $@;
         eval {
-            my @ret = $repo->delete( %{ $self } );
+            my @ret = $self->repository->delete( %{ $self } );
             $doc->add_meta(
                 detail => "successfully deleted the resource /"
-                            . $self->type
-                            . "/"
-                            . $self->id
+                        . $self->type
+                        . "/"
+                        . $self->id
             );
             1;
         } or do {

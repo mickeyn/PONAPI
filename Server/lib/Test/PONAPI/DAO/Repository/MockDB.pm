@@ -72,7 +72,7 @@ sub type_has_fields {
     # Check for invalid 'fields'
     my $table_obj = $self->tables->{$type};
     my %columns   = map +($_=>1), @{ $table_obj->COLUMNS };
-    
+
     return 1 unless grep !exists $columns{$_}, @$fields;
     return;
 }

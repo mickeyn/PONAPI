@@ -6,6 +6,12 @@ use JSON::XS;
 use PONAPI::Builder::Document;
 use PONAPI::DAO::Constants;
 
+has 'repository' => (
+    is       => 'ro',
+    does     => 'PONAPI::DAO::Repository',
+    required => 1,
+);
+
 has req_base => (
     is       => 'ro',
     isa      => 'Str',
@@ -61,30 +67,6 @@ has json => (
     default => sub { JSON::XS->new->allow_nonref->utf8->canonical },
 );
 
-for ( qw< data fields filter page > ) {
-    has $_ => (
-        traits   => [ 'Hash' ],
-        is       => 'ro',
-        isa      => 'HashRef',
-        default  => sub { +{} },
-        handles  => {
-            "has_$_" => 'count',
-        },
-    );
-}
-
-for ( qw< include sort > ) {
-    has $_ => (
-        traits   => [ 'Array' ],
-        is       => 'ro',
-        isa      => 'ArrayRef',
-        default  => sub { +[] },
-        handles  => {
-            "has_$_" => 'count',
-        },
-    );
-}
-
 sub response {
     my ( $self, @headers ) = @_;
     my $doc = $self->document;
@@ -100,129 +82,43 @@ sub check_has_id       { $_[0]->has_id       or  return $_[0]->_bad_request( "`i
 sub check_has_rel_type { $_[0]->has_rel_type or  return $_[0]->_bad_request( "`relationship type` is missing"  ); 1; }
 sub check_no_rel_type  { $_[0]->has_rel_type and return $_[0]->_bad_request( "`relationship type` not allowed" ); 1; }
 sub check_no_body      { $_[0]->has_body     and return $_[0]->_bad_request( "request body is not allowed"     ); 1; }
-sub check_has_data     { $_[0]->has_data     or  return $_[0]->_bad_request( "request body is missing `data`"  ); 1; }
-
-sub check_data_has_type {
-    my $self = shift;
-
-    for ( $self->_get_data_elements ) {
-        return $self->_bad_request( "conflict between the request type and the data type" )
-            unless exists $_->{'type'};
-    }
-
-    return 1;
-}
-
-sub check_data_type_match {
-    my $self = shift;
-
-    for ( $self->_get_data_elements ) {
-        return $self->_bad_request( "conflict between the request type and the data type", 409 )
-            unless $_->{'type'} eq $self->type;
-    }
-
-    return 1;
-}
 
 sub validate {
-    my ( $self, $repo ) = @_;
+    my $self = shift;
+    my $repo = $self->repository;
     my $type = $self->type;
 
-    # `type` exists in repo
+    # `type` exists
     $repo->has_type( $type )
         or $self->_bad_request( "Type `$type` doesn't exist.", 404 );
 
-    # `include` relationships exist
-    for ( @{ $self->include } ) {
-        $repo->has_relationship( $type, $_ )
-            or $self->_bad_request( "Types `$type` and `$_` are not related", 404 );
-    }
+    # `include` types & relationships
+    $self->does('PONAPI::DAO::Request::Role::HasInclude')
+        and $self->_validate_included();
 
-    if ( $self->has_fields ) {
-        my $fields = $self->fields;
-        foreach my $fields_type ( keys %$fields ) {
-            if (! $repo->has_type( $fields_type ) ) {
-                $self->_bad_request( "Type `$fields_type` doesn't exist.", 404 );
-            }
-            else {
-                $repo->type_has_fields($fields_type, $fields->{$fields_type})
-                    or $self->_bad_request(
-                        "Type `$fields_type` does not have at least one of the requested fields"
-                    );
-            }
-        }
-    }
+    # `fields` types & relationships
+    $self->does('PONAPI::DAO::Request::Role::HasFields')
+        and $self->_validate_fields();
 
     # `rel_type` relationship exists
-    $self->_validate_rel_type( $repo );
+    $self->_validate_rel_type();
 
     # check `data`
-    if ( $self->has_data ) {
-        $self->_validate_data_attributes( $repo );
-        $self->_validate_data_relationships( $repo );
-    }
+    $self->does('PONAPI::DAO::Request::Role::HasDataAttribute')
+        and $self->_validate_data();
 
     return $self;
 }
 
 sub _validate_rel_type {
-    my ( $self, $repo ) = @_;
+    my $self = shift;
     return unless $self->has_rel_type;
 
     my $type     = $self->type;
     my $rel_type = $self->rel_type;
 
     $self->_bad_request( "Types `$type` and `$rel_type` are not related", 404 )
-        unless $repo->has_relationship( $type, $rel_type );
-}
-
-sub _validate_data_attributes {
-    my ( $self, $repo ) = @_;
-    my $type = $self->type;
-
-    for my $elem ( $self->_get_data_elements ) {
-        my $e = $elem || {};
-        next unless exists $e->{attributes};
-        $repo->type_has_fields( $type, [ keys %{ $e->{'attributes'} } ] )
-            or $self->_bad_request(
-                "Type `$type` does not have at least one of the attributes in data"
-            );
-    }
-}
-
-sub _validate_data_relationships {
-    my ( $self, $repo ) = @_;
-    my $type = $self->type;
-
-    for my $elem ( $self->_get_data_elements ) {
-        my $e = $elem || {};
-        my $relationships = $e->{'relationships'};
-        next unless $e->{'relationships'};
-
-        if ( %$relationships ) {
-            for my $rel_type ( keys %$relationships ) {
-                if ( !$repo->has_relationship( $type, $rel_type ) ) {
-                    $self->_bad_request(
-                        "Types `$type` and `$rel_type` are not related",
-                        404
-                    );
-                }
-                elsif ( !$repo->has_one_to_many_relationship( $type, $rel_type )
-                        and ref $relationships->{$rel_type} eq 'ARRAY'
-                        and @{ $relationships->{$rel_type} } > 1
-                ) {
-                    $self->_bad_request(
-                        "Types `$type` and `$rel_type` are one-to-one, but got multiple values"
-                    );
-                }
-            }
-        }
-    }
-}
-
-sub _get_data_elements {
-    my $self = shift;
-    return ( ref $self->data eq 'ARRAY' ? @{ $self->data } : $self->data );
+        unless $self->repository->has_relationship( $type, $rel_type );
 }
 
 sub _bad_request {
