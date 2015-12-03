@@ -833,4 +833,106 @@ subtest '... delete_relationships' => sub {
 
 };
 
+subtest '... illegal params' => sub {
+    # Bad params for request.
+    my %all_args = (
+        id       => 1,
+        rel_type => 'authors',
+        data     => { type => articles => id => 1 },
+        page     => {},
+        include  => [ qw/comments/ ],
+        fields   => { articles => [qw/title/] },
+    );
+
+    my %request = (
+        retrieve_all => {
+            args    => \@TEST_ARGS_BASE_TYPE_NO_BODY,
+            allowed => [qw/ page include fields /],
+        },
+        retrieve     => {
+            args    => \@TEST_ARGS_BASE_TYPE_ID_NO_BODY,
+            allowed => [qw/ include fields id /],
+        },
+        retrieve_relationships => {
+            args    => [@TEST_ARGS_BASE_TYPE_ID_NO_BODY, rel_type => 'authors'],
+            allowed => [qw/ include fields id rel_type /],
+        },
+        retrieve_by_relationship => {
+            args    => [@TEST_ARGS_BASE_TYPE_ID_NO_BODY, rel_type => 'authors'],
+            allowed => [qw/ include fields id rel_type /],
+        },
+
+        create => {
+            args    => [ @TEST_ARGS_BASE_TYPE_HAS_BODY, data => {
+                @TEST_ARGS_BASE_TYPE, attributes => { title => "woah" },
+            } ],
+            allowed => [qw/ id data /],
+        },
+        delete => {
+            args    => \@TEST_ARGS_BASE_TYPE_ID_NO_BODY,
+            allowed => [qw/ id /],
+        },
+
+        update => {
+            args    => [ @TEST_ARGS_BASE_TYPE_ID_HAS_BODY, data => { @TEST_ARGS_BASE_TYPE_ID, attributes => { title => "foobar" } } ],
+            allowed => [qw/ id data /],
+        },
+
+        update_relationships => {
+            args    => [@TEST_ARGS_BASE_TYPE_ID_HAS_BODY, rel_type => 'authors', data => { type => 'people', id => 5555 }],
+            allowed => [qw/ id rel_type data /],
+        },
+        delete_relationships => {
+            args    => [@TEST_ARGS_BASE_TYPE_ID_HAS_BODY, rel_type => 'comments', data => [{ type => 'people', id => 5555 }]],
+            allowed => [qw/ id rel_type data /],
+        },
+        create_relationships => {
+            args    => [@TEST_ARGS_BASE_TYPE_ID_HAS_BODY, rel_type => 'comments', data => [{ type => 'people', id => 5555 }]],
+            allowed => [qw/ id rel_type data /],
+        },
+    );
+
+    foreach my $action ( sort keys %request ) {
+        my ($args, $allowed) = @{ $request{$action} }{qw/args allowed/};
+        my %allowed = map +($_=>1), @$allowed;
+
+        my $glob = do {
+            no strict 'refs';
+            \*{"Test::PONAPI::DAO::Repository::MockDB::${action}"};
+        };
+
+        {
+            use PONAPI::DAO::Constants;
+            no warnings 'redefine';
+            local *$glob = sub {
+                my ($self, %args) = @_;
+                $args{document}->add_resource( type => 'comments', id => 1 );
+                return PONAPI_UPDATED_NORMAL;
+            };
+            use warnings;
+
+            my @base_ret = $dao->$action(@$args);
+            cmp_ok($base_ret[0], '<', 300, "... without any changes, we get a successful $action");
+
+            my @disallowed = grep !exists $allowed{$_}, sort keys %all_args;
+            foreach my $disallowed_arg ( @disallowed ) {
+                my @ret = $dao->$action(@$args,
+                    $disallowed_arg => $all_args{$disallowed_arg},
+                );
+                TODO: {
+                    local $TODO = "Not yet checked";
+                    error_test(
+                        \@ret,
+                        {
+                            detail => "Parameter `$disallowed_arg`is not allowed for this request",
+                            status => 400,
+                        },
+                        "... catches $disallowed_arg being passed to $action",
+                    );
+                }
+            }
+        }
+    }
+};
+
 done_testing;
