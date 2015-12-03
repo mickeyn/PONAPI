@@ -25,7 +25,6 @@ sub BUILD {
 
 sub execute {
     my $self = shift;
-    my $doc = $self->document;
 
     if ( $self->is_valid ) {
         local $@;
