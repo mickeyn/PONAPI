@@ -139,7 +139,7 @@ sub validate {
     }
 
     if ( $self->has_fields ) {
-        my $fields = $self->fields || {};
+        my $fields = $self->fields;
         foreach my $fields_type ( keys %$fields ) {
             if (! $repo->has_type( $fields_type ) ) {
                 $self->_bad_request( "Type `$fields_type` doesn't exist.", 404 );
@@ -180,7 +180,8 @@ sub _validate_data_attributes {
     my ( $self, $repo ) = @_;
     my $type = $self->type;
 
-    for my $e ( $self->_get_data_elements ) {
+    for my $elem ( $self->_get_data_elements ) {
+        my $e = $elem || {};
         next unless exists $e->{attributes};
         $repo->type_has_fields( $type, [ keys %{ $e->{'attributes'} } ] )
             or $self->_bad_request(
@@ -193,7 +194,8 @@ sub _validate_data_relationships {
     my ( $self, $repo ) = @_;
     my $type = $self->type;
 
-    for my $e ( $self->_get_data_elements ) {
+    for my $elem ( $self->_get_data_elements ) {
+        my $e = $elem || {};
         my $relationships = $e->{'relationships'};
         next unless $e->{'relationships'};
 
