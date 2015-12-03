@@ -12,6 +12,7 @@ use Test::PONAPI::DAO::Repository::MockDB::Table::People;
 use Test::PONAPI::DAO::Repository::MockDB::Table::Comments;
 
 use PONAPI::DAO::Constants;
+use PONAPI::DAO::Exception;
 
 with 'PONAPI::DAO::Repository';
 
@@ -82,13 +83,13 @@ sub retrieve_all {
     my $doc  = $args{document};
 
     my $stmt = $self->tables->{$type}->select_stmt(%args);
-    return $self->_add_resources( stmt => $stmt, %args );
+    $self->_add_resources( stmt => $stmt, %args );
 }
 
 sub retrieve {
     my ( $self, %args ) = @_;
     $args{filter}{id} = delete $args{id};
-    return $self->retrieve_all(%args);
+    $self->retrieve_all(%args);
 }
 
 sub retrieve_relationships {
@@ -97,11 +98,7 @@ sub retrieve_relationships {
 
     my $rels = $self->_find_resource_relationships(%args);
 
-    if ( !$rels || !ref $rels ) {
-        $rels ||= PONAPI_ERROR;
-        return $rels;
-    }
-    elsif ( !@$rels ) {
+    if ( !@$rels ) {
         $doc->add_null_resource;
     }
     else {
@@ -110,8 +107,6 @@ sub retrieve_relationships {
 
         $doc->add_resource( %$_ ) for @{$rels};
     }
-
-    return PONAPI_OK;
 }
 
 sub retrieve_by_relationship {
@@ -120,13 +115,9 @@ sub retrieve_by_relationship {
 
     my $rels = $self->_find_resource_relationships(%args);
 
-    if ( !$rels || !ref($rels) ) {
-        $rels ||= PONAPI_ERROR;
-        return $rels;
-    }
-    elsif ( !@$rels ) {
+    if ( !@$rels ) {
         $doc->add_null_resource;
-        return PONAPI_OK;
+        return;
     }
 
     my $q_type = $rels->[0]{type};
@@ -138,7 +129,7 @@ sub retrieve_by_relationship {
         filter => { id => $q_ids },
     );
 
-    return $self->_add_resources(
+    $self->_add_resources(
         document              => $doc,
         stmt                  => $stmt,
         type                  => $q_type,
@@ -152,6 +143,25 @@ sub create {
     my ( $self, %args ) = @_;
     my ( $doc, $type, $data ) = @args{qw< document type data >};
 
+    my $dbh = $self->dbh;
+    $dbh->begin_work;
+
+    local $@;
+    eval {
+        $self->_create(%args);
+        $dbh->commit;
+    }
+    or do {
+        my $e = $@;
+        $dbh->rollback;
+        die $e;
+    };
+}
+
+sub _create {
+    my ( $self, %args ) = @_;
+    my ( $doc, $type, $data ) = @args{qw< document type data >};
+
     my $attributes    = $data->{attributes} || {};
     my $relationships = delete $data->{relationships} || {};
 
@@ -161,45 +171,27 @@ sub create {
         values => $attributes,
     );
 
-    if ( $return && $PONAPI_ERROR_RETURN{$return} ) {
-        return $return, $extra;
-    }
+    $self->_db_execute( $stmt );
 
-    my $dbh = $self->dbh;
-    $dbh->begin_work;
-
-    my ( $sth, $errstr ) = $self->_db_execute( $stmt );
-    # TODO: 409 Conflict
-    if ( $errstr ) {
-        $dbh->rollback;
-        return PONAPI_ERROR;
-    }
-
-    my $new_id = $dbh->last_insert_id("","","","");
+    my $new_id = $self->dbh->last_insert_id("","","","");
 
     foreach my $rel_type ( keys %$relationships ) {
         my $rel_data = $relationships->{$rel_type};
         $rel_data = [ $rel_data ] if ref($rel_data) ne 'ARRAY';
-        my $ret = $self->_create_relationships(
+        $self->_create_relationships(
             %args,
             id       => $new_id,
             rel_type => $rel_type,
             data     => $rel_data,
         );
-
-        if ( $ret && $PONAPI_ERROR_RETURN{$ret} ) {
-            $dbh->rollback;
-            return $ret;
-        }
     }
 
-    $dbh->commit;
     # Spec says we MUST return this, both here and in the Location header;
     # the DAO takes care of the header, but we need to put it in the doc
     $doc->add_resource( type => $type, id => $new_id );
 
     $doc->set_status(201);
-    return PONAPI_OK;
+    return;
 }
 
 sub _create_relationships {
@@ -216,7 +208,10 @@ sub _create_relationships {
         my $key_type = $all_relations->{type};
 
         if ( $data_type ne $key_type ) {
-            return PONAPI_BAD_DATA;
+            PONAPI::DAO::Exception->throw(
+                message          => "Data has type `$data_type`, but we were expecting `$key_type`",
+                bad_request_data => 1,
+            );
         }
 
         $relationship->{'id_' . $type}     = $id;
@@ -234,31 +229,24 @@ sub _create_relationships {
             values => $values,
         );
 
-        if ( $return && $PONAPI_ERROR_RETURN{$return} ) {
-            return $return, $extra;
-        }
-
-        my ( $sth, $errstr, $err_id );
-        eval  { ($sth, $errstr, $err_id) = $self->_db_execute( $stmt ); 1; }
-        or do { ($sth, $errstr, $err_id) = ('', "$@"||"Unknown error", $DBI::err) };
-
-        if ( $errstr && $one_to_one ) {
-            # Can't quite do ::Upsert
-            $stmt = SQL::Composer::Update->new(
-                table  => $table,
-                values => [ %$values ],
-                where  => [ 'id_' . $type => $id ],
-                driver => 'sqlite',
-            );
-            ($sth, $errstr, $err_id) = $self->_db_execute( $stmt );
-        }
-
-        if ( $errstr ) {
-            if ( ($err_id||-1) == SQLITE_CONSTRAINT ) {
-                return PONAPI_CONFLICT_ERROR;
+        eval  { $self->_db_execute( $stmt ); 1; }
+        or do { 
+            my $e = $@;
+            local $@ = $@;
+            if ( $one_to_one && eval { $e->sql_error } ) {
+                # Can't quite do ::Upsert
+                $stmt = SQL::Composer::Update->new(
+                    table  => $table,
+                    values => [ %$values ],
+                    where  => [ 'id_' . $type => $id ],
+                    driver => 'sqlite',
+                );
+                $self->_db_execute( $stmt );
             }
-            return PONAPI_ERROR;
-        }
+            else {
+                die $e;
+            }
+        };
     }
 
     return PONAPI_UPDATED_NORMAL;
@@ -272,19 +260,14 @@ sub create_relationships {
     $dbh->begin_work;
 
     my $ret;
-    eval  { $ret = $self->_create_relationships( %args ); 1 }
+    eval  { $ret = $self->_create_relationships( %args ); 1; }
     or do {
-        my $e = "$@"||'Unknown error';
-        $ret = PONAPI_ERROR;
+        my $e = $@||'Unknown error';
+        $dbh->rollback;
+        die $e;
     };
 
-    if ( $PONAPI_ERROR_RETURN{$ret} ) {
-        $dbh->rollback;
-        return $ret;
-    }
-
     $dbh->commit;
-
     return $ret;
     # TODO: add missing login
 }
@@ -299,17 +282,12 @@ sub update {
     my $ret;
     eval  { $ret = $self->_update( %args ); 1 }
     or do {
-        my $e = "$@"||'Unknown error';
-        $ret = PONAPI_ERROR;
+        my $e = $@;
+        $dbh->rollback;
+        die $e;
     };
 
-    if ( $PONAPI_ERROR_RETURN{$ret} ) {
-        $dbh->rollback;
-    }
-    else {
-        $dbh->commit;
-    }
-
+    $dbh->commit;
     return $ret;
 }
 
@@ -332,14 +310,8 @@ sub _update {
         );
 
         $return = $extra_return if defined $extra_return;
-        if ( $PONAPI_ERROR_RETURN{$return} ) {
-            return $return;
-        }
 
-        my ( $sth, $errstr ) = $self->_db_execute( $stmt );
-        if ( $errstr ) {
-            return PONAPI_ERROR;
-        }
+        my $sth = $self->_db_execute( $stmt );
 
         # We had a successful update, but it updated nothing
         if ( !$sth->rows ) {
@@ -349,16 +321,13 @@ sub _update {
 
     if ( %$relationships ) {
         foreach my $rel_type ( keys %$relationships ) {
-            my $return = $self->_update_relationships(
+            $self->_update_relationships(
                 document => $doc,
                 type     => $type,
                 id       => $id,
                 rel_type => $rel_type,
                 data     => $relationships->{$rel_type},
             );
-            if ( $return && $PONAPI_ERROR_RETURN{$return} ) {
-                return $return;
-            }
         }
     }
 
@@ -372,8 +341,7 @@ sub _update_relationships {
     if ( $data ) {
         $data = [ keys(%$data) ? $data : () ] if ref($data) eq 'HASH';
 
-        my $clear_ret = $self->_clear_relationships(%args);
-        return $clear_ret if $clear_ret && $PONAPI_ERROR_RETURN{$clear_ret};
+        $self->_clear_relationships(%args);
         if ( @$data ) {
             my $table_obj = $self->tables->{$type};
             my ( $column_rel_type, $rel_table ) =
@@ -390,15 +358,7 @@ sub _update_relationships {
                     values => \%insert,
                 );
 
-                if ( $return && $PONAPI_ERROR_RETURN{$return} ) {
-                    $extra->{detail} ||= 'Unknown error';
-                    return $return, $extra;
-                }
-
-                my ( $sth, $errstr ) = $self->_db_execute( $stmt );
-                if ( $errstr ) {
-                    return PONAPI_ERROR;
-                }
+                $self->_db_execute( $stmt );
             }
         }
         return PONAPI_UPDATED_NORMAL;
@@ -418,21 +378,14 @@ sub update_relationships {
     my $ret;
     eval  { $ret = $self->_update_relationships( %args ); 1 }
     or do {
-        my $e = "$@"||'Unknown error';
-        $ret = PONAPI_ERROR;
+        my $e = $@;
+        $dbh->rollback;
+        die $e;
     };
 
-    if ( $PONAPI_ERROR_RETURN{$ret} ) {
-        $dbh->rollback;
-    }
-    else {
-        $dbh->commit;
-    }
+    $dbh->commit;
 
     return $ret;
-
-    # TODO: check type can have To-Many relationships or error
-
     # TODO: add missing login
 }
 
@@ -448,10 +401,7 @@ sub _clear_relationships {
         where => { 'id_' . $type => $id },
     );
 
-    my ( $sth, $errstr ) = $self->_db_execute( $stmt );
-    if ( $errstr ) {
-        return PONAPI_ERROR;
-    }
+    $self->_db_execute( $stmt );
 
     return PONAPI_UPDATED_NORMAL;
 }
@@ -466,15 +416,36 @@ sub delete : method {
         where => { id => $id },
     );
 
-    my ( $sth, $errstr ) = $self->_db_execute( $stmt );
-    $errstr and return PONAPI_ERROR;
+    my $sth = $self->_db_execute( $stmt );
 
     # TODO: Should this also clear relationships?
 
-    return PONAPI_OK;
+    return;
 }
 
 sub delete_relationships {
+    my ( $self, %args ) = @_;
+
+    my $dbh = $self->dbh;
+    $dbh->begin_work;
+
+    my $ret;
+    eval {
+        $ret = $self->_delete_relationships(%args);
+        1;
+    }
+    or do {
+        my $e = $@;
+        $dbh->rollback;
+        die $e;
+    };
+
+    $dbh->commit;
+
+    return $ret;
+}
+
+sub _delete_relationships {
     my ( $self, %args ) = @_;
     my ( $doc, $type, $id, $rel_type, $data ) = @args{qw< document type id rel_type data >};
 
@@ -489,7 +460,10 @@ sub delete_relationships {
         my $data_type = delete $resource->{type};
 
         if ( $data_type ne $key_type ) {
-            return PONAPI_CONFLICT_ERROR;
+            PONAPI::DAO::Exception->throw(
+                message          => "Data has type `$data_type`, but we were expecting `$key_type`",
+                bad_request_data => 1,
+            );
         }
 
         my $delete_where = {
@@ -503,8 +477,6 @@ sub delete_relationships {
     my $ret = PONAPI_UPDATED_NORMAL;
 
     my $rows_modified = 0;
-    my $dbh = $self->dbh;
-    $dbh->begin_work;
     DELETE:
     foreach my $where ( @all_values ) {
         my $stmt = $table_obj->delete_stmt(
@@ -512,25 +484,11 @@ sub delete_relationships {
             where => $where,
         );
 
-        my ( $sth, $errstr ) = $self->_db_execute( $stmt );
-
-        if ( $errstr ) {
-            $ret = PONAPI_ERROR;
-            last DELETE;
-        }
-        else {
-            $rows_modified += $sth->rows;
-        }
+        my $sth = $self->_db_execute( $stmt );
+        $rows_modified += $sth->rows;
     }
 
-    if ( $PONAPI_ERROR_RETURN{$ret} ) {
-        $dbh->rollback;
-    }
-    else {
-        $ret = PONAPI_UPDATED_NOTHING if !$rows_modified;
-        $dbh->commit;
-    }
-
+    $ret = PONAPI_UPDATED_NOTHING if !$rows_modified;
 
     # TODO: add missing login
     return $ret;
@@ -544,8 +502,7 @@ sub _add_resources {
     my ( $doc, $stmt, $type, $convert_to_collection, $req_base ) =
         @args{qw< document stmt type convert_to_collection req_base >};
 
-    my ( $sth, $errstr ) = $self->_db_execute( $stmt );
-    $errstr and return PONAPI_ERROR;
+    my $sth = $self->_db_execute( $stmt );
 
     if ( $convert_to_collection ) {
         $doc->convert_to_collection;
@@ -557,13 +514,12 @@ sub _add_resources {
         $rec->add_attribute( $_ => $row->{$_} ) for keys %{$row};
         $rec->add_self_link( $req_base );
 
-        my $ret = $self->_add_resource_relationships($rec, %args);
-        return $ret if $PONAPI_ERROR_RETURN{$ret};
+        $self->_add_resource_relationships($rec, %args);
     }
 
     $doc->has_resources or $doc->add_null_resource;
 
-    return PONAPI_OK;
+    return;
 }
 
 sub _add_resource_relationships {
@@ -578,8 +534,7 @@ sub _add_resource_relationships {
         document => $doc,
         fields   => $args{fields},
     );
-    $rels or return PONAPI_OK;
-    return $rels if $PONAPI_ERROR_RETURN{$rels};
+    $rels or return;
 
     for my $r ( keys %$rels ) {
         my $relationship = $rels->{$r};
@@ -599,7 +554,7 @@ sub _add_resource_relationships {
         ) if exists $include{$r};
     }
 
-    return PONAPI_OK;
+    return;
 }
 
 sub _add_included {
@@ -614,8 +569,7 @@ sub _add_included {
         fields => $fields,
     );
 
-    my ( $sth, $errstr ) = $self->_db_execute( $stmt );
-    $errstr and return PONAPI_ERROR;
+    my $sth = $self->_db_execute( $stmt );
 
     while ( my $inc = $sth->fetchrow_hashref() ) {
         my $id = delete $inc->{id};
@@ -629,9 +583,7 @@ sub _find_resource_relationships {
     my ( $self, %args ) = @_;
     my ( $doc, $rel_type ) = @args{qw< document rel_type >};
 
-    my $rels = $self->_fetchall_relationships(%args) || PONAPI_ERROR;
-
-    return $rels if $PONAPI_ERROR_RETURN{$rels};
+    my $rels = $self->_fetchall_relationships(%args);
 
     return $rels->{$rel_type} if exists $rels->{$rel_type};
 
@@ -658,10 +610,7 @@ sub _fetchall_relationships {
             fields => [ 'id_' . $rel_type ],
         );
 
-        my ( $sth, $errstr ) = $self->_db_execute( $stmt );
-        if ( $errstr ) {
-            return PONAPI_ERROR;
-        }
+        my $sth = $self->_db_execute( $stmt );
 
         $ret{$name} = +[
             map +{ type => $rel_type, id => @$_ },
@@ -680,13 +629,38 @@ sub _db_execute {
     eval {
         $sth = $self->dbh->prepare($stmt->to_sql);
         $ret = $sth->execute($stmt->to_bind);
+        # This should never happen, since the DB handle is
+        # created with RaiseError.
+        die $DBI::errstr if !$ret;
         1;
     } or do {
         my $e = "$@"||'Unknown error';
-        return undef, $e, $DBI::err;
+        my $errstr = $DBI::errstr;
+        my $err_id = $DBI::err;
+
+        my $message;
+        if ( $err_id && $err_id == SQLITE_CONSTRAINT ) {
+            PONAPI::DAO::Exception->throw(
+                message   => "Table constraint failed: $errstr",
+                sql_error => 1,
+                status    => 409,
+            );
+        }
+        # TODO better error messages for other codes
+        elsif ( $err_id ) {
+            PONAPI::DAO::Exception->throw(
+                message   => $errstr,
+                sql_error => 1,
+            );
+        }
+        else {
+            PONAPI::DAO::Exception->throw(
+                message => "Non-SQL error while running query? $e"
+            )
+        }
     };
 
-    return ( $sth, ( !$ret ? ($DBI::errstr, $DBI::err) : () ) );
+    return $sth;
 }
 
 __PACKAGE__->meta->make_immutable;

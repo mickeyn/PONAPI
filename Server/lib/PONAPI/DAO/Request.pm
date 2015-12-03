@@ -238,32 +238,6 @@ sub _server_failure {
     return;
 }
 
-sub _verify_repository_response {
-    my ( $self, $ret, $extra ) = @_;
-
-    die "operation returned an unexpected value"
-        unless exists $PONAPI_RETURN{$ret};
-
-    if ( $PONAPI_ERROR_RETURN{$ret} ) {
-        my $doc = $self->document;
-        if ( $ret == PONAPI_CONFLICT_ERROR ) {
-            my $msg = $extra->{detail} || 'Conflict error in the data';
-            $doc->raise_error( 409, { detail => $msg } );
-        }
-        elsif ( $ret == PONAPI_BAD_DATA ) {
-            my $msg = $extra->{detail} || 'Bad data in request';
-            $doc->raise_error( 400, { detail => $msg } );
-        }
-        # TODO other error codes!
-        else {
-            $doc->raise_error( 400, { detail => 'Unknown error' } );
-        }
-        return;
-    }
-
-    return 1;
-}
-
 sub _get_resource_for_meta {
     my $self = shift;
 
@@ -283,6 +257,35 @@ sub _add_success_meta {
     $self->document->add_meta(
         detail => 'successful operation on ' . $self->_get_resource_for_meta,
     );
+}
+
+sub _handle_error {
+    my ($self, $e) = @_;
+    {
+        local $@;
+        if ( !eval { $e->isa('PONAPI::DAO::Exception'); } ) {
+            warn "$e";
+            return $self->_server_failure;
+        }
+    }
+
+    my $doc    = $self->document;
+    my $status = $e->status;
+    if ( $e->sql_error ) {
+        my $msg = $e->message;
+        $doc->raise_error( $status, { detail => "SQL error: $msg" });
+    }
+    elsif ( $e->bad_request_data ) {
+        my $msg = $e->message;
+        $doc->raise_error( $status, { detail => "Bad request data: $msg" } );
+    }
+    else {
+        # Unknown error..?
+        warn $e->as_string;
+        $self->_server_failure;
+    }
+
+    return;
 }
 
 __PACKAGE__->meta->make_immutable;

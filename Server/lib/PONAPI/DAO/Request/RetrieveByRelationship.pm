@@ -16,15 +16,13 @@ sub execute {
     my ( $self, $repo ) = @_;
 
     if ( $self->is_valid ) {
+        local $@;
         eval {
-            my @ret = $repo->retrieve_by_relationship( %{ $self } );
-            $self->_verify_repository_response(@ret);
-
+            $repo->retrieve_by_relationship( %{ $self } );
             1;
         } or do {
-            # NOTE: this probably needs to be more sophisticated - SL
-            warn "$@";
-            $self->_server_failure;
+            my $e = $@;
+            $self->_handle_error($e);
         };
     }
 
