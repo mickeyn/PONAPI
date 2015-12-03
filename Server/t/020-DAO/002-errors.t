@@ -42,6 +42,14 @@ my $ERR_BODY_NOT_ALLOWED    = "request body is not allowed";
 my $ERR_RELTYPE_MISSING     = "`relationship type` is missing";
 my $ERR_RELTYPE_NOT_ALLOWED = "`relationship type` not allowed";
 
+my $SERVER_ERROR = [ 500, [], {
+    errors => [{
+        detail => 'A fatal error has occured, please check server logs',
+        status => 500
+    }],
+    jsonapi => { version => '1.0' }
+}];
+
 sub error_test {
     my ($ret, $expect, $desc) = @_;
     my ($status, $headers, $doc) = @$ret;
@@ -587,22 +595,29 @@ subtest '... explodey repo errors' => sub {
             };
             is_deeply(
                 \@ret,
-                [
-                    500,
-                    [],
-                    {
-                        errors => [
-                            {
-                                detail => 'A fatal error has occured, please check server logs',
-                                status => 500
-                            }
-                        ],
-                        jsonapi => { version => '1.0' }
-                    }
-                ],
+                $SERVER_ERROR,
                 "... expected PONAPI response for error on $method"
             );
             like( $w, $expected_re, "... expected perl error from $method" );
+
+            # See that we catch people using PONAPI::DAO::Exception without
+            # an exception type
+            ($w, @ret) = ('');
+            my $msg = "my great exception!";
+            @ret = do {
+                no warnings 'redefine';
+                local $SIG{__WARN__} = sub { $w .= shift };
+                local *$glob = sub {
+                    PONAPI::DAO::Exception->throw(message => $msg)
+                };
+                $dao->$method(@$arguments);
+            };
+            is_deeply(
+                \@ret,
+                $SERVER_ERROR,
+                "... we catch exceptions without types",
+            );
+            like($w, qr/\A\Q$msg\E/, "... and make them warn");
 
             # Let's also test that all the methods detect unknown types
             $w = '';
@@ -632,19 +647,7 @@ subtest '... explodey repo errors' => sub {
             }
             is_deeply(
                 \@ret,
-                [
-                    500,
-                    [],
-                    {
-                        'errors' => [
-                            {
-                                'detail' => 'A fatal error has occured, please check server logs',
-                                'status' => 500
-                            }
-                        ],
-                        'jsonapi' => { 'version' => '1.0' }
-                    }
-                ],
+                $SERVER_ERROR,
                 "... Bad ->$method implementations are detected"
             );
             like(
