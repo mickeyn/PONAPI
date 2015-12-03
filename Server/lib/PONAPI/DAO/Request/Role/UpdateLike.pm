@@ -45,7 +45,7 @@ sub _verify_update_response {
     return 1;
 };
 
-override _add_success_meta => sub {
+sub _add_success_meta {
     my ($self, $return_status) = @_;
 
     my $resource = $self->_get_resource_for_meta;

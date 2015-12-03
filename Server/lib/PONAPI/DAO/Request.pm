@@ -253,14 +253,6 @@ sub _get_resource_for_meta {
     return $resource;
 }
 
-sub _add_success_meta {
-    my $self = shift;
-
-    $self->document->add_meta(
-        detail => 'successful operation on ' . $self->_get_resource_for_meta,
-    );
-}
-
 sub _handle_error {
     my ($self, $e) = @_;
     {
