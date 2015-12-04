@@ -233,18 +233,12 @@ subtest '... retrieve relationships' => sub {
         ],
       )
     {
-        my ( $args, $expected, $desc ) = @$tuple;
+        my ( $args, $expected_detil, $desc, $expected_status ) = @$tuple;
         foreach my $method (qw/retrieve_by_relationship retrieve_relationships/) {
             my @ret = $dao->$method(@$args);
-            my $doc = pop @ret;
-            is_deeply(
+            error_test(
                 \@ret,
-                [ 400, [] ],
-                "errors come back as 400s + empty extra headers"
-            );
-            is(
-                $doc->{errors}[0]{detail},
-                $expected,
+                { detail => $expected_detil, status => $expected_status||400 },
                 "$desc $method"
             );
         }
