@@ -557,7 +557,6 @@ subtest '... update' => sub {
     ok( $w,                       "... and we gave a perl warning, too" );
 };
 
-
 subtest '... delete' => sub {
     foreach my $tuple (
         [
