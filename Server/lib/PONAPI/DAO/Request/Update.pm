@@ -14,17 +14,6 @@ has '+update_nothing_status' => (
     default => sub { 404 },
 );
 
-sub BUILD {
-    my $self = shift;
-
-    $self->check_has_id;
-
-    # http://jsonapi.org/format/#crud-updating-responses-409
-    # A server MUST return 409 Conflict when processing a PATCH request in which the
-    # resource object's type and id do not match the server's endpoint.
-    $self->check_has_data and $self->check_data_has_type and $self->check_data_type_match;
-}
-
 sub execute {
     my $self = shift;
 

@@ -17,14 +17,6 @@ has data => (
     predicate => 'has_data',
 );
 
-sub BUILD {
-    my $self = shift;
-
-    $self->check_has_id;
-    $self->check_has_rel_type;
-    $self->check_has_data;
-}
-
 sub execute {
     my $self = shift;
     if ( $self->is_valid ) {
@@ -43,6 +35,17 @@ sub execute {
     }
 
     return $self->response();
+}
+
+sub _validate_data {
+    my $self = shift;
+
+    # these are chained to avoid multiple errors on the same issue
+    $self->check_has_data
+        and $self->check_data_has_type;
+
+    $self->check_data_attributes();
+    $self->check_data_relationships();
 }
 
 

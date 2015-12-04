@@ -55,54 +55,80 @@ has json => (
     default => sub { JSON::XS->new->allow_nonref->utf8->canonical },
 );
 
-sub check_has_id       { $_[0]->has_id       or  return $_[0]->_bad_request( "`id` is missing"                 ); 1; }
-sub check_has_rel_type { $_[0]->has_rel_type or  return $_[0]->_bad_request( "`relationship type` is missing"  ); 1; }
-
-my %role_to_param = (
-    HasID          => 'id',
-    HasRelationshipType => 'rel_type',
-    HasFields      => 'fields',
-    HasFilter      => 'filter',
-    HasInclude     => 'include',
-    HasPage        => 'page',
-    HasSort        => 'sort',
-    
-);
 sub BUILD {
-    my ($self, $args) = @_;
-
-    my $repo = $self->repository;
+    my ( $self, $args ) = @_;
     my $type = $self->type;
 
     # `type` exists
-    $repo->has_type( $type )
+    $self->repository->has_type( $type )
         or $self->_bad_request( "Type `$type` doesn't exist.", 404 );
 
-    if ( $self->does('PONAPI::DAO::Request::Role::HasDataMethods') ) {
-        $self->has_data && $self->_validate_data;
+    # validate `id` parameter
+    if ( $self->does('PONAPI::DAO::Request::Role::HasID') ) {
+        $self->_bad_request( "`id` is missing for this request" )
+            unless $self->has_id;
     }
-    else {
-        $self->_bad_request("Parameter `data` is not allowed for this request")
-            if exists $args->{data} && $self->has_body;
-    } 
+    elsif ( defined $args->{id} ) {
+        $self->_bad_request( "`id` is not allowed for this request" );
+    }
 
-    foreach my $role ( keys %role_to_param ) {
-        my $param = $role_to_param{$role};
-        if ( $self->does("PONAPI::DAO::Request::Role::$role") ) {
-            my $has_method = "has_${param}";
-            if ( $self->$has_method ) {
-                my $validate   = "_validate_${param}";
-                $self->$validate() if $self->can($validate)
-            }
+    # validate `rel_type` parameter
+    if ( $self->does('PONAPI::DAO::Request::Role::HasRelationshipType') ) {
+        defined $args->{rel_type}
+            ? $self->_validate_rel_type
+            : $self->_bad_request( "`relationship type` is missing for this request" );
+    }
+    elsif ( defined $args->{rel_type} ) {
+        $self->_bad_request( "`relationship type` is not allowed for this request" );
+    }
+
+    # validate `include` parameter
+    if ( defined $args->{include} ) {
+        $self->does('PONAPI::DAO::Request::Role::HasInclude')
+            ? $self->_validate_include
+            : $self->_bad_request( "`include` is not allowed for this request" );
+    }
+
+    # validate `fields` parameter
+    if ( defined $args->{fields} ) {
+        $self->does('PONAPI::DAO::Request::Role::HasFields')
+            ? $self->_validate_fields
+            : $self->_bad_request( "`fields` is not allowed for this request" );
+    }
+
+    # validate `filter` parameter
+    if ( defined $args->{filter} ) {
+        $self->does('PONAPI::DAO::Request::Role::HasFilter')
+            ? $self->_validate_filter
+            : $self->_bad_request( "`filter` is not allowed for this request" );
+    }
+
+    # validate `sort` parameter
+    if ( defined $args->{sort} ) {
+        $self->does('PONAPI::DAO::Request::Role::HasSort')
+            ? $self->_validate_sort
+            : $self->_bad_request( "`sort` is not allowed for this request" );
+    }
+
+    # validate `page` parameter
+    if ( defined $args->{page} ) {
+        $self->does('PONAPI::DAO::Request::Role::HasPage')
+            ? $self->_validate_page
+            : $self->_bad_request( "`page` is not allowed for this request" );
+    }
+
+    # validate `data`
+    if ( $self->has_body ) {
+        if ( $self->can('has_data') ) {
+            $self->_validate_data;
         }
         else {
-            my $status = $param eq 'rel_type' ? 404 : 400;
-            $self->_bad_request("Parameter `$param` is not allowed for this request", $status)
-                if exists $args->{$param};
+            $self->_bad_request( "request body is not allowed" );
         }
     }
-
-    return $self
+    elsif ( $self->can('has_data') ) {
+        $self->_bad_request( "request body is missing" );
+    }
 }
 
 sub response {
@@ -113,16 +139,6 @@ sub response {
         if $self->send_doc_self_link;
 
     return ( $doc->status, \@headers, $doc->build );
-}
-
-sub _validate_rel_type {
-    my $self = shift;
-
-    my $type     = $self->type;
-    my $rel_type = $self->rel_type;
-
-    $self->_bad_request( "Types `$type` and `$rel_type` are not related", 404 )
-        unless $self->repository->has_relationship( $type, $rel_type );
 }
 
 sub _bad_request {

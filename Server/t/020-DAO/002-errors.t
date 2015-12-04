@@ -35,12 +35,14 @@ my @TEST_ARGS_TYPE_ID_HAS_BODY      = ( @TEST_ARGS_TYPE_ID,      @TEST_ARGS_HAS_
 my @TEST_ARGS_BASE_TYPE_ID_HAS_BODY = ( @TEST_ARGS_BASE_TYPE_ID, @TEST_ARGS_HAS_BODY );
 
 
-my $ERR_ID_MISSING          = "`id` is missing";
-my $ERR_ID_NOT_ALLOWED      = "Parameter `id` is not allowed for this request";
-my $ERR_BODY_DATA_MISSING   = "request body is missing `data`";
-my $ERR_BODY_NOT_ALLOWED    = "Parameter `data` is not allowed for this request";
-my $ERR_RELTYPE_MISSING     = "`relationship type` is missing";
-my $ERR_RELTYPE_NOT_ALLOWED = "Parameter `rel_type` is not allowed for this request";
+my $ERR_ID_MISSING          = "`id` is missing for this request";
+my $ERR_ID_NOT_ALLOWED      = "`id` is not allowed for this request";
+my $ERR_BODY_MISSING        = "request body is missing";
+my $ERR_DATA_MISSING        = "request body is missing `data`";
+my $ERR_BODY_NOT_ALLOWED    = "request body is not allowed";
+my $ERR_RELTYPE_MISSING     = "`relationship type` is missing for this request";
+my $ERR_RELTYPE_NOT_ALLOWED = "`relationship type` is not allowed for this request";
+my $ERR_PAGE_NOT_ALLOWED    = "`page` is not allowed for this request";
 
 my $SERVER_ERROR = [ 500, [], {
     errors => [{
@@ -111,13 +113,13 @@ subtest '... retrieve all' => sub {
         ],
       )
     {
-        my ( $args, $expected, $desc, $status ) = @$tuple;
-        my @res = $dao->retrieve_all(@$args);
-        my $doc = $res[2];
-        $status ||= 400;
-        is( $res[0], $status, "... $status on error" );
-        is( $doc->{errors}[0]{detail}, $expected, $desc );
-        is( scalar( @{ $doc->{errors} } ), 1, "... and that's the only error" );
+        my ( $args, $expected_detail, $desc, $expected_status) = @$tuple;
+        my @ret = $dao->retrieve_all(@$args);
+        error_test(
+            \@ret,
+            { detail => $expected_detail, status => $expected_status||400 },
+            "..."
+        );
     }
 };
 
@@ -157,25 +159,23 @@ subtest '... retrieve' => sub {
         ],
       )
     {
-        my ( $args, $expected, $desc ) = @$tuple;
+        my ( $args, $expected_detail, $desc ) = @$tuple;
         my @ret = $dao->retrieve(@$args);
-        my $doc = pop @ret;
-        is_deeply(
+        error_test(
             \@ret,
-            [ 400, [] ],
+            { detail => $expected_detail, status => 400 },
             "errors come back as 400s + empty extra headers"
         );
-        is( $doc->{errors}[0]{detail}, $expected, $desc );
     }
 
-# Spec says we can either stop processing as soon as we spot an error, or keep going an accumulate·
-# multiple errors.  Currently we do multiple, so testing that here.
-    my $doc = $dao->retrieve( @TEST_ARGS_BASE_TYPE_NO_BODY, data => { id => 1 } );
+    # Spec says we can either stop processing as soon as we spot an error, or keep going an accumulate·
+    # multiple errors.  Currently we do multiple, so testing that here.
+    my $ret = $dao->retrieve( @TEST_ARGS_BASE_TYPE_HAS_BODY, data => { id => 1 } );
     is_deeply(
-        [ sort { $a->{detail} cmp $b->{detail} } @{ $doc->{errors} } ],
+        [ sort { $a->{detail} cmp $b->{detail} } @{ $ret->{errors} } ],
         [
-            { detail => $ERR_BODY_NOT_ALLOWED, status => 400 },
             { detail => $ERR_ID_MISSING,       status => 400 },
+            { detail => $ERR_BODY_NOT_ALLOWED, status => 400 },
         ],
         "DAO can result multiple error objects for one request",
     );
@@ -206,6 +206,7 @@ subtest '... retrieve' => sub {
     }
 };
 
+
 subtest '... retrieve relationships' => sub {
     foreach my $tuple (
 
@@ -217,11 +218,10 @@ subtest '... retrieve relationships' => sub {
             "id is required (missing)"
         ],
         [
-            [ @TEST_ARGS_BASE_TYPE_ID_HAS_BODY ],
+            [ @TEST_ARGS_BASE_TYPE_ID_NO_BODY ],
             $ERR_RELTYPE_MISSING,
             "rel_type is missing"
         ],
-
         [
             [
                 @TEST_ARGS_BASE_TYPE_ID_HAS_BODY,
@@ -233,12 +233,12 @@ subtest '... retrieve relationships' => sub {
         ],
       )
     {
-        my ( $args, $expected_detil, $desc, $expected_status ) = @$tuple;
+        my ( $args, $expected_detail, $desc, $expected_status ) = @$tuple;
         foreach my $method (qw/retrieve_by_relationship retrieve_relationships/) {
             my @ret = $dao->$method(@$args);
             error_test(
                 \@ret,
-                { detail => $expected_detil, status => $expected_status||400 },
+                { detail => $expected_detail, status => $expected_status||400 },
                 "$desc $method"
             );
         }
@@ -297,7 +297,7 @@ subtest '... create' => sub {
         [
             [ @TEST_ARGS_BASE_TYPE_NO_BODY, rel_type => 1 ],
             $ERR_RELTYPE_NOT_ALLOWED,
-            "bad rel_type", 400
+            "bad rel_type"
         ],
         [
             [ @TEST_ARGS_BASE_TYPE_NO_BODY, rel_type => 'authors' ],
@@ -306,7 +306,12 @@ subtest '... create' => sub {
         ],
         [
             [ @TEST_ARGS_BASE_TYPE_NO_BODY ],
-            $ERR_BODY_DATA_MISSING,
+            $ERR_BODY_MISSING,
+            "body is missing"
+        ],
+        [
+            [ @TEST_ARGS_BASE_TYPE_HAS_BODY ],
+            $ERR_DATA_MISSING,
             "data is missing"
         ],
 
@@ -326,11 +331,10 @@ subtest '... create' => sub {
       )
     {
         my ( $args, $expected_detail, $desc, $expected_status ) = @$tuple;
-        $expected_status ||= 400;
         my @ret = $dao->create(@$args);
         error_test(
             \@ret,
-            { detail => $expected_detail, status => $expected_status },
+            { detail => $expected_detail, status => $expected_status || 400 },
             $desc,
         );
     }
@@ -653,7 +657,6 @@ subtest '... explodey repo errors' => sub {
 
 };
 
-
 subtest '... delete' => sub {
     foreach my $tuple (
         [
@@ -665,25 +668,21 @@ subtest '... delete' => sub {
             [ @TEST_ARGS_BASE_TYPE_ID_NO_BODY, rel_type => 1 ],
             $ERR_RELTYPE_NOT_ALLOWED,
             "rel_type is not allowed",
-            404
         ],
         [
             [ @TEST_ARGS_BASE_TYPE_ID_NO_BODY, rel_type => 0 ],
             $ERR_RELTYPE_NOT_ALLOWED,
             "rel_type is not allowed (false rel_type value)",
-            404
         ],
         [
             [ @TEST_ARGS_BASE_TYPE_ID_NO_BODY, rel_type => "" ],
             $ERR_RELTYPE_NOT_ALLOWED,
             'rel_type is not allowed (not allowed rel_type "")',
-            404
         ],
         [
             [ @TEST_ARGS_BASE_TYPE_ID_NO_BODY, rel_type => "comments" ],
             $ERR_RELTYPE_NOT_ALLOWED,
             "rel_type is not allowed",
-            404
         ],
         [
             [ @TEST_ARGS_BASE_TYPE_ID_HAS_BODY, data => { type => "" } ],
@@ -711,14 +710,14 @@ subtest '... create_relationships' => sub {
             "... id is missing"
         ],
         [
-            [ @TEST_ARGS_BASE_TYPE_ID_NO_BODY ],
-            "`relationship type` is missing",
-            "... rel_type is missing"
-        ],
-        [
             [ @TEST_ARGS_BASE_TYPE_ID_NO_BODY, rel_type => 'comments' ],
             "request body is missing `data`",
             "... data is missing",
+        ],
+        [
+            [ @TEST_ARGS_BASE_TYPE_ID_HAS_BODY, data => [] ],
+            "`relationship type` is missing",
+            "... rel_type is missing"
         ],
         [
             [ @TEST_ARGS_BASE_TYPE_ID_HAS_BODY, rel_type => 'authors', data => [{}] ],
@@ -727,14 +726,14 @@ subtest '... create_relationships' => sub {
         ],
       )
     {
-        my ( $args, $expected, $desc, $status ) = @$tuple;
-        my @res = $dao->create_relationships(@$args);
-        my $doc = $res[2];
-        $status ||= 400;
-        is( $res[0], $status, "... $status on error" );
-        is( $doc->{errors}[0]{detail}, $expected, $desc);
+        my ( $args, $expected_detail, $desc, $expected_status ) = @$tuple;
+        my @ret = $dao->create_relationships(@$args);
+        error_test(
+            \@ret,
+            { detail => $expected_detail, status => $expected_status||400 },
+            "$desc create_relationships"
+        );
     }
-
 
     # A conflict should return a 409
     # Also testing the rollback here, which is entirely implementation
@@ -831,12 +830,12 @@ subtest '... delete_relationships' => sub {
 subtest '... illegal params' => sub {
     # Bad params for request.
     my %all_args = (
-        id       => { id => 1},
-        rel_type => { rel_type => 'authors'},
-        data     => { data => { type => articles => id => 1 }, has_body => 1},
-        page     => { page    => {} },
-        include  => { include => [ qw/comments/ ]},
-        fields   => { fields  => { articles => [qw/title/] }},
+        id       => { expected_detail => $ERR_ID_NOT_ALLOWED,      id => 1 },
+        rel_type => { expected_detail => $ERR_RELTYPE_NOT_ALLOWED, rel_type => 'authors' },
+        data     => { expected_detail => $ERR_BODY_NOT_ALLOWED,    data => { type => articles => id => 1 }, has_body => 1 },
+        page     => { expected_detail => $ERR_PAGE_NOT_ALLOWED,    page => {} },
+        fields   => { fields => { articles => [qw/title/] } },
+        include  => { include => [ qw/comments/ ] },
     );
 
     my %request = (
@@ -863,6 +862,7 @@ subtest '... illegal params' => sub {
             } ],
             allowed => [qw/ id data /],
         },
+
         delete => {
             args    => \@TEST_ARGS_BASE_TYPE_ID_NO_BODY,
             allowed => [qw/ id /],
@@ -872,7 +872,6 @@ subtest '... illegal params' => sub {
             args    => [ @TEST_ARGS_BASE_TYPE_ID_HAS_BODY, data => { @TEST_ARGS_BASE_TYPE_ID, attributes => { title => "foobar" } } ],
             allowed => [qw/ id data /],
         },
-
         update_relationships => {
             args    => [@TEST_ARGS_BASE_TYPE_ID_HAS_BODY, rel_type => 'authors', data => { type => 'people', id => 5555 }],
             allowed => [qw/ id rel_type data /],
@@ -911,15 +910,15 @@ subtest '... illegal params' => sub {
 
             my @disallowed = grep !exists $allowed{$_}, sort keys %all_args;
             foreach my $disallowed_arg ( @disallowed ) {
+                my $expected_detail = $all_args{$disallowed_arg}{expected_detail};
                 my @ret = $dao->$action(@$args,
                     %{ $all_args{$disallowed_arg} },
                 );
-                my $status = $disallowed_arg eq 'rel_type' ? 404 : 400;
                 error_test(
                     \@ret,
                     {
-                        detail => "Parameter `$disallowed_arg` is not allowed for this request",
-                        status => $status,
+                        detail => $expected_detail || "`$disallowed_arg` is not allowed for this request",
+                        status => 400,
                     },
                     "... catches $disallowed_arg being passed to $action",
                 );
