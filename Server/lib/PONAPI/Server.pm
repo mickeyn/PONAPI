@@ -230,7 +230,7 @@ sub _error_response {
 
     return $self->_response( $args->[0], [], +{
         jsonapi => { version => $self->{'ponapi.spec_version'} },
-        errors  => [ { detail => $args->[1] } ],
+        errors  => [ { detail => $args->[1], status => $args->[0] } ],
     });
 }
 

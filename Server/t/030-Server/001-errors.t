@@ -33,14 +33,13 @@ sub error_test {
     isa_ok( $errors, 'ARRAY' );
 
     my ($err) = grep { $_->{detail} eq $expect->{detail} } @{ $errors };
-    is( $err->{detail}, $expect->{detail}, $desc ) or diag(Dumper($content));
+    is( $err->{detail}, $expect->{detail}, $desc );
     is( $err->{status},  $expect->{status}, '... and it has the expected error code' );
 }
 
+my $app = Plack::Test->create( PONAPI::Server->to_app );
+
 subtest '... include errors' => sub {
-
-    my $app = Plack::Test->create( PONAPI::Server->to_app );
-
     {
         my $res = $app->request( GET '/articles/2?include=comments', @TEST_HEADERS );
         is( $res->code, 200, 'existing relationships are OK' );
@@ -122,8 +121,32 @@ subtest '... include errors' => sub {
             "... bad fields are detected",  
         );
     }
+};
 
-
+subtest '... bad requests' => sub {
+    # Incomplete requests
+    foreach my $req (
+            'fields',
+            'fields=',
+            'fields[articles]',
+            'fields[articles]=',
+            'include',
+            'include=&',
+            'include=',
+            'include[articles]',
+            'page=page',
+            'filter=filter',
+    ) {
+        my $res = $app->request( GET "/articles/1?$req", @TEST_HEADERS );
+        error_test(
+            $res,
+            {
+                detail => '{JSON:API} Bad request',
+                status => 400,
+            },
+            "... bad request $req caught",
+        );
+    }
 };
 
 done_testing;
