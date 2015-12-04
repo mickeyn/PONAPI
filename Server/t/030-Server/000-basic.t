@@ -6,7 +6,7 @@ use warnings;
 use Test::More;
 use Plack::Test;
 
-use HTTP::Request::Common;
+use HTTP::Request::Common qw/GET POST DELETE/;
 
 use Data::Dumper;
 use JSON::XS;
@@ -158,8 +158,89 @@ subtest '... basic server - successful requests' => sub {
             "... and the included data is the same we fetch"
         ) or diag(Dumper($retrieve_content));
     }
+};
 
+my %json_api = ( jsonapi => { version => '1.0' } );
+sub test_successful_request {
+    my ($res) = @_;
+    ok( $res->is_success, 'Successful request to ' . $res->request->method . " " .$res->request->uri )
+        or diag(Dumper($res));
+    test_response_headers($res);
+}
+subtest '... mix' => sub {
+    my $app = Plack::Test->create( PONAPI::Server->to_app );
 
+    my $retrieve_all    = $app->request( GET '/articles',   %CT );
+    test_successful_request($retrieve_all);
+
+    my $retrieve        = $app->request( GET '/articles/2', %CT );
+    test_successful_request($retrieve); 
+
+    my $retrieve_by_rel = $app->request( GET '/articles/2/authors', %CT );
+    test_successful_request($retrieve_by_rel);
+    is(
+        decode_json($retrieve_by_rel->content)->{links}{self},
+        "/people/88",
+        "... retrieve by rel works"
+    );
+
+    my $retrieve_rel    = $app->request( GET '/articles/1/relationships/authors', %CT );
+    test_successful_request($retrieve_rel);
+    is(
+        decode_json($retrieve_rel->content)->{links}{self},
+        "/people/42",
+        "... retrive relationships"
+    );
+
+    my $update_rel  = $app->request(
+        POST '/articles/2/relationships/authors', %CT,
+        'X-HTTP-Method-Override' => 'PATCH',
+        Content => encode_json({ data => { id => 5, type => 'people'} }),
+    );
+    test_successful_request($update_rel);
+
+    my $create_rel  = $app->request(
+        POST '/articles/2/relationships/comments', %CT,
+        Content => encode_json({ data => [{ id => 5555, type => 'comments'}] }),
+    );
+    test_successful_request($create_rel);
+
+    my $delete_rel  = $app->request(
+        DELETE '/articles/2/relationships/comments', %CT,
+        Content => encode_json({ data => [{ id => 5555, type => 'comments'}] }),
+    );
+    test_successful_request($delete_rel);
+
+    my $delete      = $app->request( DELETE '/articles/2', %CT );
+    test_successful_request($delete);
+    is_deeply(
+        decode_json($delete->content),
+        {
+            %json_api,
+            meta => {detail => 'successfully deleted the resource /articles/2'},
+        },
+        "... deleted a resource, got the right meta"
+    );
+    my $delete_again = $app->request( DELETE '/articles/2', %CT );
+    test_successful_request($delete_again);
+    is_deeply(
+        decode_json($delete_again->content),
+        {
+            %json_api,
+            meta => {detail => 'successfully deleted the resource /articles/2'},
+        },
+        "... deleted a deleted, got the right meta"
+    );
+    my $retrieve_2  = $app->request( GET '/articles/2', %CT );
+    test_successful_request($retrieve_2);
+    is_deeply(
+        decode_json($retrieve_2->content),
+        {
+            %json_api,
+            data => undef,
+        },
+        "... retrieved a now-deleted resource, got data => undef"
+    );
 };
 
 subtest '... basic server - config override' => sub {
