@@ -80,7 +80,6 @@ sub type_has_fields {
 sub retrieve_all {
     my ( $self, %args ) = @_;
     my $type = $args{type};
-    my $doc  = $args{document};
 
     my $stmt = $self->tables->{$type}->select_stmt(%args);
     $self->_add_resources( stmt => $stmt, %args );
@@ -196,7 +195,7 @@ sub _create {
 
 sub _create_relationships {
     my ( $self, %args ) = @_;
-    my ( $doc, $type, $id, $rel_type, $data ) = @args{qw< document type id rel_type data >};
+    my ( $type, $id, $rel_type, $data ) = @args{qw< type id rel_type data >};
 
     my $table_obj     = $self->tables->{$type};
     my $all_relations = $table_obj->RELATIONS->{$rel_type};
@@ -230,7 +229,7 @@ sub _create_relationships {
         );
 
         eval  { $self->_db_execute( $stmt ); 1; }
-        or do { 
+        or do {
             my $e = $@;
             local $@ = $@;
             if ( $one_to_one && eval { $e->sql_error } ) {
@@ -254,7 +253,6 @@ sub _create_relationships {
 
 sub create_relationships {
     my ($self, %args) = @_;
-    my $doc = $args{document};
 
     my $dbh = $self->dbh;
     $dbh->begin_work;
@@ -274,7 +272,6 @@ sub create_relationships {
 
 sub update {
     my ( $self, %args ) = @_;
-    my $doc = $args{document};
 
     my $dbh = $self->dbh;
     $dbh->begin_work;
@@ -336,7 +333,7 @@ sub _update {
 
 sub _update_relationships {
     my ($self, %args) = @_;
-    my ( $doc, $type, $id, $rel_type, $data ) = @args{qw< document type id rel_type data >};
+    my ( $type, $id, $rel_type, $data ) = @args{qw< type id rel_type data >};
 
     if ( $data ) {
         $data = [ keys(%$data) ? $data : () ] if ref($data) eq 'HASH';
@@ -370,7 +367,6 @@ sub _update_relationships {
 
 sub update_relationships {
     my ( $self, %args ) = @_;
-    my $doc = $args{document};
 
     my $dbh = $self->dbh;
     $dbh->begin_work;
@@ -391,7 +387,7 @@ sub update_relationships {
 
 sub _clear_relationships {
     my ( $self, %args ) = @_;
-    my ( $doc, $type, $id, $rel_type ) = @args{qw< document type id rel_type >};
+    my ( $type, $id, $rel_type ) = @args{qw< type id rel_type >};
 
     my $table_obj = $self->tables->{$type};
     my $table     = $table_obj->RELATIONS->{$rel_type}{rel_table};
@@ -408,7 +404,7 @@ sub _clear_relationships {
 
 sub delete : method {
     my ( $self, %args ) = @_;
-    my ( $doc, $type, $id ) = @args{qw< document type id >};
+    my ( $type, $id ) = @args{qw< type id >};
 
     my $table_obj = $self->tables->{$type};
     my $stmt      = $table_obj->delete_stmt(
@@ -447,7 +443,7 @@ sub delete_relationships {
 
 sub _delete_relationships {
     my ( $self, %args ) = @_;
-    my ( $doc, $type, $id, $rel_type, $data ) = @args{qw< document type id rel_type data >};
+    my ( $type, $id, $rel_type, $data ) = @args{qw< type id rel_type data >};
 
     my $table_obj     = $self->tables->{$type};
     my $relation_info = $table_obj->RELATIONS->{$rel_type};
@@ -581,18 +577,18 @@ sub _add_included {
 
 sub _find_resource_relationships {
     my ( $self, %args ) = @_;
-    my ( $doc, $rel_type ) = @args{qw< document rel_type >};
+    my $rel_type = $args{rel_type};
 
-    my $rels = $self->_fetchall_relationships(%args);
-
-    return $rels->{$rel_type} if exists $rels->{$rel_type};
+    if ( $rel_type and my $rels = $self->_fetchall_relationships(%args) ) {
+        return $rels->{$rel_type} if exists $rels->{$rel_type};
+    }
 
     return [];
 }
 
 sub _fetchall_relationships {
     my ( $self, %args ) = @_;
-    my ( $type, $id, $doc ) = @args{qw< type id doc >};
+    my ( $type, $id ) = @args{qw< type id >};
     my %type_fields = map { $_ => 1 } @{ $args{fields}{$type} };
     my %ret;
     my @errors;

@@ -9,14 +9,6 @@ extends 'PONAPI::DAO::Request';
 with 'PONAPI::DAO::Request::Role::HasDataAttribute',
      'PONAPI::DAO::Request::Role::HasDataMethods';
 
-sub BUILD {
-    my $self = shift;
-
-    # http://jsonapi.org/format/#crud-creating-responses-409
-    # We need to return a 409 if $data->{type} ne $self->type
-    $self->check_has_data and $self->check_data_has_type and $self->check_data_type_match;
-}
-
 sub execute {
     my $self = shift;
     my $doc = $self->document;

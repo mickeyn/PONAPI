@@ -83,7 +83,7 @@ subtest '... include errors' => sub {
                 detail => 'Type `articles` does not have at least one of the requested fields',
                 status => 400,
             },
-            "... bad fields are detected",  
+            "... bad fields are detected",
         );
     }
 
@@ -96,7 +96,7 @@ subtest '... include errors' => sub {
                 detail => 'Types `articles` and `nope` are not related',
                 status => 404,
             },
-            "... bad includes are detected",  
+            "... bad includes are detected",
         );
 
 
@@ -107,7 +107,7 @@ subtest '... include errors' => sub {
                 detail => 'Type `NOPE` doesn\'t exist.',
                 status => 404,
             },
-            "... bad field types are detected",  
+            "... bad field types are detected",
         );
 
         # Note the 'nope'
@@ -118,7 +118,7 @@ subtest '... include errors' => sub {
                 detail => 'Type `people` does not have at least one of the requested fields',
                 status => 400,
             },
-            "... bad fields are detected",  
+            "... bad fields are detected",
         );
     }
 };

@@ -2,6 +2,17 @@ package PONAPI::DAO::Request::Role::HasDataMethods;
 
 use Moose::Role;
 
+sub _validate_data {
+    my $self = shift;
+
+    # these are chained to avoid multiple errors on the same issue
+    $self->check_has_data
+        and $self->check_data_has_type
+        and $self->check_data_type_match
+        and $self->check_data_attributes
+        and $self->check_data_relationships;
+}
+
 sub check_has_data {
     my $self = shift;
 
@@ -15,8 +26,10 @@ sub check_data_has_type {
     my $self = shift;
 
     for ( $self->_get_data_elements ) {
-        return $self->_bad_request( "conflict between the request type and the data type" )
-            unless exists $_->{'type'};
+        next if ref($_||'') ne 'HASH';
+
+        return $self->_bad_request( "request data has no type" )
+            if !exists $_->{'type'};
     }
 
     return 1;
@@ -33,15 +46,7 @@ sub check_data_type_match {
     return 1;
 }
 
-sub _validate_data {
-    my $self = shift;
-    return unless $self->has_data;
-
-    $self->_validate_data_attributes();
-    $self->_validate_data_relationships();
-}
-
-sub _validate_data_attributes {
+sub check_data_attributes {
     my $self = shift;
     my $type = $self->type;
 
@@ -56,7 +61,7 @@ sub _validate_data_attributes {
     return 1;
 }
 
-sub _validate_data_relationships {
+sub check_data_relationships {
     my $self = shift;
     my $type = $self->type;
 

@@ -12,13 +12,6 @@ with 'PONAPI::DAO::Request::Role::HasFields',
      'PONAPI::DAO::Request::Role::HasID',
      'PONAPI::DAO::Request::Role::HasRelationshipType';
 
-sub BUILD {
-    my $self = shift;
-
-    $self->check_has_id;
-    $self->check_has_rel_type;
-}
-
 sub execute {
     my $self = shift;
 

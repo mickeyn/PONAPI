@@ -17,14 +17,6 @@ has data => (
     predicate => 'has_data',
 );
 
-sub BUILD {
-    my $self = shift;
-
-    $self->check_has_id;
-    $self->check_has_rel_type;
-    $self->check_has_data;
-}
-
 sub execute {
     my $self = shift;
 
@@ -48,7 +40,9 @@ sub execute {
 
 sub _validate_rel_type {
     my $self = shift;
-    return unless $self->has_rel_type;
+
+    return $self->_bad_request( "`relationship type` is missing" )
+        unless $self->has_rel_type;
 
     my $type     = $self->type;
     my $rel_type = $self->rel_type;
@@ -61,6 +55,15 @@ sub _validate_rel_type {
     }
 }
 
+sub _validate_data {
+    my $self = shift;
+
+    # these are chained to avoid multiple errors on the same issue
+    $self->check_has_data
+        and $self->check_data_has_type
+        and $self->check_data_attributes()
+        and $self->check_data_relationships();
+}
 
 __PACKAGE__->meta->make_immutable;
 no Moose; 1;

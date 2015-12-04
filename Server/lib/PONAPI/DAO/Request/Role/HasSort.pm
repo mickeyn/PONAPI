@@ -12,6 +12,14 @@ has sort => (
     },
 );
 
+sub _validate_sort {
+    my $self = shift;
+
+    $self->has_sort
+        or $self->_bad_request( "`sort` is missing values" );
+
+    return;
+}
 
 no Moose::Role; 1;
 __END__
