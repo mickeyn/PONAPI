@@ -170,7 +170,7 @@ subtest '... retrieve' => sub {
 
 # Spec says we can either stop processing as soon as we spot an error, or keep going an accumulate·
 # multiple errors.  Currently we do multiple, so testing that here.
-    my $doc = $dao->retrieve( @TEST_ARGS_BASE_TYPE_HAS_BODY, data => { id => 1 } );
+    my $doc = $dao->retrieve( @TEST_ARGS_BASE_TYPE_NO_BODY, data => { id => 1 } );
     is_deeply(
         [ sort { $a->{detail} cmp $b->{detail} } @{ $doc->{errors} } ],
         [
@@ -187,25 +187,24 @@ subtest '... retrieve' => sub {
             { detail => "Types `people` and `nope` are not related", status => 404, },
         ],
         [
-            { fields => {nope => ['nope']},   },
+            { fields => { nope => ['nope'] },   },
             { detail => "Type `nope` doesn\'t exist.", status => 404, },
         ],
         [
-            { fields => {people => ['nope']}, },
+            { fields => { people => ['nope'] }, },
             { detail => "Type `people` does not have at least one of the requested fields", status => 400, },
         ],
     )
     {
         my ($args, $expect) = @$tuple;
-        my @ret = $dao->retrieve( @TEST_ARGS_BASE_TYPE_HAS_BODY, type => 'people', id => 42, %$args );
+        my @ret = $dao->retrieve( @TEST_ARGS_BASE_TYPE_NO_BODY, type => 'people', id => 42, %$args );
         error_test(
             \@ret,
             $expect,
-            "... catched bad retrieve with ", encode_json($args),
+            "... caught bad retrieve with ", encode_json($args),
         );
     }
 };
-
 
 subtest '... retrieve relationships' => sub {
     foreach my $tuple (
