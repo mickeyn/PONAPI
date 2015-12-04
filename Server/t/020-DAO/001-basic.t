@@ -50,7 +50,9 @@ my @TEST_ARGS_BASE_TYPE_HAS_BODY    = ( @TEST_ARGS_BASE_TYPE,    @TEST_ARGS_HAS_
 my @TEST_ARGS_BASE_TYPE_ID_HAS_BODY = ( @TEST_ARGS_BASE_TYPE_ID, @TEST_ARGS_HAS_BODY );
 
 subtest '... retrieve all' => sub {
-    my $doc = $dao->retrieve_all( @TEST_ARGS_NO_BODY, @TEST_ARGS_BASE, type => 'people', send_doc_self_link => 1 );
+    my @ret = $dao->retrieve_all( @TEST_ARGS_NO_BODY, @TEST_ARGS_BASE, type => 'people', send_doc_self_link => 1 );
+
+    my $doc = $ret[2];
 
     ok(!blessed($doc), '... the document we got is not blessed');
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');
@@ -76,10 +78,12 @@ subtest '... retrieve all' => sub {
 };
 
 subtest '... retrieve' => sub {
-    my $doc = $dao->retrieve(
+    my @ret = $dao->retrieve(
         @TEST_ARGS_BASE_TYPE_ID_NO_BODY,
         fields => { articles => [qw< title >] },
     );
+
+    my $doc = $ret[2];
 
     ok(!blessed($doc), '... the document we got is not blessed');
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');
@@ -103,10 +107,12 @@ subtest '... retrieve' => sub {
 };
 
 subtest '... retrieve relationships' => sub {
-    my $doc = $dao->retrieve_relationships(
+    my @ret = $dao->retrieve_relationships(
         @TEST_ARGS_BASE_TYPE_ID_NO_BODY,
         rel_type => 'comments',
     );
+
+    my $doc = $ret[2];
 
     ok(!blessed($doc), '... the document we got is not blessed');
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');
@@ -121,10 +127,12 @@ subtest '... retrieve relationships' => sub {
 };
 
 subtest '... retrieve by relationship' => sub {
-    my $doc = $dao->retrieve_by_relationship(
+    my @ret = $dao->retrieve_by_relationship(
         @TEST_ARGS_BASE_TYPE_ID_NO_BODY,
         rel_type => 'authors',
     );
+
+    my $doc = $ret[2];
 
     ok(!blessed($doc), '... the document we got is not blessed');
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');
@@ -138,10 +146,11 @@ subtest '... retrieve by relationship' => sub {
     # of people, so type for whatever was retrieved has to be 'person'
     is($data->{type}, 'people', '... retrieved document is of the correct type');
 
-    $doc = $dao->retrieve_by_relationship(
+    @ret = $dao->retrieve_by_relationship(
         @TEST_ARGS_BASE_TYPE_ID_NO_BODY,
         rel_type => 'comments',
     );
+    $doc = $ret[2];
 
     ok(!blessed($doc), '... the document we got is not blessed');
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');
@@ -152,8 +161,8 @@ subtest '... retrieve by relationship' => sub {
 };
 
 subtest '... update' => sub {
-    my $orig   = $dao->retrieve( @TEST_ARGS_BASE_TYPE_ID_NO_BODY );
-    my $backup = $dao->retrieve( @TEST_ARGS_BASE_TYPE_ID_NO_BODY );
+    my @orig   = $dao->retrieve( @TEST_ARGS_BASE_TYPE_ID_NO_BODY );
+    my @backup = $dao->retrieve( @TEST_ARGS_BASE_TYPE_ID_NO_BODY );
 
     my $new_title = "Yadda yadda";
     my @update_ret = $dao->update(
@@ -169,16 +178,16 @@ subtest '... update' => sub {
     my $doc = $update_ret[2];
     ok( exists $doc->{meta} && !exists $doc->{data}, "... which has a meta but no body" );
 
-    my $new = $dao->retrieve( @TEST_ARGS_BASE_TYPE_ID_NO_BODY );
+    my @new = $dao->retrieve( @TEST_ARGS_BASE_TYPE_ID_NO_BODY );
 
     ok(!blessed($doc), '... the document we got is not blessed');
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');
 
     ok($doc->{meta}, "... (optional) meta member is present");
 
-    $orig->{data}{attributes}{title} = $new_title;
-    delete $_->{data}{attributes}{updated} for $orig, $new;
-    is_deeply($orig, $new, "... update works");
+    $orig[2]->{data}{attributes}{title} = $new_title;
+    delete $_->[2]{data}{attributes}{updated} for \@orig, \@new;
+    is_deeply(\@orig, \@new, "... update works");
 
     $dao->update(
         @TEST_ARGS_BASE_TYPE_ID_HAS_BODY,
@@ -190,11 +199,11 @@ subtest '... update' => sub {
         }
     );
 
-    $orig->{data}{relationships}{authors}{data}{id} = 777;
-    my $updated = $dao->retrieve( @TEST_ARGS_BASE_TYPE_ID_NO_BODY );
+    $orig[2]->{data}{relationships}{authors}{data}{id} = 777;
+    my @updated = $dao->retrieve( @TEST_ARGS_BASE_TYPE_ID_NO_BODY );
 
-    delete $updated->{data}{attributes}{updated};
-    is_deeply($updated, $orig, "... can update one-to-one relationships");
+    delete $updated[2]->{data}{attributes}{updated};
+    is_deeply(\@updated, \@orig, "... can update one-to-one relationships");
 
     my $new_comments = [
         {type => comments => id => 55},
@@ -209,11 +218,11 @@ subtest '... update' => sub {
             },
         }
     );
-    $updated = $dao->retrieve( @TEST_ARGS_BASE_TYPE_ID_NO_BODY );
+    @updated = $dao->retrieve( @TEST_ARGS_BASE_TYPE_ID_NO_BODY );
 
-    delete $updated->{data}{attributes}{updated};
-    $orig->{data}{relationships}{comments}{data} = $new_comments;
-    is_deeply($updated, $orig, "... and many-to-many");
+    delete $updated[2]->{data}{attributes}{updated};
+    $orig[2]->{data}{relationships}{comments}{data} = $new_comments;
+    is_deeply(\@updated, \@orig, "... and many-to-many");
 
     my @res = $dao->update(
         @TEST_ARGS_BASE_TYPE_ID_HAS_BODY,
@@ -225,22 +234,22 @@ subtest '... update' => sub {
             }
         }
     );
-    $updated = $dao->retrieve( @TEST_ARGS_BASE_TYPE_ID_NO_BODY );
+    @updated = $dao->retrieve( @TEST_ARGS_BASE_TYPE_ID_NO_BODY );
 
-    delete $orig->{data}{relationships};
-    delete $updated->{data}{attributes}{updated};
-    is_deeply($updated, $orig, "... can clear relationships via update");
+    delete $orig[2]->{data}{relationships};
+    delete $updated[2]->{data}{attributes}{updated};
+    is_deeply(\@updated, \@orig, "... can clear relationships via update");
 
     use Storable qw/dclone/;
-    my $data_for_restore = dclone( $backup->{data} );
+    my $data_for_restore = dclone( $backup[2]->{data} );
     $data_for_restore->{relationships}{$_} = delete $data_for_restore->{relationships}{$_}{data}
         for keys %{ $data_for_restore->{relationships} };
     $dao->update( @TEST_ARGS_BASE_TYPE_ID_HAS_BODY, data => $data_for_restore );
-    $updated = $dao->retrieve(@TEST_ARGS_BASE_TYPE_ID_NO_BODY);
+    @updated = $dao->retrieve(@TEST_ARGS_BASE_TYPE_ID_NO_BODY);
 
-    my $backup_updated = delete $backup->{data}{attributes}{updated};
-    delete $updated->{data}{attributes}{updated};
-    is_deeply($updated, $backup, "... successfully 'restored' the comment");
+    my $backup_updated = delete $backup[2]->{data}{attributes}{updated};
+    delete $updated[2]->{data}{attributes}{updated};
+    is_deeply(\@updated, \@backup, "... successfully 'restored' the comment");
 
     my @update_200 = $dao->update( @TEST_ARGS_HAS_BODY, @TEST_ARGS_BASE, type => comments => id => 12, data => { type => comments => id => 12, attributes => { body => "This changes nothing extra" } }, respond_to_updates_with_200 => 1 );
     is($update_200[0], 200, "... can set the DAO to return 200 on updates");
@@ -442,13 +451,13 @@ subtest '... create + create_relationship' => sub {
         ],
     );
 
-    my $retrieved = $dao->retrieve(
+    my @retrieved = $dao->retrieve(
         @TEST_ARGS_BASE_TYPE_NO_BODY,
         id      => $article_id,
         include => [qw/ authors comments /],
     );
-    delete @{ $retrieved->{data}{attributes} }{qw/ created status updated /};
-    @{ $retrieved->{included} } =  sort { $a->{type} cmp $b->{type} } @{ $retrieved->{included} };
+    delete @{ $retrieved[2]->{data}{attributes} }{qw/ created status updated /};
+    @{ $retrieved[2]->{included} } =  sort { $a->{type} cmp $b->{type} } @{ $retrieved[2]->{included} };
 
     my $expect = {
            data     => {
@@ -508,7 +517,7 @@ subtest '... create + create_relationship' => sub {
          };
 
 
-    is_deeply($retrieved, $expect, "... retrieve with include returns all we have done");
+    is_deeply($retrieved[2], $expect, "... retrieve with include returns all we have done");
 
     my @update_rel = $dao->update_relationships(
         @TEST_ARGS_BASE_TYPE_HAS_BODY,
@@ -536,12 +545,12 @@ subtest '... create + create_relationship' => sub {
             }
         ], "... delete cleared the author" );
 
-    my $retrieved_again = $dao->retrieve(
+    my @retrieved_again = $dao->retrieve(
         @TEST_ARGS_BASE_TYPE_NO_BODY,
         id      => $article_id,
         include => [qw/ authors comments /],
     );
-    delete @{ $retrieved_again->{data}{attributes} }{qw/ created status updated /};
+    delete @{ $retrieved_again[2]->{data}{attributes} }{qw/ created status updated /};
 
     my $final_expect = {
         'jsonapi' => { 'version' => '1.0' },
@@ -567,7 +576,7 @@ subtest '... create + create_relationship' => sub {
             'id' => $article_id,
         }
     };
-    is_deeply($retrieved_again, $final_expect, "... including missing resources works");
+    is_deeply($retrieved_again[2], $final_expect, "... including missing resources works");
 
 
     # Special cases; updating a one-to-one lets you pass undef.

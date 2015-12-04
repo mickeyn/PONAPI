@@ -146,7 +146,6 @@ subtest '... bad requests (GET)' => sub {
             "... bad request $req caught",
         );
     }
-
 };
 
 subtest '... bad requests (POST)' => sub {
@@ -175,6 +174,19 @@ subtest '... bad requests (POST)' => sub {
         );
     }
 
+    {
+        my $create_rel  = $app->request(
+            POST '/articles/2/relationships/authors', %CT,
+            Content => encode_json({ data => { id => 5, type => 'people'} }),
+        );
+        error_test(
+            $create_rel,
+            {
+                detail => 'Parameter `data` expected Collection[Resource], but got a {"id":5,"type":"people"}',
+                status => 400,
+            }
+        )
+    }
 };
 
 done_testing;
