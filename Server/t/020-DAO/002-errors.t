@@ -5,6 +5,7 @@ use warnings;
 
 use Scalar::Util qw[ blessed ];
 
+use Data::Dumper;
 use Test::More;
 use JSON::XS;
 
@@ -27,9 +28,10 @@ my $ERR_RELTYPE_MISSING     = "`relationship type` is missing for this request";
 my $ERR_RELTYPE_NOT_ALLOWED = "`relationship type` is not allowed for this request";
 my $ERR_PAGE_NOT_ALLOWED    = "`page` is not allowed for this request";
 
+my $SERVER_ERROR_DETAIL = 'A fatal error has occured, please check server logs';
 my $SERVER_ERROR = [ 500, [], {
     errors => [{
-        detail => 'A fatal error has occured, please check server logs',
+        detail => $SERVER_ERROR_DETAIL,
         status => 500
     }],
     jsonapi => { version => '1.0' }
@@ -50,17 +52,33 @@ sub error_test {
             ? $_->{detail} =~ $expect->{detail}
             : $_->{detail} eq $expect->{detail}
     } @$errors;
+    if ( !$err ) {
+        fail("Didn't get an error, failing") for 1..2;
+        my $line = (caller(0))[2];
+        diag(Dumper({"error_test called at line $line, response was " =>  $ret}));
+        return;
+    }
     my $test = $expect_is_re ? \&like : \&is;
     $test->( $err->{detail}, $expect->{detail}, $desc );
-    is( $err->{status},  $expect->{status}, '... and it has the expected error code' );
+
+    my $statuses = $expect->{status};
+    $statuses = [ $statuses ] if !ref $statuses;
+    my ($matching) = grep $err->{status} == $_, @$statuses;
+    ok($matching, '... and it has the expected error code' )
+        or diag("Error has status $err->{status}, we were looking for @{$statuses}");
 }
 
 subtest '... retrieve all' => sub {
     {
-        local $@;
-        my $e;
-        eval { $dao->retrieve_all(); 1; } or do { $e = "$@"; };
-        like( $e, qr/\QAttribute (type) is required\E/, "dies without a type" )
+        my @ret = $dao->retrieve_all();
+        error_test(
+            \@ret,
+            {
+                detail => "Parameter `type` is required",
+                status => 400,
+            },
+            "type is required"
+        );
     }
 
     foreach my $tuple (
@@ -95,10 +113,15 @@ subtest '... retrieve all' => sub {
 
 subtest '... retrieve' => sub {
     {
-        local $@;
-        my $e;
-        eval { $dao->retrieve(); 1; } or do { $e = "$@"; };
-        like( $e, qr/\QAttribute (type) is required\E/, "dies without a type" )
+        my @ret = $dao->retrieve();
+        error_test(
+            \@ret,
+            {
+                detail => "Parameter `type` is required",
+                status => 400,
+            },
+            "Parameter `type` is required"
+        );
     }
 
     foreach my $tuple (
@@ -123,17 +146,12 @@ subtest '... retrieve' => sub {
         );
     }
 
+
     # Spec says we can either stop processing as soon as we spot an error, or keep going an accumulate·
     # multiple errors.  Currently we do multiple, so testing that here.
-    my $ret = $dao->retrieve( @TEST_ARGS_TYPE, data => { id => 1 } );
-    is_deeply(
-        [ sort { $a->{detail} cmp $b->{detail} } @{ $ret->{errors} } ],
-        [
-            { detail => $ERR_ID_MISSING,       status => 400 },
-            { detail => $ERR_BODY_NOT_ALLOWED, status => 400 },
-        ],
-        "DAO can result multiple error objects for one request",
-    );
+    my @ret = $dao->retrieve( @TEST_ARGS_TYPE, data => { id => 1 }, page => 1 );
+    my $doc = $ret[2];
+    cmp_ok(scalar(@{ $doc->{errors} }), ">=", 2, "DAO can result multiple error objects for one request");
 
     # Retrieve with nonexistent stuff
     foreach my $tuple (
@@ -628,6 +646,21 @@ subtest '... create_relationships' => sub {
         \@ret,
         { detail => 'Bad request data: Data has type `fake`, but we were expecting `comments`', status => 400 },
         "... discrepancies between the requested rel_type and the data are spotted",
+    );
+
+    @ret = $dao->create_relationships(
+        @TEST_ARGS_TYPE_ID,
+        rel_type => 'comments',
+        data => { type => comments => id => 3333 }, # Hashref, not an arrayref
+    );
+
+    error_test(
+        \@ret,
+        {
+            detail => 'Parameter `data` expected Collection[Resource], but got a {"id":3333,"type":"comments"}',
+            status => 400,
+        },
+        "... create relationships MUST pass an arrayref of hashrefs"
     );
 };
 
