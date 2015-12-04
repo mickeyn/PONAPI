@@ -8,10 +8,9 @@ sub _validate_data {
     # these are chained to avoid multiple errors on the same issue
     $self->check_has_data
         and $self->check_data_has_type
-        and $self->check_data_type_match;
-
-    $self->check_data_attributes();
-    $self->check_data_relationships();
+        and $self->check_data_type_match
+        and $self->check_data_attributes
+        and $self->check_data_relationships;
 }
 
 sub check_has_data {
@@ -27,8 +26,10 @@ sub check_data_has_type {
     my $self = shift;
 
     for ( $self->_get_data_elements ) {
-        return $self->_bad_request( "conflict between the request type and the data type" )
-            if ref $_ eq 'HASH' and !exists $_->{'type'};
+        next if ref($_||'') ne 'HASH';
+
+        return $self->_bad_request( "request data has no type" )
+            if !exists $_->{'type'};
     }
 
     return 1;

@@ -60,8 +60,8 @@ sub BUILD {
     my $type = $self->type;
 
     # `type` exists
-    $self->repository->has_type( $type )
-        or $self->_bad_request( "Type `$type` doesn't exist.", 404 );
+    return $self->_bad_request( "Type `$type` doesn't exist.", 404 )
+        unless $self->repository->has_type( $type );
 
     # validate `id` parameter
     if ( $self->does('PONAPI::DAO::Request::Role::HasID') ) {
@@ -119,7 +119,7 @@ sub BUILD {
 
     # validate `data`
     if ( $self->has_body ) {
-        if ( $self->can('has_data') ) {
+        if ( $self->can('data') ) {
             $self->_validate_data;
         }
         else {
