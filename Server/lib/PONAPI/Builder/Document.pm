@@ -117,15 +117,22 @@ sub has_errors {
 
 sub get_self_link {
     my ($self, $base) = @_;
-    $self->_has_resource_builders or return; # ???
+    return unless $self->_has_resource_builders;
+
     my $rec = $self->_get_resource_builder(0)->build;
+    return unless $rec;
+
     my $link = $rec->{type} . ( $self->is_collection ? '' : '/' . $rec->{id} );
     return ( $base ? $base : '/' ) . $link;
 }
+
 sub add_self_link {
     my ( $self, $base ) = @_;
+
     my $link = $self->get_self_link;
-    $self->links_builder->add_link( self => $link );
+    $self->links_builder->add_link( self => $link )
+        if $link;
+
     return $self;
 }
 
