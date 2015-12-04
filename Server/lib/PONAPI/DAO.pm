@@ -38,9 +38,7 @@ sub _action {
     my $ponapi_parameters = @_ == 1 ? $_[0] : +{ @_ };
     $ponapi_parameters->{repository} = $self->repository;
 
-    $action_class->new($ponapi_parameters)
-        ->validate()
-        ->execute();
+    $action_class->new($ponapi_parameters)->execute();
 }
 
 

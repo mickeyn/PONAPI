@@ -6,7 +6,8 @@ extends 'PONAPI::DAO::Request';
 
 with 'PONAPI::DAO::Request::Role::UpdateLike',
      'PONAPI::DAO::Request::Role::HasDataAttribute',
-     'PONAPI::DAO::Request::Role::HasDataMethods';
+     'PONAPI::DAO::Request::Role::HasDataMethods',
+     'PONAPI::DAO::Request::Role::HasID';
 
 has '+update_nothing_status' => (
     # http://jsonapi.org/format/#crud-updating-responses-404
@@ -17,7 +18,6 @@ sub BUILD {
     my $self = shift;
 
     $self->check_has_id;
-    $self->check_no_rel_type;
 
     # http://jsonapi.org/format/#crud-updating-responses-409
     # A server MUST return 409 Conflict when processing a PATCH request in which the

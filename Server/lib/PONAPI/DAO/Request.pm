@@ -49,23 +49,61 @@ has document => (
     default  => sub { PONAPI::Builder::Document->new() }
 );
 
-has id => (
-    is        => 'ro',
-    isa       => 'Str',
-    predicate => 'has_id',
-);
-
-has rel_type => (
-    is        => 'ro',
-    isa       => 'Str',
-    predicate => 'has_rel_type',
-);
-
 has json => (
     is      => 'ro',
     isa     => 'JSON::XS',
     default => sub { JSON::XS->new->allow_nonref->utf8->canonical },
 );
+
+sub check_has_id       { $_[0]->has_id       or  return $_[0]->_bad_request( "`id` is missing"                 ); 1; }
+sub check_has_rel_type { $_[0]->has_rel_type or  return $_[0]->_bad_request( "`relationship type` is missing"  ); 1; }
+
+my %role_to_param = (
+    HasID          => 'id',
+    HasRelationshipType => 'rel_type',
+    HasFields      => 'fields',
+    HasFilter      => 'filter',
+    HasInclude     => 'include',
+    HasPage        => 'page',
+    HasSort        => 'sort',
+    
+);
+sub BUILD {
+    my ($self, $args) = @_;
+
+    my $repo = $self->repository;
+    my $type = $self->type;
+
+    # `type` exists
+    $repo->has_type( $type )
+        or $self->_bad_request( "Type `$type` doesn't exist.", 404 );
+
+    if ( $self->does('PONAPI::DAO::Request::Role::HasDataMethods') ) {
+        $self->has_data && $self->_validate_data;
+    }
+    else {
+        $self->_bad_request("Parameter `data` is not allowed for this request")
+            if exists $args->{data} && $self->has_body;
+    } 
+
+    foreach my $role ( keys %role_to_param ) {
+        my $param = $role_to_param{$role};
+        if ( $self->does("PONAPI::DAO::Request::Role::$role") ) {
+            my $has_method = "has_${param}";
+            if ( $self->$has_method ) {
+                my $validate   = "_validate_${param}";
+                $self->$validate() if $self->can($validate)
+            }
+        }
+        else {
+            my $status = $param eq 'rel_type' ? 404 : 400;
+            $self->_bad_request("Parameter `$param` is not allowed for this request", $status)
+                if exists $args->{$param};
+        }
+    }
+
+    return $self
+}
 
 sub response {
     my ( $self, @headers ) = @_;
@@ -77,42 +115,8 @@ sub response {
     return ( $doc->status, \@headers, $doc->build );
 }
 
-sub check_no_id        { $_[0]->has_id       and return $_[0]->_bad_request( "`id` not allowed"                ); 1; }
-sub check_has_id       { $_[0]->has_id       or  return $_[0]->_bad_request( "`id` is missing"                 ); 1; }
-sub check_has_rel_type { $_[0]->has_rel_type or  return $_[0]->_bad_request( "`relationship type` is missing"  ); 1; }
-sub check_no_rel_type  { $_[0]->has_rel_type and return $_[0]->_bad_request( "`relationship type` not allowed" ); 1; }
-sub check_no_body      { $_[0]->has_body     and return $_[0]->_bad_request( "request body is not allowed"     ); 1; }
-
-sub validate {
-    my $self = shift;
-    my $repo = $self->repository;
-    my $type = $self->type;
-
-    # `type` exists
-    $repo->has_type( $type )
-        or $self->_bad_request( "Type `$type` doesn't exist.", 404 );
-
-    # `include` types & relationships
-    $self->does('PONAPI::DAO::Request::Role::HasInclude')
-        and $self->_validate_included();
-
-    # `fields` types & relationships
-    $self->does('PONAPI::DAO::Request::Role::HasFields')
-        and $self->_validate_fields();
-
-    # `rel_type` relationship exists
-    $self->_validate_rel_type();
-
-    # check `data`
-    $self->does('PONAPI::DAO::Request::Role::HasDataAttribute')
-        and $self->_validate_data();
-
-    return $self;
-}
-
 sub _validate_rel_type {
     my $self = shift;
-    return unless $self->has_rel_type;
 
     my $type     = $self->type;
     my $rel_type = $self->rel_type;

@@ -3,13 +3,12 @@ package PONAPI::DAO::Request::Delete;
 use Moose;
 
 extends 'PONAPI::DAO::Request';
+with 'PONAPI::DAO::Request::Role::HasID';
 
 sub BUILD {
     my $self = shift;
 
     $self->check_has_id;
-    $self->check_no_rel_type;
-    $self->check_no_body;
 }
 
 sub execute {

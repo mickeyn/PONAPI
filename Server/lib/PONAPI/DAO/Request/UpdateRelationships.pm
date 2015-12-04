@@ -7,7 +7,9 @@ use PONAPI::DAO::Constants;
 extends 'PONAPI::DAO::Request';
 
 with 'PONAPI::DAO::Request::Role::UpdateLike',
-     'PONAPI::DAO::Request::Role::HasDataMethods';
+     'PONAPI::DAO::Request::Role::HasDataMethods',
+     'PONAPI::DAO::Request::Role::HasID',
+     'PONAPI::DAO::Request::Role::HasRelationshipType';
 
 has data => (
     is        => 'ro',

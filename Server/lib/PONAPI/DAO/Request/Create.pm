@@ -12,9 +12,6 @@ with 'PONAPI::DAO::Request::Role::HasDataAttribute',
 sub BUILD {
     my $self = shift;
 
-    $self->check_no_id;
-    $self->check_no_rel_type;
-
     # http://jsonapi.org/format/#crud-creating-responses-409
     # We need to return a 409 if $data->{type} ne $self->type
     $self->check_has_data and $self->check_data_has_type and $self->check_data_type_match;

@@ -12,7 +12,7 @@ has include => (
     },
 );
 
-sub _validate_included {
+sub _validate_include {
     my $self = shift;
     my $type = $self->type;
 

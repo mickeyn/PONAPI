@@ -8,14 +8,15 @@ with 'PONAPI::DAO::Request::Role::HasFields',
      'PONAPI::DAO::Request::Role::HasFilter',
      'PONAPI::DAO::Request::Role::HasInclude',
      'PONAPI::DAO::Request::Role::HasPage',
-     'PONAPI::DAO::Request::Role::HasSort';
+     'PONAPI::DAO::Request::Role::HasSort',
+     'PONAPI::DAO::Request::Role::HasID',
+     'PONAPI::DAO::Request::Role::HasRelationshipType';
 
 sub BUILD {
     my $self = shift;
 
     $self->check_has_id;
     $self->check_has_rel_type;
-    $self->check_no_body;
 }
 
 sub execute {

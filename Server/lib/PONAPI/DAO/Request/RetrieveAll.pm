@@ -10,13 +10,6 @@ with 'PONAPI::DAO::Request::Role::HasFields',
      'PONAPI::DAO::Request::Role::HasPage',
      'PONAPI::DAO::Request::Role::HasSort';
 
-sub BUILD {
-    my $self = shift;
-
-    $self->check_no_id;
-    $self->check_no_body;
-}
-
 sub execute {
     my $self = shift;
     my $doc = $self->document;

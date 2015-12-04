@@ -154,13 +154,7 @@ sub _ponapi_check_headers {
 sub _ponapi_query_params {
     my ( $self, $wr, $req ) = @_;
 
-    my %params = (
-        fields  => {},
-        filter  => {},
-        page    => {},
-        include => [],
-        'sort'  => [],
-    );
+    my %params;
 
     my $query_params = $req->query_parameters;
 

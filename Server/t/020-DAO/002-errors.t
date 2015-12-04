@@ -36,11 +36,11 @@ my @TEST_ARGS_BASE_TYPE_ID_HAS_BODY = ( @TEST_ARGS_BASE_TYPE_ID, @TEST_ARGS_HAS_
 
 
 my $ERR_ID_MISSING          = "`id` is missing";
-my $ERR_ID_NOT_ALLOWED      = "`id` not allowed";
+my $ERR_ID_NOT_ALLOWED      = "Parameter `id` is not allowed for this request";
 my $ERR_BODY_DATA_MISSING   = "request body is missing `data`";
-my $ERR_BODY_NOT_ALLOWED    = "request body is not allowed";
+my $ERR_BODY_NOT_ALLOWED    = "Parameter `data` is not allowed for this request";
 my $ERR_RELTYPE_MISSING     = "`relationship type` is missing";
-my $ERR_RELTYPE_NOT_ALLOWED = "`relationship type` not allowed";
+my $ERR_RELTYPE_NOT_ALLOWED = "Parameter `rel_type` is not allowed for this request";
 
 my $SERVER_ERROR = [ 500, [], {
     errors => [{
@@ -174,8 +174,8 @@ subtest '... retrieve' => sub {
     is_deeply(
         [ sort { $a->{detail} cmp $b->{detail} } @{ $doc->{errors} } ],
         [
-            { detail => $ERR_ID_MISSING,       status => 400 },
             { detail => $ERR_BODY_NOT_ALLOWED, status => 400 },
+            { detail => $ERR_ID_MISSING,       status => 400 },
         ],
         "DAO can result multiple error objects for one request",
     );
@@ -217,7 +217,7 @@ subtest '... retrieve relationships' => sub {
             "id is required (missing)"
         ],
         [
-            [ @TEST_ARGS_BASE_TYPE_ID_HAS_BODY, data => { id => 1 } ],
+            [ @TEST_ARGS_BASE_TYPE_ID_HAS_BODY ],
             $ERR_RELTYPE_MISSING,
             "rel_type is missing"
         ],
@@ -302,8 +302,8 @@ subtest '... create' => sub {
         ],
         [
             [ @TEST_ARGS_BASE_TYPE_NO_BODY, rel_type => 1 ],
-            "Types `articles` and `1` are not related",
-            "bad rel_type", 404
+            $ERR_RELTYPE_NOT_ALLOWED,
+            "bad rel_type", 400
         ],
         [
             [ @TEST_ARGS_BASE_TYPE_NO_BODY, rel_type => 'authors' ],
@@ -664,35 +664,36 @@ subtest '... delete' => sub {
     foreach my $tuple (
         [
             [ @TEST_ARGS_BASE_TYPE_NO_BODY ],
-            "`id` is missing",
+            $ERR_ID_MISSING,
             "id is missing"
         ],
         [
             [ @TEST_ARGS_BASE_TYPE_ID_NO_BODY, rel_type => 1 ],
-            "`relationship type` not allowed",
+            $ERR_RELTYPE_NOT_ALLOWED,
             "rel_type is not allowed",
             404
         ],
         [
             [ @TEST_ARGS_BASE_TYPE_ID_NO_BODY, rel_type => 0 ],
-            "`relationship type` not allowed",
+            $ERR_RELTYPE_NOT_ALLOWED,
             "rel_type is not allowed (false rel_type value)",
             404
         ],
         [
             [ @TEST_ARGS_BASE_TYPE_ID_NO_BODY, rel_type => "" ],
-            "`relationship type` not allowed",
+            $ERR_RELTYPE_NOT_ALLOWED,
             'rel_type is not allowed (not allowed rel_type "")',
             404
         ],
         [
             [ @TEST_ARGS_BASE_TYPE_ID_NO_BODY, rel_type => "comments" ],
-            "`relationship type` not allowed",
-            "rel_type is not allowed"
+            $ERR_RELTYPE_NOT_ALLOWED,
+            "rel_type is not allowed",
+            404
         ],
         [
             [ @TEST_ARGS_BASE_TYPE_ID_HAS_BODY, data => { type => "" } ],
-            "request body is not allowed",
+            $ERR_BODY_NOT_ALLOWED,
             "data is not allowed"
         ],
       )
@@ -712,7 +713,7 @@ subtest '... create_relationships' => sub {
     foreach my $tuple (
         [
             [ @TEST_ARGS_BASE_TYPE_NO_BODY ],
-            "`id` is missing",
+            $ERR_ID_MISSING,
             "... id is missing"
         ],
         [
@@ -836,12 +837,12 @@ subtest '... delete_relationships' => sub {
 subtest '... illegal params' => sub {
     # Bad params for request.
     my %all_args = (
-        id       => 1,
-        rel_type => 'authors',
-        data     => { type => articles => id => 1 },
-        page     => {},
-        include  => [ qw/comments/ ],
-        fields   => { articles => [qw/title/] },
+        id       => { id => 1},
+        rel_type => { rel_type => 'authors'},
+        data     => { data => { type => articles => id => 1 }, has_body => 1},
+        page     => { page    => {} },
+        include  => { include => [ qw/comments/ ]},
+        fields   => { fields  => { articles => [qw/title/] }},
     );
 
     my %request = (
@@ -855,11 +856,11 @@ subtest '... illegal params' => sub {
         },
         retrieve_relationships => {
             args    => [@TEST_ARGS_BASE_TYPE_ID_NO_BODY, rel_type => 'authors'],
-            allowed => [qw/ include fields id rel_type /],
+            allowed => [qw/ page include fields id rel_type /],
         },
         retrieve_by_relationship => {
             args    => [@TEST_ARGS_BASE_TYPE_ID_NO_BODY, rel_type => 'authors'],
-            allowed => [qw/ include fields id rel_type /],
+            allowed => [qw/ page include fields id rel_type /],
         },
 
         create => {
@@ -917,19 +918,17 @@ subtest '... illegal params' => sub {
             my @disallowed = grep !exists $allowed{$_}, sort keys %all_args;
             foreach my $disallowed_arg ( @disallowed ) {
                 my @ret = $dao->$action(@$args,
-                    $disallowed_arg => $all_args{$disallowed_arg},
+                    %{ $all_args{$disallowed_arg} },
                 );
-                TODO: {
-                    local $TODO = "Not yet checked";
-                    error_test(
-                        \@ret,
-                        {
-                            detail => "Parameter `$disallowed_arg`is not allowed for this request",
-                            status => 400,
-                        },
-                        "... catches $disallowed_arg being passed to $action",
-                    );
-                }
+                my $status = $disallowed_arg eq 'rel_type' ? 404 : 400;
+                error_test(
+                    \@ret,
+                    {
+                        detail => "Parameter `$disallowed_arg` is not allowed for this request",
+                        status => $status,
+                    },
+                    "... catches $disallowed_arg being passed to $action",
+                );
             }
         }
     }

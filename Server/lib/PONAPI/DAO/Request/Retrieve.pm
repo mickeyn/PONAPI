@@ -7,14 +7,13 @@ extends 'PONAPI::DAO::Request';
 with 'PONAPI::DAO::Request::Role::HasFields',
      'PONAPI::DAO::Request::Role::HasFilter',
      'PONAPI::DAO::Request::Role::HasInclude',
-     'PONAPI::DAO::Request::Role::HasPage',
-     'PONAPI::DAO::Request::Role::HasSort';
+     'PONAPI::DAO::Request::Role::HasSort',
+     'PONAPI::DAO::Request::Role::HasID';
 
 sub BUILD {
     my $self = shift;
 
     $self->check_has_id;
-    $self->check_no_body;
 }
 
 sub execute {
