@@ -558,105 +558,6 @@ subtest '... update' => sub {
 };
 
 
-subtest '... explodey repo errors' => sub {
-
-    # See that we handle $repository exploding gracefully.
-    my @all = (
-        [ [qw/retrieve_all/]    => [ @TEST_ARGS_BASE_TYPE_NO_BODY ] ],
-        [ [qw/retrieve delete/] => [ @TEST_ARGS_BASE_TYPE_ID_NO_BODY ] ],
-        [ [qw/create/]          => [ @TEST_ARGS_BASE_TYPE_HAS_BODY, data => {qw/type articles/} ] ],
-        [ [qw/update/]          => [ @TEST_ARGS_BASE_TYPE_ID_HAS_BODY, data => { @TEST_ARGS_BASE_TYPE } ] ],
-        [ [qw/retrieve_by_relationship retrieve_relationships/] => [ @TEST_ARGS_BASE_TYPE_ID_NO_BODY, rel_type => 'comments' ] ],
-        [ [qw/create_relationships update_relationships delete_relationships/ ]
-            => [ @TEST_ARGS_BASE_TYPE_ID_HAS_BODY, rel_type => comments => data => [ { 1 => 2 } ] ] ],
-    );
-
-    my %strict_return_values = map +($_=>1), qw/
-        update create_relationships update_relationships delete_relationships
-    /;
-
-    my $expected_re = qr/\A\QServer error, halp at\E/;
-    foreach my $tuple (@all) {
-        my ( $methods, $arguments ) = @$tuple;
-        foreach my $method (@$methods) {
-            my $glob = do {
-                no strict 'refs';
-                \*{"Test::PONAPI::DAO::Repository::MockDB::$method"};
-            };
-            my $w   = '';
-            my @ret = do {
-                no warnings 'redefine';
-                local $SIG{__WARN__} = sub { $w .= shift };
-                local *$glob = sub { die "Server error, halp" };
-                $dao->$method(@$arguments);
-            };
-            is_deeply(
-                \@ret,
-                $SERVER_ERROR,
-                "... expected PONAPI response for error on $method"
-            );
-            like( $w, $expected_re, "... expected perl error from $method" );
-
-            # See that we catch people using PONAPI::DAO::Exception without
-            # an exception type
-            ($w, @ret) = ('');
-            my $msg = "my great exception!";
-            @ret = do {
-                no warnings 'redefine';
-                local $SIG{__WARN__} = sub { $w .= shift };
-                local *$glob = sub {
-                    PONAPI::DAO::Exception->throw(message => $msg)
-                };
-                $dao->$method(@$arguments);
-            };
-            is_deeply(
-                \@ret,
-                $SERVER_ERROR,
-                "... we catch exceptions without types",
-            );
-            like($w, qr/\A\Q$msg\E/, "... and make them warn");
-
-            # Let's also test that all the methods detect unknown types
-            $w = '';
-            my %modified_arguments = @{ dclone $arguments };
-            $modified_arguments{type} = 'fake';
-            my $data = $modified_arguments{data} || [];
-            $data = [ $data ] if ref($data) ne 'ARRAY';
-            $_->{type} = 'fake' for @$data;
-            @ret = $dao->$method( %modified_arguments );
-            is( $ret[0], 404, "... bad types in $method lead to a 404" );
-            ok(
-                scalar(
-                    grep( $_->{detail} eq 'Type `fake` doesn\'t exist.',
-                        @{ $ret[2]->{errors} } )
-                ),
-                "... and returns an error document explaining why"
-            );
-            is( $w, '', "... and no warnings" );
-
-            next unless $strict_return_values{$method};
-            ($w, @ret) = ('');
-            {
-                no warnings 'redefine';
-                local $SIG{__WARN__} = sub { $w .= shift    };
-                local *$glob         = sub { return -1111.5 };
-                @ret = $dao->$method(@$arguments);
-            }
-            is_deeply(
-                \@ret,
-                $SERVER_ERROR,
-                "... Bad ->$method implementations are detected"
-            );
-            like(
-                $w,
-                qr/\Qoperation returned an unexpected value\E/,
-                "... and gives a normal warning, too"
-            );
-        }
-    }
-
-};
-
 subtest '... delete' => sub {
     foreach my $tuple (
         [
@@ -711,12 +612,17 @@ subtest '... create_relationships' => sub {
         ],
         [
             [ @TEST_ARGS_BASE_TYPE_ID_NO_BODY, rel_type => 'comments' ],
-            "request body is missing `data`",
+            $ERR_BODY_MISSING,
+            "... body is missing",
+        ],
+        [
+            [ @TEST_ARGS_BASE_TYPE_ID_HAS_BODY, rel_type => 'comments' ],
+            $ERR_DATA_MISSING,
             "... data is missing",
         ],
         [
             [ @TEST_ARGS_BASE_TYPE_ID_HAS_BODY, data => [] ],
-            "`relationship type` is missing",
+            $ERR_RELTYPE_MISSING,
             "... rel_type is missing"
         ],
         [
@@ -826,6 +732,107 @@ subtest '... delete_relationships' => sub {
     }
 
 };
+
+
+subtest '... explodey repo errors' => sub {
+
+    # See that we handle $repository exploding gracefully.
+    my @all = (
+        [ [qw/retrieve_all/]    => [ @TEST_ARGS_BASE_TYPE_NO_BODY ] ],
+        [ [qw/retrieve delete/] => [ @TEST_ARGS_BASE_TYPE_ID_NO_BODY ] ],
+        [ [qw/create/]          => [ @TEST_ARGS_BASE_TYPE_HAS_BODY, data => {qw/type articles/} ] ],
+        [ [qw/update/]          => [ @TEST_ARGS_BASE_TYPE_ID_HAS_BODY, data => { @TEST_ARGS_BASE_TYPE } ] ],
+        [ [qw/retrieve_by_relationship retrieve_relationships/] => [ @TEST_ARGS_BASE_TYPE_ID_NO_BODY, rel_type => 'comments' ] ],
+        [ [qw/create_relationships update_relationships delete_relationships/ ]
+            => [ @TEST_ARGS_BASE_TYPE_ID_HAS_BODY, rel_type => comments => data => [ { 1 => 2 } ] ] ],
+    );
+
+    my %strict_return_values = map +($_=>1), qw/
+        update create_relationships update_relationships delete_relationships
+    /;
+
+    my $expected_re = qr/\A\QServer error, halp at\E/;
+    foreach my $tuple (@all) {
+        my ( $methods, $arguments ) = @$tuple;
+        foreach my $method (@$methods) {
+            my $glob = do {
+                no strict 'refs';
+                \*{"Test::PONAPI::DAO::Repository::MockDB::$method"};
+            };
+            my $w   = '';
+            my @ret = do {
+                no warnings 'redefine';
+                local $SIG{__WARN__} = sub { $w .= shift };
+                local *$glob = sub { die "Server error, halp" };
+                $dao->$method(@$arguments);
+            };
+            is_deeply(
+                \@ret,
+                $SERVER_ERROR,
+                "... expected PONAPI response for error on $method"
+            );
+            like( $w, $expected_re, "... expected perl error from $method" );
+
+            # See that we catch people using PONAPI::DAO::Exception without
+            # an exception type
+            ($w, @ret) = ('');
+            my $msg = "my great exception!";
+            @ret = do {
+                no warnings 'redefine';
+                local $SIG{__WARN__} = sub { $w .= shift };
+                local *$glob = sub {
+                    PONAPI::DAO::Exception->throw(message => $msg)
+                };
+                $dao->$method(@$arguments);
+            };
+            is_deeply(
+                \@ret,
+                $SERVER_ERROR,
+                "... we catch exceptions without types",
+            );
+            like($w, qr/\A\Q$msg\E/, "... and make them warn");
+
+            # Let's also test that all the methods detect unknown types
+            $w = '';
+            my %modified_arguments = @{ dclone $arguments };
+            $modified_arguments{type} = 'fake';
+            my $data = $modified_arguments{data} || [];
+            $data = [ $data ] if ref($data) ne 'ARRAY';
+            $_->{type} = 'fake' for @$data;
+            @ret = $dao->$method( %modified_arguments );
+            is( $ret[0], 404, "... bad types in $method lead to a 404" );
+            ok(
+                scalar(
+                    grep( $_->{detail} eq 'Type `fake` doesn\'t exist.',
+                        @{ $ret[2]->{errors} } )
+                ),
+                "... and returns an error document explaining why"
+            );
+            is( $w, '', "... and no warnings" );
+
+            next unless $strict_return_values{$method};
+            ($w, @ret) = ('');
+            {
+                no warnings 'redefine';
+                local $SIG{__WARN__} = sub { $w .= shift    };
+                local *$glob         = sub { return -1111.5 };
+                @ret = $dao->$method(@$arguments);
+            }
+            is_deeply(
+                \@ret,
+                $SERVER_ERROR,
+                "... Bad ->$method implementations are detected"
+            );
+            like(
+                $w,
+                qr/\Qoperation returned an unexpected value\E/,
+                "... and gives a normal warning, too"
+            );
+        }
+    }
+
+};
+
 
 subtest '... illegal params' => sub {
     # Bad params for request.
