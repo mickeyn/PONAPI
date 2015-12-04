@@ -20,6 +20,12 @@ has 'repository' => (
     required => 1,
 );
 
+has 'version' => (
+    is       => 'ro',
+    isa      => 'Str',
+    required => 1,
+);
+
 sub retrieve_all             { shift->_action( 'PONAPI::DAO::Request::RetrieveAll'            , @_ ) }
 sub retrieve                 { shift->_action( 'PONAPI::DAO::Request::Retrieve'               , @_ ) }
 sub retrieve_relationships   { shift->_action( 'PONAPI::DAO::Request::RetrieveRelationships'  , @_ ) }
@@ -37,6 +43,7 @@ sub _action {
 
     my $ponapi_parameters = @_ == 1 ? $_[0] : +{ @_ };
     $ponapi_parameters->{repository} = $self->repository;
+    $ponapi_parameters->{version}    = $self->version;
 
     $action_class->new($ponapi_parameters)->execute();
 }

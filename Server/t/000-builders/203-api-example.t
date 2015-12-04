@@ -123,7 +123,7 @@ is($ACTION, 'GET', '... got the action we expected from the request');
 
 # the Builder
 
-my $doc = PONAPI::Builder::Document->new( is_collection => 1 );
+my $doc = PONAPI::Builder::Document->new( version => '1.0', is_collection => 1 );
 isa_ok($doc, 'PONAPI::Builder::Document');
 does_ok($doc, 'PONAPI::Builder');
 does_ok($doc, 'PONAPI::Builder::Role::HasLinksBuilder');

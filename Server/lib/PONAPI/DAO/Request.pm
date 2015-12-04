@@ -12,6 +12,12 @@ has 'repository' => (
     required => 1,
 );
 
+has 'version' => (
+    is       => 'ro',
+    isa      => 'Str',
+    required => 1,
+);
+
 has req_base => (
     is       => 'ro',
     isa      => 'Str',
@@ -46,7 +52,8 @@ has is_valid => (
 has document => (
     is       => 'ro',
     isa      => 'PONAPI::Builder::Document',
-    default  => sub { PONAPI::Builder::Document->new() }
+    lazy     => 1,
+    builder  => '_build_document',
 );
 
 has json => (
@@ -55,9 +62,14 @@ has json => (
     default => sub { JSON::XS->new->allow_nonref->utf8->canonical },
 );
 
+sub _build_document { PONAPI::Builder::Document->new( version => $_[0]->version ) }
+
 sub BUILD {
     my ( $self, $args ) = @_;
     my $type = $self->type;
+
+    # trigger creation of document object
+    $self->document;
 
     # `type` exists
     return $self->_bad_request( "Type `$type` doesn't exist.", 404 )
