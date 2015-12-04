@@ -1,9 +1,16 @@
 package PONAPI::Server::ConfigReader;
 
 use Moose;
-use MooseX::Types::Path::Class;
 
 use PONAPI::DAO;
+
+use Moose::Util::TypeConstraints;
+use Path::Class::Dir;
+
+class_type 'Path::Class::Dir';
+coerce 'Path::Class::Dir',
+    from 'Str',
+    via { Path::Class::Dir->new($_) };
 
 has dir => (
     is       => 'ro',
