@@ -162,20 +162,30 @@ sub _ponapi_query_params {
         'sort'  => [],
     );
 
+    my $query_params = $req->query_parameters;
+
     # loop over query parameters (unique keys)
-    for my $k ( keys %{ $req->query_parameters } ) {
+    for my $k ( keys %{ $query_params } ) {
         my ( $p, $f ) = $k =~ /^ (\w+?) (?:\[(\w+)\])? $/x;
 
         # valid parameter names
         $wr->(ERR_BAD_REQ_PARAMS)
             unless grep { $p eq $_ } qw< fields filter page include sort >;
 
+        # "complex" parameters have the correct structre
+        $wr->(ERR_BAD_REQ)
+            if !defined $f and grep { $p eq $_ } qw< page fields filter >;
+
         # 'sort' requested but not supported
         $wr->(ERR_SORT_NOT_ALLOWED)
             if $p eq 'sort' and !$self->{'ponapi.sort_allowed'};
 
         # values can be passed as CSV
-        my @values = map { split /,/ } $req->query_parameters->get_all($k);
+        my @values = map { split /,/ } $query_params->get_all($k);
+
+        # check we have values for a given key
+        $wr->(ERR_BAD_REQ)
+            if exists $query_params->{$k} and !@values;
 
         # values passed on in array-ref
         grep { $p eq $_ } qw< fields filter >
