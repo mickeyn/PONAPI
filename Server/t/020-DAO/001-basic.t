@@ -93,7 +93,7 @@ subtest '... retrieve' => sub {
 
     # Retrieve using false values as ids; should return nothing,
     # because the ids don't exist, but should not error.
-    foreach my $id ( '', 0, 0E0, 0.0, '0 but true' ) {
+    foreach my $id ( '', 0, '0E0', '0.0', '0 but true' ) {
         my @ret = $dao->retrieve( @TEST_ARGS_BASE_TYPE_NO_BODY, id => $id );
         is_deeply(\@ret,
             [ 200, [], { data => undef, jsonapi => { version => '1.0' } } ],
