@@ -14,13 +14,13 @@ use PONAPI::DAO::Request::UpdateRelationships;
 use PONAPI::DAO::Request::Delete;
 use PONAPI::DAO::Request::DeleteRelationships;
 
-has 'repository' => (
+has repository => (
     is       => 'ro',
     does     => 'PONAPI::DAO::Repository',
     required => 1,
 );
 
-has 'version' => (
+has version => (
     is       => 'ro',
     isa      => 'Str',
     required => 1,

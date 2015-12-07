@@ -6,13 +6,13 @@ use JSON::XS;
 use PONAPI::Builder::Document;
 use PONAPI::DAO::Constants;
 
-has 'repository' => (
+has repository => (
     is       => 'ro',
     does     => 'PONAPI::DAO::Repository',
     required => 1,
 );
 
-has 'version' => (
+has version => (
     is       => 'ro',
     isa      => 'Str',
     required => 1,
