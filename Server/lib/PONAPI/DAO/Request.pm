@@ -4,7 +4,6 @@ use Moose;
 use JSON::XS;
 
 use PONAPI::Builder::Document;
-use PONAPI::DAO::Constants;
 
 has 'repository' => (
     is       => 'ro',

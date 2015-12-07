@@ -2,8 +2,6 @@ package PONAPI::DAO::Request::CreateRelationships;
 
 use Moose;
 
-use PONAPI::DAO::Constants;
-
 extends 'PONAPI::DAO::Request';
 
 with 'PONAPI::DAO::Request::Role::UpdateLike',

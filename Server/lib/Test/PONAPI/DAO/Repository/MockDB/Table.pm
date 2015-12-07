@@ -1,8 +1,7 @@
 package Test::PONAPI::DAO::Repository::MockDB::Table;
+
 use Moose;
 use SQL::Composer;
-
-use PONAPI::DAO::Constants;
 
 sub insert_stmt {
     my ($self, %args) = @_;
