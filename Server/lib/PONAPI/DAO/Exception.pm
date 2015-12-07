@@ -19,23 +19,19 @@ has status => (
 );
 
 has bad_request_data => (
-    is        => 'ro',
-    isa       => 'Bool',
+    is  => 'ro',
+    isa => 'Bool',
 );
 
 has sql_error => (
-    is        => 'ro',
-    isa       => 'Bool',
+    is  => 'ro',
+    isa => 'Bool',
 );
 
 # Picked from Throwable::Error
 sub as_string {
-    my ($self) = @_;
-
-    my $str = $self->message;
-    $str .= "\n\n" . $self->stack_trace->as_string;
-
-    return $str;
+    my $self = shift;
+    return $self->message . "\n\n" . $self->stack_trace->as_string;
 }
 
 __PACKAGE__->meta->make_immutable;
