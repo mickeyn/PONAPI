@@ -60,7 +60,7 @@ subtest '... retrieve all' => sub {
     ok(exists $doc->{'links'}, '... we have a `links` key');
     is(scalar keys %$doc, 3, '... only got 3 keys');
 
-    is(ref $doc->{'data'}, 'ARRAY', '.... the document->{data} we got is an ARRAY ref');
+    is(ref $doc->{'data'}, 'ARRAY', '... the document->{data} we got is an ARRAY ref');
 
     foreach my $person ( @{$doc->{'data'}} ) {
         is(ref $person, 'HASH', '... the resource we got is a HASH ref');

@@ -8,7 +8,6 @@ use Plack::Test;
 
 use HTTP::Request::Common;
 use JSON::XS;
-use Data::Dumper;
 
 BEGIN {
     use_ok('PONAPI::Server');
@@ -16,7 +15,7 @@ BEGIN {
 
 my $BAD_REQUEST_MSG = "{JSON:API} Bad request";
 
-my @TEST_HEADERS = ( 'Content-Type' => 'application/vnd.api+json' );
+my %CT = ( 'Content-Type' => 'application/vnd.api+json' );
 
 sub error_test {
     my ($res, $expect, $desc) = @_;
@@ -41,12 +40,12 @@ my $app = Plack::Test->create( PONAPI::Server->to_app );
 
 subtest '... include errors' => sub {
     {
-        my $res = $app->request( GET '/articles/2?include=comments', @TEST_HEADERS );
+        my $res = $app->request( GET '/articles/2?include=comments', %CT );
         is( $res->code, 200, 'existing relationships are OK' );
     }
 
     {
-        my $res = $app->request( GET '/articles/1/relationships/0', @TEST_HEADERS );
+        my $res = $app->request( GET '/articles/1/relationships/0', %CT );
         is($res->code, 404, "... error on non-existent '0'");
         is_deeply(
             decode_json $res->content,
@@ -61,7 +60,7 @@ subtest '... include errors' => sub {
         );
     }
     {
-        my $res = $app->request( GET '/articles/1/relationships//', @TEST_HEADERS );
+        my $res = $app->request( GET '/articles/1/relationships//', %CT );
         is($res->code, 400, "... error empty-string relationship");
         is(
             (decode_json($res->content)||{})->{errors}[0]{detail},
@@ -71,12 +70,12 @@ subtest '... include errors' => sub {
     }
 
     {
-        my $res = $app->request( GET '/articles/2?include=asdasd,comments.not_there', @TEST_HEADERS );
+        my $res = $app->request( GET '/articles/2?include=asdasd,comments.not_there', %CT );
         is( $res->code, 404, 'non-existing relationships are not found' );
     }
 
     {
-        my $res = $app->request( GET '/articles/1?fields[articles]=nope', @TEST_HEADERS );
+        my $res = $app->request( GET '/articles/1?fields[articles]=nope', %CT );
         error_test(
             $res,
             {
@@ -89,7 +88,7 @@ subtest '... include errors' => sub {
 
     {
         # Note the nope
-        my $res = $app->request( GET '/articles/1?include=nope', @TEST_HEADERS );
+        my $res = $app->request( GET '/articles/1?include=nope', %CT );
         error_test(
             $res,
             {
@@ -100,7 +99,7 @@ subtest '... include errors' => sub {
         );
 
 
-        $res = $app->request( GET '/articles/1?include=authors&fields[NOPE]=nope', @TEST_HEADERS );
+        $res = $app->request( GET '/articles/1?include=authors&fields[NOPE]=nope', %CT );
         error_test(
             $res,
             {
@@ -111,7 +110,7 @@ subtest '... include errors' => sub {
         );
 
         # Note the 'nope'
-        $res = $app->request( GET '/articles/1?include=authors&fields[people]=nope', @TEST_HEADERS );
+        $res = $app->request( GET '/articles/1?include=authors&fields[people]=nope', %CT );
         error_test(
             $res,
             {
@@ -137,7 +136,7 @@ subtest '... bad requests (GET)' => sub {
             'page=page',
             'filter=filter',
     ) {
-        my $res = $app->request( GET "/articles/1?$req", @TEST_HEADERS );
+        my $res = $app->request( GET "/articles/1?$req", %CT );
         error_test(
             $res,
             {
@@ -153,7 +152,7 @@ subtest '... bad requests (GET)' => sub {
 subtest '... bad requests (POST)' => sub {
 
     {
-        my $res = $app->request( POST "/articles", @TEST_HEADERS );
+        my $res = $app->request( POST "/articles", %CT );
         error_test(
             $res,
             {
@@ -165,7 +164,7 @@ subtest '... bad requests (POST)' => sub {
     }
 
     {
-        my $res = $app->request( POST "/articles", @TEST_HEADERS, Content => "hello" );
+        my $res = $app->request( POST "/articles", %CT, Content => "hello" );
         error_test(
             $res,
             {

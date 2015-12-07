@@ -10,7 +10,6 @@ BEGIN {
     use_ok('PONAPI::Builder::Document')
 }
 
-use Data::Dumper;
 use JSON::XS;
 
 my $JSON = JSON::XS->new->utf8;
@@ -99,7 +98,6 @@ my $GOT = PONAPI::Builder::Document
     ->build
 ;
 
-#warn Dumper $GOT;
 is_deeply( $GOT, $EXPECTED, '... got the expected result' );
 
 ## ----------------------------------------------------------------------------

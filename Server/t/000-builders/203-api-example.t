@@ -167,9 +167,6 @@ foreach my $article ( @articles ) {
 
 my $GOT = $doc->build;
 
-#use Data::Dumper;
-#warn Dumper $GOT;
-
 is_deeply($EXPECTED, $GOT, '... does our result match?');
 
 done_testing;
