@@ -123,7 +123,7 @@ subtest '... include errors' => sub {
     }
 };
 
-subtest '... bad requests' => sub {
+subtest '... bad requests (GET)' => sub {
     # Incomplete requests
     foreach my $req (
             'fields',
@@ -147,6 +147,35 @@ subtest '... bad requests' => sub {
             "... bad request $req caught",
         );
     }
+
+};
+
+subtest '... bad requests (POST)' => sub {
+
+    {
+        my $res = $app->request( POST "/articles", @TEST_HEADERS );
+        error_test(
+            $res,
+            {
+                detail => 'request body is missing',
+                status => 400,
+            },
+            "... POST with no body",
+        );
+    }
+
+    {
+        my $res = $app->request( POST "/articles", @TEST_HEADERS, Content => "hello" );
+        error_test(
+            $res,
+            {
+                detail => '{JSON:API} Bad request',
+                status => 400,
+            },
+            "... POST with non-JSON body",
+        );
+    }
+
 };
 
 done_testing;

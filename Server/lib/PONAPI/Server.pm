@@ -83,7 +83,7 @@ sub _ponapi_params {
     my %params = (
         @ponapi_route_params,
         @ponapi_query_params,
-        data     => $data,
+        ( data => $data )x!! $data,
         has_body => $has_body,
         respond_to_updates_with_200 => $self->{'ponapi.respond_to_updates_with_200'},
     );
@@ -203,9 +203,11 @@ sub _ponapi_query_params {
 
 sub _ponapi_data {
     my ( $self, $wr, $req ) = @_;
-    $req->method eq 'GET' and return +{};
 
-    my $body = decode_json( $req->content );
+    return unless $req->content;
+
+    my $body;
+    eval { $body = decode_json( $req->content ); 1 };
 
     $wr->(ERR_BAD_REQ)
         unless $body and ref $body eq 'HASH' and exists $body->{data};
