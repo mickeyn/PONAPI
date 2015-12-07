@@ -39,12 +39,6 @@ sub call {
     return $self->_error_response( $ponapi_params->{__error__} )
         if $ponapi_params->{__error__};
 
-    $ponapi_params->{req_base} =
-        $self->{'ponapi.relative_links'} eq 'full' ? "".$req->base : '/';
-
-    $ponapi_params->{send_doc_self_link} = $self->{'ponapi.doc_auto_self_link'}
-        if $req->method eq 'GET';
-
     my $action = delete $ponapi_params->{action};
     my ( $status, $headers, $res ) = $self->{'ponapi.DAO'}->$action($ponapi_params);
     return $self->_response( $status, $headers, $res );
@@ -80,12 +74,20 @@ sub _ponapi_params {
 
     my $data = $self->_ponapi_data($wr, $req);
 
+    my $req_base = $self->{'ponapi.relative_links'} eq 'full' ? "".$req->base : '/';
+
     my %params = (
         @ponapi_route_params,
         @ponapi_query_params,
-        ( data => $data )x!! $data,
+
         has_body => $has_body,
+        req_base => $req_base,
+
         respond_to_updates_with_200 => $self->{'ponapi.respond_to_updates_with_200'},
+
+        ( send_doc_self_link => $self->{'ponapi.doc_auto_self_link'} )x!! ( $req->method eq 'GET' ),
+
+        ( data => $data )x!! $data,
     );
 
     return \%params;
