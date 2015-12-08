@@ -186,13 +186,6 @@ subtest '... mix' => sub {
         "... retrive relationships"
     );
 
-    my $update_rel  = $app->request(
-        POST '/articles/2/relationships/authors', %CT,
-        'X-HTTP-Method-Override' => 'PATCH',
-        Content => encode_json({ data => { id => 5, type => 'people'} }),
-    );
-    test_successful_request($update_rel);
-
     my $create_rel  = $app->request(
         POST '/articles/2/relationships/comments', %CT,
         Content => encode_json({ data => [{ id => 5555, type => 'comments'}] }),
