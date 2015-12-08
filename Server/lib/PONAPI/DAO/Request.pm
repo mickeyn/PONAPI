@@ -12,11 +12,10 @@ has repository => (
     required => 1,
 );
 
-has version => (
+has document => (
     is       => 'ro',
-    isa      => 'Str',
+    isa      => 'PONAPI::Builder::Document',
     required => 1,
-    trigger  => \&_version_set,
 );
 
 has req_base => (
@@ -50,23 +49,22 @@ has is_valid => (
     writer  => 'set_is_valid',
 );
 
-has document => (
-    init_arg => undef,
-    is       => 'ro',
-    isa      => 'PONAPI::Builder::Document',
-    writer   => '_set_document',
-);
-
 has json => (
     is      => 'ro',
     isa     => 'JSON::XS',
     default => sub { JSON::XS->new->allow_nonref->utf8->canonical },
 );
 
-sub _version_set {
-    my ( $self, $version ) = @_;
-    my $doc = PONAPI::Builder::Document->new( version => $version );
-    $self->_set_document( $doc );
+sub BUILDARGS {
+    my $class = shift;
+    my %args = @_ == 1 ? %{ $_[0] } : @_;
+
+    my $version = delete $args{version}
+        || die "[__PACKAGE__] missing arg `version`";
+
+    $args{document} = PONAPI::Builder::Document->new( version => $version );
+
+    return \%args;
 }
 
 sub BUILD {
