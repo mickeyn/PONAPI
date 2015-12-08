@@ -49,7 +49,7 @@ my $EXPECTED = $JSON->decode(q[
 
 # ...
 
-my $doc = PONAPI::Builder::Document->new( is_collection => 1 )
+my $doc = PONAPI::Builder::Document->new( version => '1.0', is_collection => 1 )
 
     -> add_meta ( "total-pages" => 13 )
 

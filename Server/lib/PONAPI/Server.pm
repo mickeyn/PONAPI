@@ -165,7 +165,6 @@ sub _ponapi_query_params {
     my ( $self, $wr, $req ) = @_;
 
     my %params;
-
     my $query_params = $req->query_parameters;
 
     # loop over query parameters (unique keys)

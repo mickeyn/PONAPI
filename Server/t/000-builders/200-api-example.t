@@ -69,7 +69,7 @@ my $EXPECTED = $JSON->decode(q[
 ]);
 
 my $GOT = PONAPI::Builder::Document
-    ->new
+    ->new( version => '1.0' )
         ->add_resource( id => 1, type => 'articles' )
             ->add_attributes(
                 title => 'Rails is Omakase',

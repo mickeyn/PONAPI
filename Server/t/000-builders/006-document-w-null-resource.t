@@ -19,7 +19,7 @@ TODO:
 
 subtest '... testing constructor' => sub {
 
-    my $doc = PONAPI::Builder::Document->new;
+    my $doc = PONAPI::Builder::Document->new( version => '1.0' );
     isa_ok( $doc, 'PONAPI::Builder::Document');
 
     my $r = $doc->add_null_resource();

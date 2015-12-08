@@ -5,9 +5,15 @@ use JSON::XS;
 
 use PONAPI::Builder::Document;
 
-has 'repository' => (
+has repository => (
     is       => 'ro',
     does     => 'PONAPI::DAO::Repository',
+    required => 1,
+);
+
+has document => (
+    is       => 'ro',
+    isa      => 'PONAPI::Builder::Document',
     required => 1,
 );
 
@@ -42,17 +48,23 @@ has is_valid => (
     writer  => 'set_is_valid',
 );
 
-has document => (
-    is       => 'ro',
-    isa      => 'PONAPI::Builder::Document',
-    default  => sub { PONAPI::Builder::Document->new() }
-);
-
 has json => (
     is      => 'ro',
     isa     => 'JSON::XS',
     default => sub { JSON::XS->new->allow_nonref->utf8->canonical },
 );
+
+sub BUILDARGS {
+    my $class = shift;
+    my %args = @_ == 1 ? %{ $_[0] } : @_;
+
+    my $version = delete $args{version}
+        || die "[__PACKAGE__] missing arg `version`";
+
+    $args{document} = PONAPI::Builder::Document->new( version => $version );
+
+    return \%args;
+}
 
 sub BUILD {
     my ( $self, $args ) = @_;

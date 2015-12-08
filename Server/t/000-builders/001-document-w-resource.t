@@ -19,7 +19,7 @@ TODO:
 
 subtest '... testing constructor' => sub {
 
-    my $doc = PONAPI::Builder::Document->new;
+    my $doc = PONAPI::Builder::Document->new( version => '1.0' );
     isa_ok( $doc, 'PONAPI::Builder::Document');
     does_ok($doc, 'PONAPI::Builder');
     does_ok($doc, 'PONAPI::Builder::Role::HasLinksBuilder');

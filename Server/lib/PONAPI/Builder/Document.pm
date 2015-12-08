@@ -10,6 +10,12 @@ with 'PONAPI::Builder',
      'PONAPI::Builder::Role::HasLinksBuilder',
      'PONAPI::Builder::Role::HasMeta';
 
+has version => (
+    is       => 'ro',
+    isa      => 'Str',
+    required => 1,
+);
+
 has status => (
     init_arg  => undef,
     is        => 'ro',
@@ -139,7 +145,7 @@ sub add_self_link {
 sub build {
     my $self   = shift;
     my %args   = @_;
-    my $result = +{ jsonapi => { version => "1.0" } };
+    my $result = +{ jsonapi => { version => $self->version } };
 
     if ( ! $self->has_errors_builder ) {
         $result->{meta}  = $self->_meta                if $self->has_meta;
@@ -178,7 +184,7 @@ sub build {
             $_->{status} //= $self->status for @$errors;
         }
         return +{
-            jsonapi => +{ version => "1.0" },
+            jsonapi => +{ version => $self->version },
             errors  => $errors,
         };
     }

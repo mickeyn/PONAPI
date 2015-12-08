@@ -30,7 +30,7 @@ ok($repository->has_relationship(people   => 'articles'),  '... we have the (peo
 
 ok(!$repository->has_relationship(comments => 'authors'),  '... we do not have the (comments => author) relationship (as expected)');
 
-my $dao = PONAPI::DAO->new( repository => $repository );
+my $dao = PONAPI::DAO->new( version => '1.0', repository => $repository );
 isa_ok($dao, 'PONAPI::DAO');
 
 my @TEST_ARGS_BASE     = ( req_base => '/'        );

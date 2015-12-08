@@ -14,9 +14,15 @@ use PONAPI::DAO::Request::UpdateRelationships;
 use PONAPI::DAO::Request::Delete;
 use PONAPI::DAO::Request::DeleteRelationships;
 
-has 'repository' => (
+has repository => (
     is       => 'ro',
     does     => 'PONAPI::DAO::Repository',
+    required => 1,
+);
+
+has version => (
+    is       => 'ro',
+    isa      => 'Str',
     required => 1,
 );
 
@@ -37,6 +43,7 @@ sub _action {
 
     my $ponapi_parameters = @_ == 1 ? $_[0] : +{ @_ };
     $ponapi_parameters->{repository} = $self->repository;
+    $ponapi_parameters->{version}    = $self->version;
 
     $action_class->new($ponapi_parameters)->execute();
 }

@@ -82,7 +82,7 @@ my $EXPECTED = {
 
 
 my $builder = PONAPI::Builder::Document
-    ->new( is_collection => 1 )
+    ->new( version => '1.0', is_collection => 1 )
         ->add_resource( type => 'articles', id => 1 )
             ->add_attribute( "title" => "JSON API paints my bikeshed!" )
             ->add_links( "self" => "http://example.com/articles/1" )

@@ -11,7 +11,7 @@ BEGIN {
 }
 
 subtest '... single document builder' => sub {
-    my $root = PONAPI::Builder::Document->new;
+    my $root = PONAPI::Builder::Document->new( version => '1.0' );
     isa_ok($root, 'PONAPI::Builder::Document');
 
     ok($root->is_root, '... this is the root');

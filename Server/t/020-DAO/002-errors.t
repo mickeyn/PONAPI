@@ -13,7 +13,7 @@ use Test::PONAPI::DAO::Repository::MockDB;
 use Test::PONAPI::DAO::Repository::MockDB::Loader;
 
 my $repository = Test::PONAPI::DAO::Repository::MockDB->new;
-my $dao = PONAPI::DAO->new( repository => $repository );
+my $dao = PONAPI::DAO->new( version => '1.0', repository => $repository );
 
 
 my @TEST_ARGS_BASE     = ( req_base => '/'        );
