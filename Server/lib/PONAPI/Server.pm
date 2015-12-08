@@ -71,25 +71,20 @@ sub _ponapi_params {
     my @ponapi_query_params = $self->_ponapi_query_params($wr, $req);
 
     # THE BODY CONTENT
-    my $has_body = !!( $req->content_length > 0 );
-    $wr->(ERR_BAD_REQ) if $req->method eq 'GET' and $has_body;
+    my @ponapi_data = $self->_ponapi_data($wr, $req);
 
-    my $data = $self->_ponapi_data($wr, $req);
-
-    my $req_base = $self->{'ponapi.relative_links'} eq 'full' ? "".$req->base : '/';
+    # misc.
+    my $req_base      = $self->{'ponapi.relative_links'} eq 'full' ? "".$req->base : '/';
+    my $update_200    = !!$self->{'ponapi.respond_to_updates_with_200'};
+    my $doc_self_link = ($req->method eq 'GET') ? !!$self->{'ponapi.doc_auto_self_link'} : 0;
 
     my %params = (
         @ponapi_route_params,
         @ponapi_query_params,
-
-        has_body => $has_body,
-        req_base => $req_base,
-
-        respond_to_updates_with_200 => $self->{'ponapi.respond_to_updates_with_200'},
-
-        ( send_doc_self_link => $self->{'ponapi.doc_auto_self_link'} )x!! ( $req->method eq 'GET' ),
-
-        ( data => $data )x!! $data,
+        @ponapi_data,
+        req_base                    => $req_base,
+        respond_to_updates_with_200 => $update_200,
+        send_doc_self_link          => $doc_self_link,
     );
 
     return \%params;
@@ -212,16 +207,21 @@ sub _ponapi_query_params {
 
 sub _ponapi_data {
     my ( $self, $wr, $req ) = @_;
+    my @ret = ( has_body => 0 );
 
-    return unless $req->content;
+    if ( $req->content_length > 0 ) {
+        $wr->(ERR_BAD_REQ) if $req->method eq 'GET';
 
-    my $body;
-    eval { $body = decode_json( $req->content ); 1 };
+        my $body;
+        eval { $body = decode_json( $req->content ); 1 };
 
-    $wr->(ERR_BAD_REQ)
-        unless $body and ref $body eq 'HASH' and exists $body->{data};
+        $wr->(ERR_BAD_REQ)
+            unless $body and ref $body eq 'HASH' and exists $body->{data};
 
-    return $body->{data};
+        @ret = ( has_body => 1, data => $body->{data} );
+    }
+
+    return @ret;
 }
 
 sub _response {
