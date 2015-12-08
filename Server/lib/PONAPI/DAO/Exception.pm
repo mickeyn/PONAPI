@@ -29,6 +29,12 @@ has sql_error => (
     isa => 'Bool',
 );
 
+has json_api_version => (
+    is      => 'ro',
+    isa     => 'Str',
+    default => sub { '1.0' },
+);
+
 # Picked from Throwable::Error
 sub as_string {
     my $self = shift;
@@ -42,7 +48,7 @@ sub as_response {
     my $detail = $self->message;
 
     return $status, [], +{
-        jsonapi => { version  => "1.0" },
+        jsonapi => { version  => $self->json_api_version },
         errors  => [ { detail => $detail, status => $status } ],
     };
 }
@@ -59,8 +65,9 @@ sub new_from_exception {
     }
 
     return $class->new(
-        message => $message,
-        status  => $status,
+        message          => $message,
+        status           => $status,
+        json_api_version => $dao->version,
     );
 }
 
