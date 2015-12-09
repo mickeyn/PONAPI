@@ -130,7 +130,7 @@ sub BUILD {
 
     # validate `data`
     if ( $self->has_body ) {
-        if ( $self->can('data') ) {
+        if ( $self->can('has_data') ) {
             $self->_validate_data;
         }
         else {

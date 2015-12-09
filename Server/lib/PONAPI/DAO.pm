@@ -26,6 +26,12 @@ has version => (
     required => 1,
 );
 
+has json => (
+    is      => 'ro',
+    isa     => 'JSON::XS',
+    default => sub { JSON::XS->new->allow_nonref->utf8->canonical },
+);
+
 sub retrieve_all             { shift->_action( 'PONAPI::DAO::Request::RetrieveAll'            , @_ ) }
 sub retrieve                 { shift->_action( 'PONAPI::DAO::Request::Retrieve'               , @_ ) }
 sub retrieve_relationships   { shift->_action( 'PONAPI::DAO::Request::RetrieveRelationships'  , @_ ) }
@@ -44,10 +50,21 @@ sub _action {
     my $ponapi_parameters = @_ == 1 ? $_[0] : +{ @_ };
     $ponapi_parameters->{repository} = $self->repository;
     $ponapi_parameters->{version}    = $self->version;
+    $ponapi_parameters->{json}       = $self->json;
 
-    $action_class->new($ponapi_parameters)->execute();
+    local $@;
+    my @ret;
+    eval {
+        @ret = $action_class->new($ponapi_parameters)->execute();
+    } or do {
+        my $e = $@ || 'Unknown error';
+        @ret = PONAPI::DAO::Exception
+                    ->new_from_exception($e, $self)
+                    ->as_response;
+    };
+
+    return @ret;
 }
-
 
 __PACKAGE__->meta->make_immutable;
 no Moose; 1;

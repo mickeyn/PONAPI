@@ -53,7 +53,7 @@ subtest '... method override (middleware loaded)' => sub {
 
         my $content  = decode_json($res->content);
         my $included = $content->{included}->[0];
-        my $expect = {
+        my $expected = {
             id    => 42,
             type  => 'people',
             links => { self => '/people/42' },
@@ -65,11 +65,43 @@ subtest '... method override (middleware loaded)' => sub {
         };
         is_deeply(
             $included,
-            $expect,
+            $expected,
             "... included is as expected"
         );
     }
 
+    {
+        my $res  = $app->request(
+            POST '/articles/2/relationships/authors',
+            'Content-Type' => $JSONAPI_MEDIATYPE,
+            'X-HTTP-Method-Override' => 'PATCH',
+            Content => encode_json({ data => { id => 5, type => 'people'} }),
+        );
+        ok( $res->is_success, 'Successful request to ' . $res->request->method . " " .$res->request->uri );
+        my $h = $res->headers;
+        is(
+            $h->header('Content-Type')||'',
+            'application/vnd.api+json',
+            "... has the right content-type",
+        );
+        is(
+            $h->header('X-PONAPI-Server-Version')||'',
+            '1.0',
+            "... and gives us the custom X-PONAPI-Server-Version header",
+        );
+
+        my $content  = decode_json($res->content);
+        is_deeply(
+            $content,
+            {
+                jsonapi => { version => '1.0' },
+                meta    => {
+                    detail => 'successfully modified /articles/2/authors => {"id":5,"type":"people"}',
+                },
+            },
+            "... got the right response",
+        );
+    }
 };
 
 done_testing;

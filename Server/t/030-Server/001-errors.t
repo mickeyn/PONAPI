@@ -18,7 +18,7 @@ my $BAD_REQUEST_MSG = "{JSON:API} Bad request";
 my %CT = ( 'Content-Type' => 'application/vnd.api+json' );
 
 sub error_test {
-    my ($res, $expect, $desc) = @_;
+    my ($res, $expected, $desc) = @_;
 
     my $h = $res->headers;
     is( $h->header('Content-Type')||'', 'application/vnd.api+json', "... has the right content-type" );
@@ -31,10 +31,12 @@ sub error_test {
     my $errors = $content->{errors};
     isa_ok( $errors, 'ARRAY' );
 
-    my ($err) = grep { $_->{detail} eq $expect->{detail} } @{ $errors };
-    is( $err->{detail}, $expect->{detail}, $desc );
-    is( $err->{status},  $expect->{status}, '... and it has the expected error code' );
+    my ($err) = grep { $_->{detail} eq $expected->{detail} } @{ $errors };
+    is( $err->{detail}, $expected->{detail}, $desc );
+    is( $err->{status},  $expected->{status}, '... and it has the expected error code' );
 }
+
+### ...
 
 my $app = Plack::Test->create( PONAPI::Server->to_app );
 
@@ -51,8 +53,8 @@ subtest '... include errors' => sub {
             decode_json $res->content,
             {
                 errors => [{
+                    detail => "Types `articles` and `0` are not related",
                     status => 404,
-                    detail => "Types `articles` and `0` are not related"
                 }],
                 jsonapi => {version => "1.0"}
             },
@@ -140,13 +142,12 @@ subtest '... bad requests (GET)' => sub {
         error_test(
             $res,
             {
-                detail => '{JSON:API} Bad request',
+                detail => $BAD_REQUEST_MSG,
                 status => 400,
             },
             "... bad request $req caught",
         );
     }
-
 };
 
 subtest '... bad requests (POST)' => sub {
@@ -168,13 +169,26 @@ subtest '... bad requests (POST)' => sub {
         error_test(
             $res,
             {
-                detail => '{JSON:API} Bad request',
+                detail => $BAD_REQUEST_MSG,
                 status => 400,
             },
             "... POST with non-JSON body",
         );
     }
 
+    {
+        my $create_rel  = $app->request(
+            POST '/articles/2/relationships/authors', %CT,
+            Content => encode_json({ data => { id => 5, type => 'people'} }),
+        );
+        error_test(
+            $create_rel,
+            {
+                detail => 'Parameter `data` expected Collection[Resource], but got a {"id":5,"type":"people"}',
+                status => 400,
+            }
+        )
+    }
 };
 
 done_testing;
