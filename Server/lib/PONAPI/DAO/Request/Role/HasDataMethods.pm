@@ -6,20 +6,10 @@ sub _validate_data {
     my $self = shift;
 
     # these are chained to avoid multiple errors on the same issue
-    $self->check_has_data
-        and $self->check_data_has_type
+    $self->check_data_has_type
         and $self->check_data_type_match
         and $self->check_data_attributes
         and $self->check_data_relationships;
-}
-
-sub check_has_data {
-    my $self = shift;
-
-    return $self->_bad_request( "request body is missing `data`" )
-        unless $self->has_data;
-
-    return 1;
 }
 
 sub check_data_has_type {
@@ -28,7 +18,7 @@ sub check_data_has_type {
     for ( $self->_get_data_elements ) {
         next if ref($_||'') ne 'HASH';
 
-        return $self->_bad_request( "request data has no type" )
+        return $self->_bad_request( "request data has no `type` key" )
             if !exists $_->{'type'};
     }
 

@@ -23,12 +23,6 @@ has req_base => (
     required => 1,
 );
 
-has has_body => (
-    is       => 'ro',
-    isa      => 'Bool',
-    required => 1,
-);
-
 has type => (
     is       => 'ro',
     isa      => 'Str',
@@ -129,7 +123,7 @@ sub BUILD {
     }
 
     # validate `data`
-    if ( $self->has_body ) {
+    if ( exists $args->{data} ) {
         if ( $self->can('data') ) {
             $self->_validate_data;
         }
@@ -138,7 +132,7 @@ sub BUILD {
         }
     }
     elsif ( $self->can('has_data') ) {
-        $self->_bad_request( "request body is missing" );
+        $self->_bad_request( "request body is missing `data`" );
     }
 }
 

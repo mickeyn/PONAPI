@@ -156,7 +156,7 @@ subtest '... bad requests (POST)' => sub {
         error_test(
             $res,
             {
-                detail => 'request body is missing',
+                detail => 'request body is missing `data`',
                 status => 400,
             },
             "... POST with no body",

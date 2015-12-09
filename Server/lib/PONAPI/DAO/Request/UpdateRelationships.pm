@@ -39,8 +39,7 @@ sub _validate_data {
     my $self = shift;
 
     # these are chained to avoid multiple errors on the same issue
-    $self->check_has_data
-        and $self->check_data_has_type
+    $self->check_data_has_type
         and $self->check_data_attributes()
         and $self->check_data_relationships();
 }

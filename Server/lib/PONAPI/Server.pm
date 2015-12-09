@@ -224,21 +224,18 @@ sub _ponapi_query_params {
 
 sub _ponapi_data {
     my ( $self, $wr, $req ) = @_;
-    my @ret = ( has_body => 0 );
 
-    if ( $req->content_length > 0 ) {
-        $wr->(ERR_BAD_REQ) if $req->method eq 'GET';
+    return unless $req->content_length > 0;
 
-        my $body;
-        eval { $body = decode_json( $req->content ); 1 };
+    $wr->(ERR_BAD_REQ) if $req->method eq 'GET';
 
-        $wr->(ERR_BAD_REQ)
-            unless $body and ref $body eq 'HASH' and exists $body->{data};
+    my $body;
+    eval { $body = decode_json( $req->content ); 1 };
 
-        @ret = ( has_body => 1, data => $body->{data} );
-    }
+    $wr->(ERR_BAD_REQ)
+        unless $body and ref $body eq 'HASH' and exists $body->{data};
 
-    return @ret;
+    return ( data => $body->{data} );
 }
 
 sub _response {
