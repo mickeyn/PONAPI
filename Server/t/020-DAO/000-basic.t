@@ -62,6 +62,19 @@ subtest '... retrieve all' => sub {
         ok(exists $person->{attributes}->{gender}, '... the attribute `gender` key exists');
     }
 
+    my @include = $dao->retrieve_all(
+        @TEST_ARGS_NO_BODY, @TEST_ARGS_BASE,
+        type => 'articles',
+        send_doc_self_link => 1,
+        include => [qw/comments/],
+    );
+    my @comment_ids = sort { $a <=> $b }
+                      map $_->{id}, @{ $include[2]->{included} || [] };
+    is_deeply(
+        \@comment_ids,
+        [5, 12],
+        "...retrieve_all + include works"
+    );
 };
 
 subtest '... retrieve' => sub {

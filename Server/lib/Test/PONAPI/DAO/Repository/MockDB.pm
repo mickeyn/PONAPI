@@ -99,15 +99,7 @@ sub retrieve_relationships {
 
     my $rels = $self->_find_resource_relationships(%args);
 
-    if ( !@$rels ) {
-        $doc->add_null_resource;
-    }
-    else {
-        $doc->convert_to_collection
-            if $self->has_one_to_many_relationship(@args{qw/type rel_type/});
-
-        $doc->add_resource( %$_ ) for @{$rels};
-    }
+    $doc->add_resource( %$_ ) for @{$rels};
 }
 
 sub retrieve_by_relationship {
@@ -116,10 +108,7 @@ sub retrieve_by_relationship {
 
     my $rels = $self->_find_resource_relationships(%args);
 
-    if ( !@$rels ) {
-        $doc->add_null_resource;
-        return;
-    }
+    return unless @$rels;
 
     my $q_type = $rels->[0]{type};
     my $q_ids  = [ map { $_->{id} } @{$rels} ];
@@ -136,7 +125,6 @@ sub retrieve_by_relationship {
         type                  => $q_type,
         fields                => $fields,
         include               => $include,
-        convert_to_collection => $self->has_one_to_many_relationship($type, $rel_type),
     );
 }
 
@@ -497,14 +485,10 @@ sub _delete_relationships {
 
 sub _add_resources {
     my ( $self, %args ) = @_;
-    my ( $doc, $stmt, $type, $convert_to_collection ) =
-        @args{qw< document stmt type convert_to_collection >};
+    my ( $doc, $stmt, $type ) =
+        @args{qw< document stmt type >};
 
     my $sth = $self->_db_execute( $stmt );
-
-    if ( $convert_to_collection ) {
-        $doc->convert_to_collection;
-    }
 
     while ( my $row = $sth->fetchrow_hashref() ) {
         my $id = delete $row->{id};
@@ -514,8 +498,6 @@ sub _add_resources {
 
         $self->_add_resource_relationships($rec, %args);
     }
-
-    $doc->has_resources or $doc->add_null_resource;
 
     return;
 }

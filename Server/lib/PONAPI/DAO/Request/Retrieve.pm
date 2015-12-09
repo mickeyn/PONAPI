@@ -18,6 +18,8 @@ sub execute {
         local $@;
         eval {
             $self->repository->retrieve( %{ $self } );
+            $self->document->add_null_resource
+                unless $self->document->_has_resource_builders;
             1;
         } or do {
             my $e = $@;
