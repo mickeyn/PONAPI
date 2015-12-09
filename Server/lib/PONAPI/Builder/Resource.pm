@@ -91,8 +91,9 @@ sub add_relationship {
 }
 
 sub add_self_link {
-    my ( $self, $base ) = @_;
-    $self->links_builder->add_link( self => ( $base ? $base : '/' ) . $self->{type} . '/' . $self->{id} );
+    my $self = shift;
+    my $base = $self->find_root->req_base;
+    $self->links_builder->add_link( self => $base . $self->{type} . '/' . $self->{id} );
     return $self;
 }
 

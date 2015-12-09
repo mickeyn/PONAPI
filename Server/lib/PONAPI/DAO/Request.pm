@@ -17,12 +17,6 @@ has document => (
     required => 1,
 );
 
-has req_base => (
-    is       => 'ro',
-    isa      => 'Str',
-    required => 1,
-);
-
 has type => (
     is       => 'ro',
     isa      => 'Str',
@@ -55,7 +49,10 @@ sub BUILDARGS {
     my $version = delete $args{version}
         || die "[__PACKAGE__] missing arg `version`";
 
-    $args{document} = PONAPI::Builder::Document->new( version => $version );
+    my @doc_params = ( version => $version );
+    push @doc_params => ( req_base => $args{req_base} ) if $args{req_base};
+
+    $args{document} = PONAPI::Builder::Document->new( @doc_params );
 
     return \%args;
 }
@@ -140,7 +137,7 @@ sub response {
     my ( $self, @headers ) = @_;
     my $doc = $self->document;
 
-    $doc->add_self_link( $self->req_base )
+    $doc->add_self_link
         if $self->send_doc_self_link;
 
     return ( $doc->status, \@headers, $doc->build );

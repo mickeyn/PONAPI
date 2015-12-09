@@ -121,19 +121,25 @@ sub has_errors {
     return 0;
 }
 
+has req_base => (
+    is      => 'ro',
+    isa     => 'Str',
+    default => sub { '/' },
+);
+
 sub get_self_link {
-    my ($self, $base) = @_;
+    my $self = shift;
     return unless $self->_has_resource_builders;
 
     my $rec = $self->_get_resource_builder(0)->build;
     return unless $rec;
 
-    my $link = $rec->{type} . ( $self->is_collection ? '' : '/' . $rec->{id} );
-    return ( $base ? $base : '/' ) . $link;
+    my $link = $self->req_base . $rec->{type} . ( $self->is_collection ? '' : '/' . $rec->{id} );
+    return $link;
 }
 
 sub add_self_link {
-    my ( $self, $base ) = @_;
+    my $self = shift;
 
     my $link = $self->get_self_link;
     $self->links_builder->add_link( self => $link )

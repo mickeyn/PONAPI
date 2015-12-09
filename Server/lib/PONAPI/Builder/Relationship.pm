@@ -52,28 +52,22 @@ sub add_resource {
     $self->_add_resource_id_builder( $b );
 }
 
-sub add_self_link {
-    my ( $self, $base ) = @_;
-    return $self->_add_relationship_link( 'self', $base );
-}
-
-sub add_related_link {
-    my ( $self, $base ) = @_;
-    return $self->_add_relationship_link( 'related', $base );
-}
+sub add_self_link    { $_[0]->_add_relationship_link('self')    }
+sub add_related_link { $_[0]->_add_relationship_link('related') }
 
 sub _add_relationship_link {
-    my ( $self, $key, $base ) = @_;
+    my ( $self, $key ) = @_;
     my $rec = $self->parent->build;
+
     $self->links_builder->add_link(
-        $key => ( $base ? $base : '/' )
+        $key => $self->find_root->req_base
               . $rec->{type}
               . '/' . $rec->{id}
               . ( $key eq 'self' ? '/relationships' : '' )
               . '/' . $self->name
     );
-    return $self;
 
+    return $self;
 }
 
 sub build {

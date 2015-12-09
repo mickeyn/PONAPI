@@ -495,8 +495,8 @@ sub _delete_relationships {
 
 sub _add_resources {
     my ( $self, %args ) = @_;
-    my ( $doc, $stmt, $type, $convert_to_collection, $req_base ) =
-        @args{qw< document stmt type convert_to_collection req_base >};
+    my ( $doc, $stmt, $type, $convert_to_collection ) =
+        @args{qw< document stmt type convert_to_collection >};
 
     my $sth = $self->_db_execute( $stmt );
 
@@ -508,7 +508,7 @@ sub _add_resources {
         my $id = delete $row->{id};
         my $rec = $doc->add_resource( type => $type, id => $id );
         $rec->add_attribute( $_ => $row->{$_} ) for keys %{$row};
-        $rec->add_self_link( $req_base );
+        $rec->add_self_link;
 
         $self->_add_resource_relationships($rec, %args);
     }
@@ -539,8 +539,8 @@ sub _add_resource_relationships {
         my $one_to_many = $self->has_one_to_many_relationship($type, $r);
         for ( @$relationship ) {
             $rec->add_relationship( $r, $_, $one_to_many )
-                ->add_self_link( $args{req_base} )
-                ->add_related_link( $args{req_base} );
+                ->add_self_link
+                ->add_related_link;
         }
 
         $self->_add_included(
@@ -571,7 +571,7 @@ sub _add_included {
         my $id = delete $inc->{id};
         $doc->add_included( type => $type, id => $id )
             ->add_attributes( %{$inc} )
-            ->add_self_link( $args{req_base} );
+            ->add_self_link;
     }
 }
 
