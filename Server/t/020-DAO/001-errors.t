@@ -77,7 +77,7 @@ sub error_test {
     }
     my $test = $expect_is_re ? \&like : \&is;
     $test->( $err->{detail}, $expect->{detail}, $desc );
-    
+
     my $statuses = $expect->{status};
     $statuses = [ $statuses ] if !ref $statuses;
     my ($matching) = grep $err->{status} == $_, @$statuses;
@@ -728,7 +728,7 @@ subtest '... create_relationships' => sub {
         rel_type => 'comments',
         data => { type => comments => id => 3333 }, # Hashref, not an arrayref
     );
-    
+
     error_test(
         \@ret,
         {

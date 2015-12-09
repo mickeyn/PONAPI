@@ -53,7 +53,7 @@ subtest '... method override (middleware loaded)' => sub {
 
         my $content  = decode_json($res->content);
         my $included = $content->{included}->[0];
-        my $expect = {
+        my $expected = {
             id    => 42,
             type  => 'people',
             links => { self => '/people/42' },
@@ -65,7 +65,7 @@ subtest '... method override (middleware loaded)' => sub {
         };
         is_deeply(
             $included,
-            $expect,
+            $expected,
             "... included is as expected"
         );
     }
