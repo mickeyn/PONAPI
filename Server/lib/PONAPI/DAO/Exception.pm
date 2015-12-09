@@ -1,6 +1,8 @@
 package PONAPI::DAO::Exception;
+
 use Moose;
 use Moose::Util qw/find_meta/;
+
 with 'Throwable', 'StackTrace::Auto';
 
 use overload
@@ -96,10 +98,10 @@ sub _handle_exception_obj {
 
         my $type_name_nice = _moose_type_to_nice_description($type_name);
         my $message = "Parameter `$attribute_name` expected $type_name_nice, but got a $value_nice";
-        
+
         return 400, $message;
     }
-    
+
     return;
 }
 
@@ -111,7 +113,7 @@ sub _moose_type_to_nice_description {
     $type_name =~ s/HashRef/Resource/g;
     $type_name =~ s/Maybe\[(.+)]/null or $1/g;
     $type_name =~ s/\|/ or /g;
-    
+
     return $type_name;
 }
 
