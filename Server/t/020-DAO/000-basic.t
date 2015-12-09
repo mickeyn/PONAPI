@@ -457,6 +457,31 @@ subtest '... create + create_relationship' => sub {
         ],
     );
 
+    # Let's use the work so far to test that retrieve_all+include shouldn't
+    # return more than one resource per type&id pair
+    {
+        # Now $author_id will be the author of two articles
+        my @update_rel = $dao->update_relationships(
+            @TEST_ARGS_BASE_TYPE_HAS_BODY,
+            type     => 'articles',
+            id       => 2,
+            rel_type => 'authors',
+            data     => { type => people => id => $author_id }
+        );
+        my @retrieve_all = $dao->retrieve_all(
+            @TEST_ARGS_NO_BODY, @TEST_ARGS_BASE,
+            send_doc_self_link => 1,
+            type => 'articles', include => [qw/authors/],
+        );
+        my @author_ids = sort { $a <=> $b }
+                      map $_->{id}, @{ $retrieve_all[2]->{included} || [] };
+        my %uniq = map +($_=>1), @author_ids;
+        # http://jsonapi.org/format/#document-compound-documents
+        # A compound document MUST NOT include more than one resource object for each type and id pair.
+        is(scalar(@author_ids), scalar(keys %uniq), "include has no duplicates")
+            or diag("include has duplicates! Got <@author_ids>");
+    }
+
     my @retrieved = $dao->retrieve(
         @TEST_ARGS_TYPE,
         id      => $article_id,

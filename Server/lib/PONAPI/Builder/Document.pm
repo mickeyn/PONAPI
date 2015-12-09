@@ -163,8 +163,20 @@ sub build {
                     if $self->has_resource;
             }
 
-            $result->{included} = +[ map { $_->build( %args ) } @{ $self->_included } ]
-                if $self->has_included;
+            
+            # http://jsonapi.org/format/#document-compound-documents
+            # "A compound document MUST NOT include more than one resource
+            # object for each type and id pair."
+            # So in short, we need to check that we don't have any duplicates.
+            if ( $self->has_included ) {
+                my $included_builders = $self->_included;
+                my (@included, %seen);
+                foreach my $builder ( @$included_builders ) {
+                    next if $seen{$builder->{type}}{$builder->{id}}++;
+                    push @included, $builder->build( %args );
+                }
+                $result->{included} = \@included;
+            }
         }
         else {
             if ( $self->is_collection ) {

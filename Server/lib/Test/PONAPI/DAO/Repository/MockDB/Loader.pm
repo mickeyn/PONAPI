@@ -66,8 +66,9 @@ sub load {
 
         q< DROP TABLE IF EXISTS rel_articles_people; >,
         q< CREATE TABLE IF NOT EXISTS rel_articles_people (
-             id_articles   INTEGER     UNIQUE     NOT NULL,
-             id_people     INTEGER     UNIQUE     NOT NULL ); >,
+             id_articles   INTEGER     NOT NULL PRIMARY KEY,
+             id_people     INTEGER     NOT NULL
+        ); >,
 
         map(qq< INSERT INTO rel_articles_people (id_articles, id_people) VALUES $_>,
              q<(1, 42)>,
