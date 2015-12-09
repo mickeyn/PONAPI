@@ -3,4 +3,7 @@ plackup \
   -R conf \
   -MPlack::Middleware::MethodOverride \
   -Ilib \
-  -e 'use PONAPI::Server; my $app = PONAPI::Server->to_app; Plack::Middleware::MethodOverride->wrap($app);'
+  -e 'use PONAPI::Server;
+      my $comp = PONAPI::Server->new();
+      my $app  = $comp->to_app;
+      Plack::Middleware::MethodOverride->wrap( $app );'

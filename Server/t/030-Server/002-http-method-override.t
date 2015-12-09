@@ -9,7 +9,6 @@ use Plack::Test;
 use HTTP::Request::Common;
 use Plack::Middleware::MethodOverride;
 
-use Data::Dumper;
 use JSON::XS;
 
 BEGIN {
@@ -29,7 +28,7 @@ sub test_response_headers {
 
 subtest '... method override (middleware not loaded)' => sub {
 
-    my $app = Plack::Test->create( PONAPI::Server->to_app );
+    my $app = Plack::Test->create( PONAPI::Server->new()->to_app );
 
     {
         my $res = $app->request( POST '/articles/1?include=authors', @TEST_HEADERS );
@@ -42,7 +41,7 @@ subtest '... method override (middleware not loaded)' => sub {
 subtest '... method override (middleware loaded)' => sub {
 
     my $app = Plack::Test->create(
-        Plack::Middleware::MethodOverride->wrap(PONAPI::Server->to_app )
+        Plack::Middleware::MethodOverride->wrap(PONAPI::Server->new()->to_app )
     );
 
     {

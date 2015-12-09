@@ -26,8 +26,12 @@ use constant {
 my $qr_member_name_prefix = qr/^[a-zA-Z0-9]/;
 
 sub prepare_app {
+    my $self = shift;
+
     my %conf = PONAPI::Server::ConfigReader->new( dir => 'conf' )->read_config;
-    $_[0]->{$_} = $conf{$_} for keys %conf;
+    $self->{$_} //= $conf{$_} for keys %conf;
+
+    $self->_load_dao();
 }
 
 sub call {
@@ -48,6 +52,19 @@ sub call {
 
 
 ### ...
+
+sub _load_dao {
+    my $self = shift;
+
+    my $repository =
+        Module::Runtime::use_module( $self->{'repository.class'} )->new( @{ $self->{'repository.args'} } )
+          || die "[PONAPI Server] failed to create a repository object\n";
+
+    $self->{'ponapi.DAO'} = PONAPI::DAO->new(
+        repository => $repository,
+        version    => $self->{'ponapi.spec_version'},
+    );
+}
 
 sub _request_headers {
     my ( $self, $req ) = @_;

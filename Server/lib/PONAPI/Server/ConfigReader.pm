@@ -33,7 +33,7 @@ sub read_config {
     $self->_set_server_send_header;
     $self->_set_server_self_link;
     $self->_set_server_relative_links;
-    $self->_load_repository;
+    $self->_set_repository;
 
     $self->{'ponapi.mediatype'} = 'application/vnd.api+json';
     $self->{'ponapi.qr_mediatype'} = qr{application/vnd\.api\+json};
@@ -95,17 +95,10 @@ sub _set_server_relative_links {
     $self->{'ponapi.relative_links'} = $self->config->{server}{links_type};
 }
 
-sub _load_repository {
+sub _set_repository {
     my $self = shift;
-    my $conf = $self->config->{repository};
-
-    my $repository = Module::Runtime::use_module( $conf->{class} )->new( @{ $conf->{args} } )
-        || die "[PONAPI Server] failed to create a repository object\n";
-
-    $self->{'ponapi.DAO'} = PONAPI::DAO->new(
-        repository => $repository,
-        version    => $self->{'ponapi.spec_version'},
-    );
+    $self->{'repository.class'} = $self->config->{repository}{class};
+    $self->{'repository.args'}  = $self->config->{repository}{args};
 }
 
 

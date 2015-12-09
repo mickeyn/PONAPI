@@ -36,7 +36,7 @@ sub error_test {
     is( $err->{status},  $expect->{status}, '... and it has the expected error code' );
 }
 
-my $app = Plack::Test->create( PONAPI::Server->to_app );
+my $app = Plack::Test->create( PONAPI::Server->new()->to_app );
 
 subtest '... include errors' => sub {
     {
