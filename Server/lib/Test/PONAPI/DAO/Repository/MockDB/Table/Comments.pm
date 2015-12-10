@@ -2,23 +2,35 @@
 package Test::PONAPI::DAO::Repository::MockDB::Table::Comments;
 
 use Moose;
-
 extends 'Test::PONAPI::DAO::Repository::MockDB::Table';
 
-use constant TYPE   => 'comments';
-use constant TABLE  => 'comments';
+use Test::PONAPI::DAO::Repository::MockDB::Table::Relationships;
 
-use constant COLUMNS => [qw[
-    id
-    body
-]];
+sub BUILDARGS {
+    my $class = shift;
+    my %args = @_ == 1 ? %{ $_[0] } : @_;
 
-use constant RELATIONS => {
-    articles => {
-        type      => 'articles',
-        rel_table => 'rel_articles_comments'
-    },
-};
+    my $to_articles = 
+        Test::PONAPI::DAO::Repository::MockDB::Table::Relationships->new(
+            TYPE          => 'articles',
+            TABLE         => 'rel_articles_comments',
+            ID_COLUMN     => 'id_comments',
+            REL_ID_COLUMN => 'id_articles',
+            COLUMNS       => [qw/ id_articles id_comments /],
+            ONE_TO_ONE    => 1,
+        );
+
+    %args = (
+        TYPE      => 'comments',
+        TABLE     => 'comments',
+        ID_COLUMN => 'id',
+        COLUMNS   => [qw/ id body /],
+        RELATIONS => { articles => $to_articles, },
+        %args,
+    );
+    
+    return \%args;
+}
 
 __PACKAGE__->meta->make_immutable;
 no Moose; 1;

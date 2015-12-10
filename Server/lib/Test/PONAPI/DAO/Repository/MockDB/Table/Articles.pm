@@ -2,9 +2,9 @@
 package Test::PONAPI::DAO::Repository::MockDB::Table::Articles;
 
 use Moose;
+use Test::PONAPI::DAO::Repository::MockDB::Table::Relationships;
 
-use constant TYPE   => 'articles';
-use constant TABLE  => 'articles';
+extends 'Test::PONAPI::DAO::Repository::MockDB::Table';
 
 use constant COLUMNS => [qw[
     id
@@ -15,22 +15,46 @@ use constant COLUMNS => [qw[
     status
 ]];
 
-use constant RELATIONS => {
-    authors  => {
-        type      => 'people',
-        rel_table => 'rel_articles_people',
-        one_to_one => 1,
-    },
-    comments => {
-        type      => 'comments',
-        rel_table => 'rel_articles_comments'
-    },
-};
+sub BUILDARGS {
+    my $class = shift;
+    my %args = @_ == 1 ? %{ $_[0] } : @_;
 
-extends 'Test::PONAPI::DAO::Repository::MockDB::Table';
+    # We could abstract these to their own objects, but no need currently
+    my $to_comments =
+        Test::PONAPI::DAO::Repository::MockDB::Table::Relationships->new(
+            TYPE          => 'comments',
+            TABLE         => 'rel_articles_comments',
+            ID_COLUMN     => 'id_articles',
+            REL_ID_COLUMN => 'id_comments',
+            COLUMNS       => [qw/ id_articles id_comments /],
+            ONE_TO_ONE    => 0,
+        );
+    my $to_authors =
+        Test::PONAPI::DAO::Repository::MockDB::Table::Relationships->new(
+            TYPE          => 'people',
+            TABLE         => 'rel_articles_people',
+            ID_COLUMN     => 'id_articles',
+            REL_ID_COLUMN => 'id_people',
+            COLUMNS       => [qw/ id_articles id_people /],
+            ONE_TO_ONE    => 1,
+        );
+
+    %args = (
+        TYPE      => 'articles',
+        TABLE     => 'articles',
+        ID_COLUMN => 'id',
+        COLUMNS   => COLUMNS(),
+        RELATIONS => {
+            authors  => $to_authors,
+            comments => $to_comments,
+        },
+        %args,
+    );
+
+    return \%args;
+}
 
 use PONAPI::DAO::Constants;
-
 override update_stmt => sub {
     my ($self, %args) = @_;
 

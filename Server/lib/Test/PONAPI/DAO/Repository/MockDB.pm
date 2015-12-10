@@ -63,7 +63,7 @@ sub has_one_to_many_relationship {
     if ( my $table = $self->tables->{$type} ) {
         my $relations = $table->RELATIONS;
         return if !exists $relations->{ $rel_name };
-        return !$relations->{ $rel_name }{one_to_one};
+        return !$relations->{ $rel_name }->ONE_TO_ONE;
     }
     return;
 }
@@ -188,13 +188,18 @@ sub _create_relationships {
     my ( $type, $id, $rel_type, $data ) = @args{qw< type id rel_type data >};
 
     my $table_obj     = $self->tables->{$type};
-    my $all_relations = $table_obj->RELATIONS->{$rel_type};
+    my $relation_obj = $table_obj->RELATIONS->{$rel_type};
+
+    my $rel_table = $relation_obj->TABLE;
+    my $key_type  = $relation_obj->TYPE;
+
+    my $id_column     = $relation_obj->ID_COLUMN;
+    my $rel_id_column = $relation_obj->REL_ID_COLUMN;
 
     my @all_values;
     foreach my $orig ( @$data ) {
         my $relationship = { %$orig };
         my $data_type = delete $relationship->{type};
-        my $key_type = $all_relations->{type};
 
         if ( $data_type ne $key_type ) {
             PONAPI::DAO::Exception->throw(
@@ -203,18 +208,17 @@ sub _create_relationships {
             );
         }
 
-        $relationship->{'id_' . $type}     = $id;
-        $relationship->{'id_' . $key_type} = delete $relationship->{id};
+        $relationship->{$id_column}     = $id;
+        $relationship->{$rel_id_column} = delete $relationship->{id};
 
         push @all_values, $relationship;
     }
 
-    my $table = $all_relations->{rel_table};
     my $one_to_one = !$self->has_one_to_many_relationship($type, $rel_type);
 
     foreach my $values ( @all_values ) {
-        my ($stmt, $return, $extra) = $table_obj->insert_stmt(
-            table  => $table,
+        my ($stmt, $return, $extra) = $relation_obj->insert_stmt(
+            table  => $rel_table,
             values => $values,
         );
 
@@ -225,9 +229,9 @@ sub _create_relationships {
             if ( $one_to_one && eval { $e->sql_error } ) {
                 # Can't quite do ::Upsert
                 $stmt = SQL::Composer::Update->new(
-                    table  => $table,
+                    table  => $rel_table,
                     values => [ %$values ],
-                    where  => [ 'id_' . $type => $id ],
+                    where  => [ $id_column => $id ],
                     driver => 'sqlite',
                 );
                 $self->_db_execute( $stmt );
@@ -331,14 +335,22 @@ sub _update_relationships {
         $self->_clear_relationships(%args);
         if ( @$data ) {
             my $table_obj = $self->tables->{$type};
-            my ( $column_rel_type, $rel_table ) =
-                    @{ $table_obj->RELATIONS->{$rel_type} }{qw< type rel_table >};
+            my $relation_obj = $table_obj->RELATIONS->{$rel_type};
+
+            my $rel_table       = $relation_obj->TABLE;
+            my $column_rel_type = $relation_obj->TYPE;
+
+            my $id_column     = $relation_obj->ID_COLUMN;
+            my $rel_id_column = $relation_obj->REL_ID_COLUMN;
 
             foreach my $insert ( @$data ) {
-                my %insert = (%$insert, 'id_' . $type => $id);
+                my %insert = %$insert;
+                my $rel_id = delete $insert{id};
 
                 delete $insert{type};
-                $insert{'id_' . $column_rel_type} = delete $insert{id};
+
+                $insert{$id_column}     = $id;
+                $insert{$rel_id_column} = $rel_id;
 
                 my ($stmt, $return, $extra) = $table_obj->insert_stmt(
                     table  => $rel_table,
@@ -379,12 +391,15 @@ sub _clear_relationships {
     my ( $self, %args ) = @_;
     my ( $type, $id, $rel_type ) = @args{qw< type id rel_type >};
 
-    my $table_obj = $self->tables->{$type};
-    my $table     = $table_obj->RELATIONS->{$rel_type}{rel_table};
+    my $table_obj    = $self->tables->{$type};
+    my $relation_obj = $table_obj->RELATIONS->{$rel_type};
 
-    my $stmt = $table_obj->delete_stmt(
+    my $table     = $relation_obj->TABLE;
+    my $id_column = $relation_obj->ID_COLUMN;
+
+    my $stmt = $relation_obj->delete_stmt(
         table => $table,
-        where => { 'id_' . $type => $id },
+        where => { $id_column => $id },
     );
 
     $self->_db_execute( $stmt );
@@ -435,11 +450,14 @@ sub _delete_relationships {
     my ( $self, %args ) = @_;
     my ( $type, $id, $rel_type, $data ) = @args{qw< type id rel_type data >};
 
-    my $table_obj     = $self->tables->{$type};
-    my $relation_info = $table_obj->RELATIONS->{$rel_type};
+    my $table_obj    = $self->tables->{$type};
+    my $relation_obj = $table_obj->RELATIONS->{$rel_type};
 
-    my $table    = $relation_info->{rel_table};
-    my $key_type = $relation_info->{type};
+    my $table    = $relation_obj->TABLE;
+    my $key_type = $relation_obj->TYPE;
+
+    my $id_column     = $relation_obj->ID_COLUMN;
+    my $rel_id_column = $relation_obj->REL_ID_COLUMN;
 
     my @all_values;
     foreach my $resource ( @$data ) {
@@ -453,8 +471,8 @@ sub _delete_relationships {
         }
 
         my $delete_where = {
-            'id_' . $type     => $id,
-            'id_' . $key_type => $resource->{id},
+            $id_column     => $id,
+            $rel_id_column => $resource->{id},
         };
 
         push @all_values, $delete_where;
@@ -465,7 +483,7 @@ sub _delete_relationships {
     my $rows_modified = 0;
     DELETE:
     foreach my $where ( @all_values ) {
-        my $stmt = $table_obj->delete_stmt(
+        my $stmt = $relation_obj->delete_stmt(
             table => $table,
             where => $where,
         );
@@ -593,21 +611,24 @@ sub _fetchall_relationships {
     for my $name ( keys %{ $self->tables->{$type}->RELATIONS } ) {
         next if keys %type_fields > 0 and !exists $type_fields{$name};
 
-        my $table_obj = $self->tables->{$type};
-        my ( $rel_type, $rel_table ) =
-            @{ $table_obj->RELATIONS->{$name} }{qw< type rel_table >};
+        my $table_obj     = $self->tables->{$type};
+        my $rel_table_obj = $table_obj->RELATIONS->{$name};
+        my $rel_type      = $rel_table_obj->TYPE;
+        my $rel_table     = $rel_table_obj->TABLE;
+        my $id_column     = $rel_table_obj->ID_COLUMN;
+        my $rel_id_column = $rel_table_obj->REL_ID_COLUMN;
 
-        my $stmt = $table_obj->select_stmt(
+        my $stmt = $rel_table_obj->select_stmt(
             type   => $rel_table,
-            filter => { 'id_' . $type => $id },
-            fields => [ 'id_' . $rel_type ],
+            filter => { $id_column => $id },
+            fields => [ $rel_id_column ],
         );
 
         my $sth = $self->_db_execute( $stmt );
 
         $ret{$name} = +[
-            map +{ type => $rel_type, id => @$_ },
-            @{ $sth->fetchall_arrayref() }
+            map +{ type => $rel_type, id => $_->{$rel_id_column} },
+            @{ $sth->fetchall_arrayref({}) }
         ];
     }
 
