@@ -1,3 +1,4 @@
+# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::DAO::Request::Role::HasPage;
 
 use Moose::Role;
@@ -22,4 +23,5 @@ sub _validate_page {
 }
 
 no Moose::Role; 1;
+
 __END__

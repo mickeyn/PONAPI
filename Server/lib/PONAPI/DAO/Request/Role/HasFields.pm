@@ -1,3 +1,4 @@
+# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::DAO::Request::Role::HasFields;
 
 use Moose::Role;
@@ -30,6 +31,6 @@ sub _validate_fields {
     }
 }
 
-
 no Moose::Role; 1;
+
 __END__

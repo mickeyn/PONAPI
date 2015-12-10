@@ -1,5 +1,4 @@
 #!perl
-
 use strict;
 use warnings;
 
@@ -18,6 +17,7 @@ TODO:
 =cut
 
 subtest '... testing relationship with meta' => sub {
+
     my $doc = PONAPI::Builder::Document->new( version => '1.0' );
     isa_ok( $doc, 'PONAPI::Builder::Document');
     does_ok($doc, 'PONAPI::Builder');
@@ -42,9 +42,11 @@ subtest '... testing relationship with meta' => sub {
         },
         '... the document now has meta',
     );
+
 };
 
 subtest '... testing relationship with multiple meta' => sub {
+
     my $doc = PONAPI::Builder::Document->new( version => '1.0' );
     isa_ok( $doc, 'PONAPI::Builder::Document');
     does_ok($doc, 'PONAPI::Builder');
@@ -78,9 +80,11 @@ subtest '... testing relationship with multiple meta' => sub {
         },
         '... document with meta',
     );
+
 };
 
 subtest '... testing relationship with meta object' => sub {
+
     my $doc = PONAPI::Builder::Document->new( version => '1.0' );
     isa_ok( $doc, 'PONAPI::Builder::Document');
     does_ok($doc, 'PONAPI::Builder');
@@ -113,6 +117,7 @@ subtest '... testing relationship with meta object' => sub {
         },
         '... document with meta object',
     );
+
 };
 
 done_testing;

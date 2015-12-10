@@ -1,5 +1,4 @@
 #!perl
-
 use strict;
 use warnings;
 
@@ -29,7 +28,7 @@ subtest '... creating a document with errors' => sub {
         $ERROR,
         "... the document now has errors",
     );
-};
 
+};
 
 done_testing;

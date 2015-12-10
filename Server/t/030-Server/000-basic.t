@@ -1,5 +1,4 @@
 #!perl
-
 use strict;
 use warnings;
 
@@ -159,9 +158,11 @@ subtest '... basic server - successful requests' => sub {
             "... and the included data is the same we fetch"
         ) or diag(Dumper($retrieve_content));
     }
+
 };
 
 subtest '... mix' => sub {
+
     my $app = Plack::Test->create( PONAPI::Server->to_app );
 
     my $retrieve_all = $app->request( GET '/articles',   %CT );
@@ -230,6 +231,7 @@ subtest '... mix' => sub {
         },
         "... retrieved a now-deleted resource, got data => undef"
     );
+
 };
 
 subtest '... basic server - config override' => sub {

@@ -1,5 +1,4 @@
 #!perl
-
 use strict;
 use warnings;
 
@@ -41,6 +40,7 @@ sub error_test {
 my $app = Plack::Test->create( PONAPI::Server->new()->to_app );
 
 subtest '... include errors' => sub {
+
     {
         my $res = $app->request( GET '/articles/2?include=comments', %CT );
         is( $res->code, 200, 'existing relationships are OK' );
@@ -122,9 +122,11 @@ subtest '... include errors' => sub {
             "... bad fields are detected",
         );
     }
+
 };
 
 subtest '... bad requests (GET)' => sub {
+
     # Incomplete requests
     foreach my $req (
             'fields',
@@ -189,6 +191,7 @@ subtest '... bad requests (POST)' => sub {
             }
         )
     }
+
 };
 
 done_testing;

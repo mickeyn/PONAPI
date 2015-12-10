@@ -1,3 +1,4 @@
+# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::DAO::Request::CreateRelationships;
 
 use Moose;
@@ -60,6 +61,7 @@ sub _validate_data {
         and $self->check_data_relationships();
 }
 
-
 __PACKAGE__->meta->make_immutable;
 no Moose; 1;
+
+__END__

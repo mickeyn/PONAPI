@@ -1,3 +1,4 @@
+# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::DAO::Request::Role::HasDataMethods;
 
 use Moose::Role;
@@ -86,6 +87,6 @@ sub _get_data_elements {
     return ( ref $self->data eq 'ARRAY' ? @{ $self->data } : $self->data );
 }
 
-
 no Moose::Role; 1;
+
 __END__

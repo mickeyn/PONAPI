@@ -1,4 +1,6 @@
+# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::DAO::Repository;
+
 use Moose::Role;
 
 requires 'has_type';
@@ -18,6 +20,7 @@ requires 'delete';
 requires 'delete_relationships';
 
 no Moose::Role; 1;
+
 __END__
 =encoding UTF-8
 

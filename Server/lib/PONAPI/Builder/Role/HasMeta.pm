@@ -1,5 +1,6 @@
 # ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::Builder::Role::HasMeta;
+
 use Moose::Role;
 
 has _meta => (
@@ -20,3 +21,5 @@ sub add_meta {
 }
 
 no Moose::Role; 1;
+
+__END__

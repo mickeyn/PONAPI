@@ -1,5 +1,4 @@
 #!perl
-
 use strict;
 use warnings;
 
@@ -66,6 +65,7 @@ subtest '... adding relationship to resource' => sub {
         },
         '... built as expected'
     );
+
 };
 
 subtest '... adding multiple relationship of same type to resource' => sub {
@@ -116,6 +116,7 @@ subtest '... adding multiple relationship of same type to resource' => sub {
         },
         '... built as expected'
     );
+
 };
 
 done_testing;

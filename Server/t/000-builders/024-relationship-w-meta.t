@@ -1,5 +1,4 @@
 #!perl
-
 use strict;
 use warnings;
 
@@ -18,6 +17,7 @@ TODO:
 =cut
 
 subtest '... testing meta sub-building' => sub {
+
     my $builder = PONAPI::Builder::Relationship->new( name => 'author' );
     isa_ok( $builder, 'PONAPI::Builder::Relationship');
     does_ok($builder, 'PONAPI::Builder');
@@ -46,6 +46,7 @@ subtest '... testing meta sub-building' => sub {
         },
         '... Relationship with meta',
     );
+
 };
 
 done_testing;

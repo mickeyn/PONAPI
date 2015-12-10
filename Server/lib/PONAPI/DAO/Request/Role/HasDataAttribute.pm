@@ -1,3 +1,4 @@
+# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::DAO::Request::Role::HasDataAttribute;
 
 use Moose::Role;
@@ -12,6 +13,6 @@ has data => (
     },
 );
 
-
 no Moose::Role; 1;
+
 __END__

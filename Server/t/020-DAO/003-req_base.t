@@ -1,5 +1,4 @@
 #!perl
-
 use strict;
 use warnings;
 
@@ -20,6 +19,7 @@ isa_ok($dao, 'PONAPI::DAO');
 my $REQ_BASE = '<<TEST_REQ_BASE>>/';
 
 subtest '... providing a request base string' => sub {
+
     my @ret = $dao->retrieve( type => 'articles', id => 2, send_doc_self_link => 1, req_base => $REQ_BASE  );
     my $doc = $ret[2];
 
@@ -44,6 +44,7 @@ subtest '... providing a request base string' => sub {
             like($links->{$k}, $qr_prefix, "... the `relationships.$rel.links.$k` key has the expected req_base prefix")
         }
     }
+
 };
 
 done_testing;

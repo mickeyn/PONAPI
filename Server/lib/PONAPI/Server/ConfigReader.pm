@@ -1,11 +1,12 @@
+# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::Server::ConfigReader;
 
 use Moose;
 
-use PONAPI::DAO;
-
 use Moose::Util::TypeConstraints;
 use Path::Class::Dir;
+
+use PONAPI::DAO;
 
 class_type 'Path::Class::Dir';
 coerce 'Path::Class::Dir',
@@ -108,6 +109,7 @@ sub _set_repository {
     $self->{'repository.args'}  = $self->config->{repository}{args};
 }
 
-
 __PACKAGE__->meta->make_immutable;
 no Moose; 1;
+
+__END__

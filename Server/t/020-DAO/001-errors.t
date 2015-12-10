@@ -1,5 +1,4 @@
 #!perl
-
 use strict;
 use warnings;
 
@@ -69,6 +68,7 @@ sub error_test {
 }
 
 subtest '... retrieve all' => sub {
+
     {
         my @ret = $dao->retrieve_all();
         error_test(
@@ -108,10 +108,11 @@ subtest '... retrieve all' => sub {
             "..."
         );
     }
+
 };
 
-
 subtest '... retrieve' => sub {
+
     {
         my @ret = $dao->retrieve();
         error_test(
@@ -177,10 +178,11 @@ subtest '... retrieve' => sub {
             "... caught bad retrieve with ", encode_json($args),
         );
     }
+
 };
 
-
 subtest '... retrieve relationships' => sub {
+
     foreach my $tuple (
 
 # TODO
@@ -216,10 +218,11 @@ subtest '... retrieve relationships' => sub {
             );
         }
     }
+
 };
 
-
 subtest '... create' => sub {
+
     {
         my @res = $dao->create(
             @TEST_ARGS_TYPE,
@@ -410,8 +413,8 @@ subtest '... create' => sub {
 
 };
 
-
 subtest '... update' => sub {
+
     # Update with a bad/missing id
     foreach my $id ( -99, 99, "bad" ) {
         my @ret = $dao->update(
@@ -524,9 +527,11 @@ subtest '... update' => sub {
     is( $ret[0], 409, "... the update had the correct error status" );
     ok( exists $ret[2]->{errors}, "... and an errors member" );
     ok( $w,                       "... and we gave a perl warning, too" );
+
 };
 
 subtest '... delete' => sub {
+
     foreach my $tuple (
         [
             [ @TEST_ARGS_TYPE ],
@@ -568,10 +573,11 @@ subtest '... delete' => sub {
             "... $desc",
         );
     }
+
 };
 
-
 subtest '... create_relationships' => sub {
+
     foreach my $tuple (
         [
             [ @TEST_ARGS_TYPE ],
@@ -662,10 +668,11 @@ subtest '... create_relationships' => sub {
         },
         "... create relationships MUST pass an arrayref of hashrefs"
     );
+
 };
 
-
 subtest '... delete_relationships' => sub {
+
     {
         # Trying to delete a non-existent relationship
         # should return a 204:
@@ -712,6 +719,7 @@ subtest '... delete_relationships' => sub {
 };
 
 subtest '... illegal params' => sub {
+
     # Bad params for request.
     my %all_args = (
         id       => { expected_detail => $ERR_ID_NOT_ALLOWED,      id => 1 },
@@ -887,6 +895,7 @@ subtest '... illegal params' => sub {
 
         }
     }
+
 };
 
 done_testing;

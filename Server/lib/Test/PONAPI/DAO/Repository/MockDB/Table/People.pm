@@ -1,5 +1,8 @@
+# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package Test::PONAPI::DAO::Repository::MockDB::Table::People;
+
 use Moose;
+
 extends 'Test::PONAPI::DAO::Repository::MockDB::Table';
 
 use constant TYPE   => 'people';
@@ -20,7 +23,6 @@ use constant RELATIONS => {
 };
 
 __PACKAGE__->meta->make_immutable;
-
 no Moose; 1;
 
 __END__

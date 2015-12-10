@@ -1,5 +1,4 @@
 #!perl
-
 use strict;
 use warnings;
 
@@ -37,6 +36,7 @@ my @TEST_ARGS_TYPE    = ( type => 'articles' );
 my @TEST_ARGS_TYPE_ID = ( type => 'articles', id => 2 );
 
 subtest '... retrieve all' => sub {
+
     my @ret = $dao->retrieve_all( type => 'people', send_doc_self_link => 1 );
     my $doc = $ret[2];
 
@@ -61,9 +61,11 @@ subtest '... retrieve all' => sub {
         ok(exists $person->{attributes}->{age}, '... the attribute `age` key exists');
         ok(exists $person->{attributes}->{gender}, '... the attribute `gender` key exists');
     }
+
 };
 
 subtest '... retrieve' => sub {
+
     my @ret = $dao->retrieve(
         @TEST_ARGS_TYPE_ID,
         fields => { articles => [qw< title >] },
@@ -89,9 +91,11 @@ subtest '... retrieve' => sub {
             "... retrieve using $id as id works without errors",
         );
     }
+
 };
 
 subtest '... retrieve relationships' => sub {
+
     my @ret = $dao->retrieve_relationships(
         @TEST_ARGS_TYPE_ID,
         rel_type => 'comments',
@@ -108,9 +112,11 @@ subtest '... retrieve relationships' => sub {
     ok(exists $data->[0]->{type}, '... the 1st resouce has a `type` key');
     ok(exists $data->[0]->{id}, '... the 1st resouce has an `id` key');
     is(keys( %{ $data->[0] } ), 2, "... that those are the only keys it returns")
+
 };
 
 subtest '... retrieve by relationship' => sub {
+
     my @ret = $dao->retrieve_by_relationship(
         @TEST_ARGS_TYPE_ID,
         rel_type => 'authors',
@@ -141,9 +147,11 @@ subtest '... retrieve by relationship' => sub {
     $data = $doc->{data};
     ok(ref $data eq 'ARRAY', '... the document has multiple resources');
     is(scalar(@$data), 2, "... two resources, in fact");
+
 };
 
 subtest '... update' => sub {
+
     my @orig   = $dao->retrieve( @TEST_ARGS_TYPE_ID );
     my @backup = $dao->retrieve( @TEST_ARGS_TYPE_ID );
 
@@ -293,9 +301,11 @@ subtest '... update' => sub {
             }],
         "...so now it returns a full resource object + meta"
     );
+
 };
 
 subtest '... delete_relationships' => sub {
+
     my @res = $dao->delete_relationships(
         @TEST_ARGS_TYPE_ID,
         rel_type => "comments",
@@ -364,9 +374,11 @@ subtest '... delete_relationships' => sub {
 
     # Multiple deletes, what does meta say?
     # TODO with 200s + extra changes, need to do the retrieve dance
+
 };
 
 subtest '... create + create_relationship' => sub {
+
     my ($status_author, $headers_author, $doc_for_author_create) = $dao->create(
         type => 'people',
         data => {
@@ -591,6 +603,7 @@ subtest '... create + create_relationship' => sub {
             jsonapi => { 'version' => '1.0' },
         }], "... clearing out a one-to-one works (using update)");
     }
+
 };
 
 # TODO

@@ -1,5 +1,6 @@
 # ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::Builder::Relationship;
+
 use Moose;
 
 use PONAPI::Builder::Resource::Identifier;
@@ -92,5 +93,6 @@ sub build {
 }
 
 __PACKAGE__->meta->make_immutable;
-
 no Moose; 1;
+
+__END__

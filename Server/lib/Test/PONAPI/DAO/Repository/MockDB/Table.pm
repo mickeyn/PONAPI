@@ -1,6 +1,8 @@
+# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package Test::PONAPI::DAO::Repository::MockDB::Table;
 
 use Moose;
+
 use SQL::Composer;
 
 sub insert_stmt {
@@ -105,4 +107,5 @@ sub _stmt_filters {
 
 __PACKAGE__->meta->make_immutable;
 no Moose; 1;
+
 __END__

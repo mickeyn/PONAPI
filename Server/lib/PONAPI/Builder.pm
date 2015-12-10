@@ -1,5 +1,6 @@
 # ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::Builder;
+
 use Moose::Role;
 
 requires 'build';
@@ -49,3 +50,5 @@ sub raise_error {
 }
 
 no Moose::Role; 1;
+
+__END__

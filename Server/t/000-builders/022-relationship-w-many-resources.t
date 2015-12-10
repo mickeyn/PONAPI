@@ -1,5 +1,4 @@
 #!perl
-
 use strict;
 use warnings;
 
@@ -19,6 +18,7 @@ TODO:
 
 
 subtest '... testing relationship with multiple data' => sub {
+
     my $builder = PONAPI::Builder::Relationship->new( name => 'author' );
     isa_ok( $builder, 'PONAPI::Builder::Relationship');
     does_ok($builder, 'PONAPI::Builder');
@@ -41,6 +41,7 @@ subtest '... testing relationship with multiple data' => sub {
         },
         '... Relationship with multiple data',
     );
+
 };
 
 done_testing;

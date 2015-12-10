@@ -1,3 +1,4 @@
+# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::DAO::Constants;
 
 my $constants;
@@ -24,6 +25,7 @@ $PONAPI_UPDATE_RETURN_VALUES{+PONAPI_UPDATED_NORMAL}    = 1;
 $PONAPI_UPDATE_RETURN_VALUES{+PONAPI_UPDATED_NOTHING}   = 1;
 
 1;
+
 __END__
 =encoding UTF-8
 

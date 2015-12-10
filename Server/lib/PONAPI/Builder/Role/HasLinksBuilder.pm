@@ -1,5 +1,6 @@
 # ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::Builder::Role::HasLinksBuilder;
+
 use Moose::Role;
 
 use PONAPI::Builder::Links;
@@ -40,3 +41,5 @@ sub add_links {
 }
 
 no Moose::Role; 1;
+
+__END__

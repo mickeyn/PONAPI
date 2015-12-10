@@ -1,5 +1,4 @@
 #!perl
-
 use strict;
 use warnings;
 
@@ -43,7 +42,7 @@ subtest '... creating a document with links' => sub {
         },
         "... the document now has links",
     );
-};
 
+};
 
 done_testing;

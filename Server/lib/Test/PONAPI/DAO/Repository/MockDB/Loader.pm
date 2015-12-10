@@ -1,4 +1,6 @@
+# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package Test::PONAPI::DAO::Repository::MockDB::Loader;
+
 use Moose;
 
 use DBI;
@@ -92,6 +94,6 @@ sub load {
 }
 
 __PACKAGE__->meta->make_immutable;
-
 no Moose; 1;
+
 __END__

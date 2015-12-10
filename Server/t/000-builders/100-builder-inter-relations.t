@@ -1,5 +1,4 @@
 #!perl
-
 use strict;
 use warnings;
 
@@ -11,6 +10,7 @@ BEGIN {
 }
 
 subtest '... single document builder' => sub {
+
     my $root = PONAPI::Builder::Document->new( version => '1.0' );
     isa_ok($root, 'PONAPI::Builder::Document');
 
@@ -74,14 +74,17 @@ subtest '... single document builder' => sub {
 
             is($links->find_root, $root, '... the great-grand-parent of links is the root builder (find_root)');
         };
+
     };
 
     subtest '... included' => sub {
+
         my $resource = $root->add_included( type => 'foo', id => 200 );
         isa_ok($resource, 'PONAPI::Builder::Resource');
 
         is($resource->parent, $root, '... the parent of resource is the document builder');
         is($resource->find_root, $root, '... the parent of resource is the document builder (find_root)');
+
     };
 };
 

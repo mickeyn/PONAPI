@@ -1,5 +1,4 @@
 #!perl
-
 use strict;
 use warnings;
 
@@ -170,5 +169,3 @@ my $GOT = $doc->build;
 is_deeply($EXPECTED, $GOT, '... does our result match?');
 
 done_testing;
-
-1;

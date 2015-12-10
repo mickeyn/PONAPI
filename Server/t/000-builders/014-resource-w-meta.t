@@ -1,5 +1,4 @@
 #!perl
-
 use strict;
 use warnings;
 
@@ -41,7 +40,7 @@ subtest '... adding attributes to resource' => sub {
         },
         '... built as expected'
     )
-};
 
+};
 
 done_testing;

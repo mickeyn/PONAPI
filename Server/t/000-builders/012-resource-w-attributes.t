@@ -1,5 +1,4 @@
 #!perl
-
 use strict;
 use warnings;
 
@@ -47,9 +46,11 @@ subtest '... adding attributes to resource' => sub {
         },
         '... built as expected'
     )
+
 };
 
 subtest '... adding complex attributes to resource' => sub {
+
     my $builder = PONAPI::Builder::Resource->new(
         id   => '1',
         type => 'articles',
@@ -87,6 +88,7 @@ subtest '... adding complex attributes to resource' => sub {
         },
         '... built as expected'
     );
+
 };
 
 done_testing;

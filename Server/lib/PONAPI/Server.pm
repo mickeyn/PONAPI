@@ -1,3 +1,4 @@
+# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::Server;
 
 use Plack::Request;
@@ -258,7 +259,6 @@ sub _error_response {
         errors  => [ { detail => $args->[1], status => $args->[0] } ],
     });
 }
-
 
 1;
 

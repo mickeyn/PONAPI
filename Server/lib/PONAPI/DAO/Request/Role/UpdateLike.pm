@@ -1,6 +1,8 @@
+# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::DAO::Request::Role::UpdateLike;
 
 use Moose::Role;
+
 use PONAPI::DAO::Constants;
 use PONAPI::DAO::Exception;
 
@@ -62,3 +64,5 @@ sub _add_success_meta {
 
 no PONAPI::DAO::Constants;
 no Moose::Role; 1;
+
+__END__

@@ -1,3 +1,4 @@
+# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::DAO::Request::RetrieveByRelationship;
 
 use Moose;
@@ -29,6 +30,7 @@ sub execute {
     return $self->response();
 }
 
-
 __PACKAGE__->meta->make_immutable;
 no Moose; 1;
+
+__END__

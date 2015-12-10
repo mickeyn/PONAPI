@@ -1,5 +1,4 @@
 #!perl
-
 use strict;
 use warnings;
 
@@ -101,6 +100,7 @@ subtest '... method override (middleware loaded)' => sub {
             "... got the right response",
         );
     }
+
 };
 
 done_testing;
