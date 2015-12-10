@@ -131,8 +131,6 @@ subtest '... bad requests (GET)' => sub {
     foreach my $req (
             'fields',
             'fields=',
-            'fields[articles]',
-            'fields[articles]=',
             'include',
             'include=&',
             'include=',
