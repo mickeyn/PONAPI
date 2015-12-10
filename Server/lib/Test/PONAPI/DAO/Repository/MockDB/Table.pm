@@ -8,7 +8,7 @@ use SQL::Composer;
 sub insert_stmt {
     my ($self, %args) = @_;
 
-    my $table = $args{table};
+    my $table  = $args{table};
     my $values = $args{values};
 
     my $stmt = SQL::Composer::Insert->new(
@@ -27,8 +27,8 @@ sub delete_stmt {
     my $where = $args{where};
 
     my $stmt = SQL::Composer::Delete->new(
-        from => $table,
-        where => [ %$where ],
+        from   => $table,
+        where  => [ %$where ],
         driver => 'sqlite',
     );
 
@@ -53,9 +53,9 @@ sub select_stmt {
 sub update_stmt {
     my ($self, %args) = @_;
 
-    my $id          = $args{id};
-    my $table       = $args{table};
-    my $values      = $args{values} || {};
+    my $id     = $args{id};
+    my $table  = $args{table};
+    my $values = $args{values} || {};
 
     local $@;
     my $stmt = eval {
@@ -99,8 +99,8 @@ sub _stmt_filters {
     return $filter if $self->TABLE ne $type;
 
     return +{
-        map   { $_ => $filter->{$_} }
-        grep  { exists $filter->{$_} }
+        map  { $_  => $filter->{$_} }
+        grep { exists $filter->{$_} }
         @{ $self->COLUMNS }
     };
 }

@@ -522,21 +522,27 @@ sub _add_resources {
 
 sub _add_resource_relationships {
     my ( $self, $rec, %args ) = @_;
-    my $doc  = $rec->find_root;
-    my $type = $rec->type;
+    my $doc    = $rec->find_root;
+    my $type   = $rec->type;
+    my $fields = $args{fields};
     my %include = map { $_ => 1 } @{ $args{include} };
 
     my $rels = $self->_fetchall_relationships(
         type     => $type,
         id       => $rec->id,
         document => $doc,
-        fields   => $args{fields},
+        fields   => $fields,
     );
     $rels or return;
 
     for my $r ( keys %$rels ) {
         my $relationship = $rels->{$r};
         @$relationship or next;
+
+        my $rel_type = $relationship->[0]{type};
+
+        # skipping the relationship if the type has an empty `fields` set
+        next if exists $fields->{$rel_type} and !@{ $fields->{$rel_type} };
 
         my $one_to_many = $self->has_one_to_many_relationship($type, $r);
         for ( @$relationship ) {
@@ -546,7 +552,7 @@ sub _add_resource_relationships {
         }
 
         $self->_add_included(
-            $relationship->[0]{type},             # included type
+            $rel_type,                            # included type
             +[ map { $_->{id} } @$relationship ], # included ids
             %args                                 # filters / fields / etc.
         ) if exists $include{$r};
@@ -591,7 +597,14 @@ sub _find_resource_relationships {
 sub _fetchall_relationships {
     my ( $self, %args ) = @_;
     my ( $type, $id ) = @args{qw< type id >};
-    my %type_fields = map { $_ => 1 } @{ $args{fields}{$type} };
+
+    # we don't want to autovivify $args{fields}{$type}
+    # since it will be checked in order to know whether
+    # the key existed in the original fields argument
+    my %type_fields = exists $args{fields}{$type}
+        ? map { $_ => 1 } @{ $args{fields}{$type} }
+        : ();
+
     my %ret;
     my @errors;
 

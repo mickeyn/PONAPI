@@ -200,8 +200,10 @@ sub _ponapi_query_params {
         my @values = map { split /,/ } $query_params->get_all($k);
 
         # check we have values for a given key
-        $wr->(ERR_BAD_REQ)
-            if exists $query_params->{$k} and !@values;
+        # (for 'fields' an empty list is valid)
+        unless ( $p eq 'fields' ) {
+            $wr->(ERR_BAD_REQ) if exists $query_params->{$k} and !@values;
+        }
 
         # values passed on in array-ref
         grep { $p eq $_ } qw< fields filter >
