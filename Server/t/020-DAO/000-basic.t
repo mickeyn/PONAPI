@@ -75,6 +75,31 @@ subtest '... retrieve all' => sub {
         [5, 12],
         "...retrieve_all + include works"
     );
+
+    my @include_fields = $dao->retrieve_all(
+        @TEST_ARGS_NO_BODY, @TEST_ARGS_BASE,
+        type => 'articles',
+        send_doc_self_link => 1,
+        include => [qw/comments authors/],
+        fields  => {
+            articles => [qw/title authors/],
+            people   => [qw/name/],
+            comments => [qw/id/],
+        },
+    );
+
+    use Data::Dumper; warn Dumper(\@include_fields);
+
+    my @include_comments_no_body = $dao->retrieve_all(
+        @TEST_ARGS_NO_BODY, @TEST_ARGS_BASE,
+        type => 'articles',
+        send_doc_self_link => 1,
+        include => [qw/comments authors/],
+        fields  => { articles => ["title"], comments => ["id"] },
+    );
+
+    use Data::Dumper; warn Dumper(\@include_fields);
+
 };
 
 subtest '... retrieve' => sub {
@@ -105,6 +130,15 @@ subtest '... retrieve' => sub {
         );
     }
 
+    {
+        my @ret = $dao->retrieve(
+            @TEST_ARGS_BASE_TYPE_NO_BODY,
+            id => 2,
+            include => [qw/authors/],
+            fields  => { people => [qw/ articles /], articles => [qw/id/] },
+        );
+        use Data::Dumper; warn Dumper(\@ret);
+    }
 };
 
 subtest '... retrieve relationships' => sub {

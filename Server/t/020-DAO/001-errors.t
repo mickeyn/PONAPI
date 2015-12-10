@@ -109,6 +109,12 @@ subtest '... retrieve all' => sub {
         );
     }
 
+    my @empty_fields = $dao->retrieve_all(
+        @TEST_ARGS_BASE_TYPE_NO_BODY,
+        type => 'articles',
+        fields  => { articles => [] },
+    );
+    use Data::Dumper; warn Dumper(\@empty_fields);
 };
 
 subtest '... retrieve' => sub {
