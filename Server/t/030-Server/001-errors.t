@@ -13,6 +13,7 @@ BEGIN {
 }
 
 my $BAD_REQUEST_MSG = "{JSON:API} Bad request";
+my $NO_MATCH_MSG    = "{JSON:API} No matching route";
 
 my %CT = ( 'Content-Type' => 'application/vnd.api+json' );
 
@@ -61,6 +62,7 @@ subtest '... include errors' => sub {
             "false-value relationships are allowed"
         );
     }
+
     {
         my $res = $app->request( GET '/articles/1/relationships//', %CT );
         is($res->code, 400, "... error empty-string relationship");
@@ -185,6 +187,18 @@ subtest '... bad requests (POST)' => sub {
                 status => 400,
             },
             "... POST with non-JSON body",
+        );
+    }
+
+    {
+        my $res = $app->request( POST "/articles/relationships/", %CT, Content => {} );
+        error_test(
+            $res,
+            {
+                detail => $NO_MATCH_MSG,
+                status => 404,
+            },
+            "... POST with relationships without rel_type",
         );
     }
 
