@@ -98,12 +98,33 @@ sub retrieve {
 
 sub retrieve_relationships {
     my ( $self, %args ) = @_;
-    my $doc = $args{document};
+    my ($type, $rel_type, $doc) = @args{qw/type rel_type document/};
 
     my $page = $args{page};
     $self->_validate_page($page) if $page;
 
-    my $rels = $self->_find_resource_relationships(%args);
+    my $sort = $args{sort} || [];
+    if ( @$sort ) {
+        # TODO move to the request:
+        PONAPI::DAO::Exception->throw(
+            message => "You can only sort by id in retrieve_relationships"
+        ) if @$sort > 1 || $sort->[0] !~ /\A(-)?id\z/;
+
+        my $desc = !!$1;
+
+        my $table_obj    = $self->tables->{$type};
+        my $relation_obj = $table_obj->RELATIONS->{$rel_type};
+
+        my $id_column     = $relation_obj->REL_ID_COLUMN;
+
+        @$sort = ($desc ? '-' : '') . $id_column;
+    }
+
+    my $rels = $self->_find_resource_relationships(
+        %args,
+        # No need to fetch other relationship types
+        fields => { $type => [ $rel_type ] },
+    );
 
     return unless @{ $rels || [] };
 
@@ -120,21 +141,30 @@ sub retrieve_by_relationship {
     my ( $self, %args ) = @_;
     my ( $doc, $type, $rel_type, $fields, $include ) = @args{qw< document type rel_type fields include >};
 
-    my $page = $args{page};
+    my $sort = delete $args{sort} || [];
+    my $page = delete $args{page};
     $self->_validate_page($page) if $page;
-    my $rels = $self->_find_resource_relationships(%args);
+
+    # We need to avoid passing sort and page here, since sort
+    # will have columns for the actual data, not the relationship
+    # table, and page needs to happen after sorting
+    my $rels = $self->_find_resource_relationships(
+        %args,
+        # No need to fetch other relationship types
+        fields => { $type => [ $rel_type ] },
+    );
 
     return unless @$rels;
 
     my $q_type = $rels->[0]{type};
     my $q_ids  = [ map { $_->{id} } @{$rels} ];
 
-    # Do NOT pass page here! We already filtered them out in
-    # _find_resource_relationships
     my $stmt = $self->tables->{$q_type}->select_stmt(
         type   => $q_type,
         fields => $fields,
         filter => { id => $q_ids },
+        sort   => $sort,
+        page   => $page,
     );
 
     $self->_add_resources(
@@ -144,6 +174,7 @@ sub retrieve_by_relationship {
         fields   => $fields,
         include  => $include,
         page     => $page,
+        sort     => $sort,
     );
 }
 
@@ -598,6 +629,10 @@ sub _add_resource_relationships {
     my $fields = $args{fields};
     my %include = map { $_ => 1 } @{ $args{include} };
 
+    # Do not add sort or page here -- those were for the primary resource
+    # *only*.
+    # TODO any way to make them happen here? Fetching a resource with a million
+    # relationships seems bad.
     my $rels = $self->_fetchall_relationships(
         type     => $type,
         id       => $rec->id,
@@ -638,6 +673,9 @@ sub _add_included {
 
     $filter->{id} = $ids;
 
+    # Do NOT add sort -- sort here was for the *main* resource!
+    # TODO spec is vague regarding page here.  How do you paginate included
+    # resources?
     my $stmt = $self->tables->{$type}->select_stmt(
         type   => $type,
         filter => $filter,
@@ -680,6 +718,8 @@ sub _fetchall_relationships {
     my @errors;
 
     for my $name ( keys %{ $self->tables->{$type}->RELATIONS } ) {
+        # If we have fields, and this relationship is not mentioned, skip
+        # it.
         next if keys %type_fields > 0 and !exists $type_fields{$name};
 
         my $table_obj     = $self->tables->{$type};

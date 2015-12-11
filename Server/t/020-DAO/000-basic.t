@@ -124,6 +124,53 @@ subtest '... retrieve all' => sub {
             "... all the pagination links are there"
         );
     }
+
+    # sort
+    foreach my $sort_by (
+        [qw/-id/],
+        [qw/-body/],
+        # Nope. Not going to implement these for MockDB, since they
+        # require joins, or doing the sorts in perl
+        # [qw/authors.name/],
+        # [qw/body authors.name/],
+    )
+    {
+        my @sort = $dao->retrieve_all(
+            send_doc_self_link => 1,
+            type => 'comments',
+            sort => [ @$sort_by ],
+        );
+        my $doc = $sort[2];
+        is( scalar @{ $doc->{data}}, 2, "... we fetched 2 resources, with sort" );
+        my $ids = join "|", map $_->{id}, @{ $doc->{data} };
+        my $expect = '12|5';
+        is( $ids, $expect, "got them in the correct order" );
+
+        TODO: {
+            local $TODO = "Not yet implemented";
+            like( $doc->{links}{self}, qr/&sort=/, "sort is included in the self link" );
+        }
+    }
+
+    {
+        my @sort_page = $dao->retrieve_all(
+            type => 'comments',
+            sort => [qw/ -id /],
+            page => { offset => 1, limit => 1 },
+        );
+        my $doc = $sort_page[2];
+        is( scalar @{ $doc->{data}}, 1, "... we only fetched one resource with sort+page" );
+        is( $doc->{data}[0]{id}, 5, "... and it was what we wanted (id=5)" );
+
+        my @sort_page_prev = $dao->retrieve_all(
+            type => 'comments',
+            sort => [qw/ -id /],
+            page => { offset => 0, limit => 1 },
+        );
+        $doc = $sort_page_prev[2];
+        is( scalar @{ $doc->{data}}, 1, "... fetched the previous result" );
+        is( $doc->{data}[0]{id}, 12, "... and it was what we wanted (id=12)" );
+    }
 };
 
 subtest '... retrieve' => sub {
@@ -194,8 +241,7 @@ subtest '... retrieve relationships' => sub {
     {
         # page!
         my @page = $dao->retrieve_relationships(
-            @TEST_ARGS_TYPE,
-            id       => 2,
+            @TEST_ARGS_TYPE_ID,
             rel_type => "comments",
             req_path => '/articles/2/comments',
             page => {
@@ -220,6 +266,20 @@ subtest '... retrieve relationships' => sub {
             $expect,
             "... all the pagination links are there"
         );
+    }
+
+    {
+        # sort
+        my @sort = $dao->retrieve_relationships(
+            @TEST_ARGS_TYPE_ID,
+            rel_type => "comments",
+            sort => [qw/ -id /],
+        );
+        my $doc = $sort[2];
+        is( scalar @{ $doc->{data}}, 2, "... we fetched 2 resources, with sort" );
+        my $ids = join "|", map $_->{id}, @{ $doc->{data} };
+        my $expect = "12|5";
+        is( $ids, $expect, "got them in the correct order" );
     }
 };
 
@@ -293,6 +353,30 @@ subtest '... retrieve by relationship' => sub {
             $expect,
             "... all the pagination links are there"
         );
+    }
+
+    {
+        # sort
+        my @sort = $dao->retrieve_by_relationship(
+            @TEST_ARGS_TYPE_ID,
+            rel_type => "comments",
+            sort => [qw/ -id /],
+        );
+        my $doc = $sort[2];
+        is( scalar @{ $doc->{data}}, 2, "... we fetched 2 resources, with sort(-d)" );
+        my $ids = join "|", map $_->{id}, @{ $doc->{data} };
+        my $expect = "12|5";
+        is( $ids, $expect, "... got them in the correct order" );
+
+        my @sort_title = $dao->retrieve_by_relationship(
+            @TEST_ARGS_TYPE_ID,
+            rel_type => "comments",
+            sort => [qw/ -body /],
+        );
+        $doc = $sort_title[2];
+        is( scalar @{ $doc->{data}}, 2, "... we fetched 2 resources, with sort(body)" );
+        $ids = join "|", map $_->{id}, @{ $doc->{data} };
+        is( $ids, $expect, "... got them in the correct order" );
     }
 };
 

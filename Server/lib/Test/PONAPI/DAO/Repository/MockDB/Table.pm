@@ -62,6 +62,12 @@ sub select_stmt {
     my $filters = $self->_stmt_filters($type, $args{filter});
 
     my %limit   = %{ $args{page} || {} };
+    my $sort    = $args{sort} || [];
+
+    my %order_by = map {
+        my ($desc, $col) = /\A(-?)(.+)\z/s;
+        ( $col => ( $desc ? 'desc' : 'asc' ) );
+    } @$sort;
 
     my $columns = $self->_stmt_columns(\%args);
     my $stmt = SQL::Composer::Select->new(
@@ -69,6 +75,7 @@ sub select_stmt {
         from    => $type,
         columns => $columns,
         where   => [ %{ $filters } ],
+        (%order_by ? (order_by => [ %order_by ]) : ()),
     );
 
     return $stmt;
