@@ -38,6 +38,25 @@ sub test_successful_request {
 
 ### ...
 
+subtest '... basic server - startup' => sub {
+
+    { # fail setver startup
+        my $app;
+        eval {
+            $app = Plack::Test->create(
+                PONAPI::Server->new( 'repository.class' => 'X' )->to_app
+            );
+        };
+        ok(ref($app) ne 'Plack::Test::MockHTTP', '... server fails to start with bad repository class');
+    }
+
+    {
+        my $app = Plack::Test->create( PONAPI::Server->new()->to_app );
+        ok(ref($app) eq 'Plack::Test::MockHTTP', '... server started successfully');
+    }
+
+};
+
 subtest '... basic server - errors' => sub {
 
     my $app = Plack::Test->create( PONAPI::Server->new()->to_app );
