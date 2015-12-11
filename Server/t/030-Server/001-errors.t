@@ -127,6 +127,18 @@ subtest '... include errors' => sub {
 
 subtest '... bad requests (GET)' => sub {
 
+    {
+        my $res = $app->request( GET "/_articles", %CT );
+        error_test(
+            $res,
+            {
+                detail => $BAD_REQUEST_MSG,
+                status => 400,
+            },
+            "... bad fields are detected",
+        );
+    }
+
     # Incomplete requests
     foreach my $req (
             'fields',
