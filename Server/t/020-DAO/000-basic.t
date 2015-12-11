@@ -63,7 +63,6 @@ subtest '... retrieve all' => sub {
     }
 
     my @include = $dao->retrieve_all(
-        @TEST_ARGS_NO_BODY, @TEST_ARGS_BASE,
         type => 'articles',
         send_doc_self_link => 1,
         include => [qw/comments/],
@@ -77,7 +76,6 @@ subtest '... retrieve all' => sub {
     );
 
     my @include_fields = $dao->retrieve_all(
-        @TEST_ARGS_NO_BODY, @TEST_ARGS_BASE,
         type => 'articles',
         send_doc_self_link => 1,
         include => [qw/comments authors/],
@@ -88,18 +86,44 @@ subtest '... retrieve all' => sub {
         },
     );
 
-    use Data::Dumper; warn Dumper(\@include_fields);
+#    use Data::Dumper; warn Dumper(\@include_fields);
 
     my @include_comments_no_body = $dao->retrieve_all(
-        @TEST_ARGS_NO_BODY, @TEST_ARGS_BASE,
         type => 'articles',
         send_doc_self_link => 1,
         include => [qw/comments authors/],
         fields  => { articles => ["title"], comments => ["id"] },
     );
 
-    use Data::Dumper; warn Dumper(\@include_fields);
+#    use Data::Dumper; warn Dumper(\@include_fields);
 
+    {
+        # page!
+        my @page = $dao->retrieve_all(
+            @TEST_ARGS_TYPE,
+            req_path => '/articles',
+            page => {
+                offset => 1,
+                limit  => 1,
+            },
+        );
+        my $doc = $page[2];
+        is( scalar @{ $doc->{data}}, 1, "... we only fetched one resource, as requested" );
+        is( $doc->{data}[0]{id}, 2, "... and the resource has id=2" )
+            or diag("Honestly, this should break, since we are not using sort");
+        my $expect = {
+            first => '/articles?page%5Blimit%5D=1&page%5Boffset%5D=0',
+            next  => '/articles?page%5Blimit%5D=1&page%5Boffset%5D=2',
+            prev  => '/articles?page%5Blimit%5D=1&page%5Boffset%5D=0',
+            self  => '/articles?page%5Blimit%5D=1&page%5Boffset%5D=1',
+        };
+        my $links = $doc->{links};
+        is_deeply(
+            $links,
+            $expect,
+            "... all the pagination links are there"
+        );
+    }
 };
 
 subtest '... retrieve' => sub {
@@ -132,12 +156,11 @@ subtest '... retrieve' => sub {
 
     {
         my @ret = $dao->retrieve(
-            @TEST_ARGS_BASE_TYPE_NO_BODY,
             id => 2,
             include => [qw/authors/],
             fields  => { people => [qw/ articles /], articles => [qw/id/] },
         );
-        use Data::Dumper; warn Dumper(\@ret);
+#        use Data::Dumper; warn Dumper(\@ret);
     }
 };
 
@@ -145,6 +168,8 @@ subtest '... retrieve relationships' => sub {
 
     my @ret = $dao->retrieve_relationships(
         @TEST_ARGS_TYPE_ID,
+        req_path => '/articles/2/comments',
+        send_doc_self_link => 1,
         rel_type => 'comments',
     );
     my $doc = $ret[2];
@@ -158,14 +183,52 @@ subtest '... retrieve relationships' => sub {
     ok(ref $data->[0] eq 'HASH', '... the 1st resouce is a HASH ref');
     ok(exists $data->[0]->{type}, '... the 1st resouce has a `type` key');
     ok(exists $data->[0]->{id}, '... the 1st resouce has an `id` key');
-    is(keys( %{ $data->[0] } ), 2, "... that those are the only keys it returns")
+    is(keys( %{ $data->[0] } ), 2, "... that those are the only keys it returns");
 
+    is(
+        $doc->{links}{self},
+        '/articles/2/comments',
+        "... we get the correct self link"
+    );
+
+    {
+        # page!
+        my @page = $dao->retrieve_relationships(
+            @TEST_ARGS_TYPE,
+            id       => 2,
+            rel_type => "comments",
+            req_path => '/articles/2/comments',
+            page => {
+                offset => 1,
+                limit  => 1,
+            },
+        );
+        my $doc = $page[2];
+        is( scalar @{ $doc->{data}}, 1, "... we only fetched one resource, as requested" );
+
+        is( $doc->{data}[0]{id}, 12, "... and the resource has id=12" )
+            or diag("Honestly, this should break, since we are not using sort");
+        my $expect = {
+            first => '/articles/2/comments?page%5Blimit%5D=1&page%5Boffset%5D=0',
+            prev  => '/articles/2/comments?page%5Blimit%5D=1&page%5Boffset%5D=0',
+            self  => '/articles/2/comments?page%5Blimit%5D=1&page%5Boffset%5D=1',
+        };
+        my $links = $doc->{links};
+
+        is_deeply(
+            $links,
+            $expect,
+            "... all the pagination links are there"
+        );
+    }
 };
 
 subtest '... retrieve by relationship' => sub {
 
     my @ret = $dao->retrieve_by_relationship(
         @TEST_ARGS_TYPE_ID,
+        req_path => '/articles/2/authors',
+        send_doc_self_link => 1,
         rel_type => 'authors',
     );
     my $doc = $ret[2];
@@ -182,6 +245,12 @@ subtest '... retrieve by relationship' => sub {
     # of people, so type for whatever was retrieved has to be 'person'
     is($data->{type}, 'people', '... retrieved document is of the correct type');
 
+    is(
+        $doc->{links}{self},
+        '/articles/2/authors',
+        "... we get the correct self link"
+    );
+
     @ret = $dao->retrieve_by_relationship(
         @TEST_ARGS_TYPE_ID,
         rel_type => 'comments',
@@ -195,6 +264,36 @@ subtest '... retrieve by relationship' => sub {
     ok(ref $data eq 'ARRAY', '... the document has multiple resources');
     is(scalar(@$data), 2, "... two resources, in fact");
 
+    {
+        # page!
+        my @page = $dao->retrieve_by_relationship(
+            @TEST_ARGS_TYPE_ID,
+            req_path => '/articles/2/comments',
+            rel_type => "comments",
+            page => {
+                offset => 1,
+                limit  => 1,
+            },
+        );
+        my $doc = $page[2];
+        is( scalar @{ $doc->{data}}, 1, "... we only fetched one resource, as requested" );
+
+        is( $doc->{data}[0]{id}, 12, "... and the resource has id=12" )
+            or diag("Honestly, this should break, since we are not using sort");
+        my $expect = {
+            first => '/articles/2/comments?page%5Blimit%5D=1&page%5Boffset%5D=0',
+            prev  => '/articles/2/comments?page%5Blimit%5D=1&page%5Boffset%5D=0',
+            self  => '/articles/2/comments?page%5Blimit%5D=1&page%5Boffset%5D=1',
+            next  => '/articles/2/comments?page%5Blimit%5D=1&page%5Boffset%5D=2',
+        };
+        my $links = $doc->{links};
+
+        is_deeply(
+            $links,
+            $expect,
+            "... all the pagination links are there"
+        );
+    }
 };
 
 subtest '... update' => sub {
@@ -496,14 +595,12 @@ subtest '... create + create_relationship' => sub {
     {
         # Now $author_id will be the author of two articles
         my @update_rel = $dao->update_relationships(
-            @TEST_ARGS_BASE_TYPE_HAS_BODY,
             type     => 'articles',
             id       => 2,
             rel_type => 'authors',
             data     => { type => people => id => $author_id }
         );
         my @retrieve_all = $dao->retrieve_all(
-            @TEST_ARGS_NO_BODY, @TEST_ARGS_BASE,
             send_doc_self_link => 1,
             type => 'articles', include => [qw/authors/],
         );

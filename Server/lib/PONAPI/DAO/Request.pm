@@ -140,7 +140,7 @@ sub response {
     my $doc = $self->document;
 
     $doc->add_self_link
-        if $self->send_doc_self_link;
+        if $self->send_doc_self_link && !$doc->has_link('self');
 
     return ( $doc->status, \@headers, $doc->build );
 }

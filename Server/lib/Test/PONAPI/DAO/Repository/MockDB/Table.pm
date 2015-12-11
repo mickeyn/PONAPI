@@ -61,8 +61,11 @@ sub select_stmt {
     my $type    = $args{type};
     my $filters = $self->_stmt_filters($type, $args{filter});
 
+    my %limit   = %{ $args{page} || {} };
+
     my $columns = $self->_stmt_columns(\%args);
     my $stmt = SQL::Composer::Select->new(
+        %limit,
         from    => $type,
         columns => $columns,
         where   => [ %{ $filters } ],

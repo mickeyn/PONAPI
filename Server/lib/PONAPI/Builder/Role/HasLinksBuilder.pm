@@ -16,6 +16,7 @@ has 'links_builder' => (
     builder   => '_build_links_builder',
     handles   => [qw[
         has_links
+        has_link
     ]]
 );
 

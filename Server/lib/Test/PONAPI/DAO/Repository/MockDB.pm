@@ -6,6 +6,7 @@ use Moose;
 use DBI;
 use DBD::SQLite::Constants qw/:result_codes/;;
 use SQL::Composer;
+use Scalar::Util qw/looks_like_number/;
 
 use Test::PONAPI::DAO::Repository::MockDB::Loader;
 
@@ -83,6 +84,8 @@ sub retrieve_all {
     my ( $self, %args ) = @_;
     my $type = $args{type};
 
+    $self->_validate_page($args{page}) if $args{page};
+
     my $stmt = $self->tables->{$type}->select_stmt(%args);
     $self->_add_resources( stmt => $stmt, %args );
 }
@@ -97,15 +100,28 @@ sub retrieve_relationships {
     my ( $self, %args ) = @_;
     my $doc = $args{document};
 
+    my $page = $args{page};
+    $self->_validate_page($page) if $page;
+
     my $rels = $self->_find_resource_relationships(%args);
 
-    $doc->add_resource( %$_ ) for @{$rels};
+    return unless @{ $rels || [] };
+
+    $doc->add_resource( %$_ ) for @$rels;
+
+    $self->_add_pagination_links(
+        page     => $page,
+        document => $doc,
+    ) if $page;
+
 }
 
 sub retrieve_by_relationship {
     my ( $self, %args ) = @_;
     my ( $doc, $type, $rel_type, $fields, $include ) = @args{qw< document type rel_type fields include >};
 
+    my $page = $args{page};
+    $self->_validate_page($page) if $page;
     my $rels = $self->_find_resource_relationships(%args);
 
     return unless @$rels;
@@ -113,6 +129,8 @@ sub retrieve_by_relationship {
     my $q_type = $rels->[0]{type};
     my $q_ids  = [ map { $_->{id} } @{$rels} ];
 
+    # Do NOT pass page here! We already filtered them out in
+    # _find_resource_relationships
     my $stmt = $self->tables->{$q_type}->select_stmt(
         type   => $q_type,
         fields => $fields,
@@ -120,11 +138,12 @@ sub retrieve_by_relationship {
     );
 
     $self->_add_resources(
-        document              => $doc,
-        stmt                  => $stmt,
-        type                  => $q_type,
-        fields                => $fields,
-        include               => $include,
+        document => $doc,
+        stmt     => $stmt,
+        type     => $q_type,
+        fields   => $fields,
+        include  => $include,
+        page     => $page,
     );
 }
 
@@ -517,6 +536,58 @@ sub _add_resources {
         $self->_add_resource_relationships($rec, %args);
     }
 
+    $self->_add_pagination_links(
+        page => $args{page},
+        rows => scalar $sth->rows,
+        document => $doc,
+    ) if $args{page};
+
+    return;
+}
+
+sub _add_pagination_links {
+    my ($self, %args) = @_;
+    my ($page, $rows_fetched, $document) = @args{qw/page rows document/};
+    $rows_fetched ||= -1;
+
+    my ($offset, $limit) = @{$page}{qw/offset limit/};
+
+    my %current = %$page;
+    my %first = ( %current, offset => 0, );
+    my (%previous, %next);
+
+    if ( ($offset - $limit) >= 0 ) {
+        %previous = %current;
+        $previous{offset} -= $current{limit};
+    }
+
+    if ( $rows_fetched >= $limit ) {
+        %next = %current;
+        $next{offset} += $limit;
+    }
+
+    $document->add_pagination_links(
+        first => \%first,
+        self  => \%current,
+        prev  => \%previous,
+        next  => \%next,
+    );
+}
+
+sub _validate_page {
+    my ($self, $page) = @_;
+
+    exists $page->{limit}
+        or PONAPI::DAO::Exception->throw(message => "Limit missing for `page`");
+
+    looks_like_number($page->{limit})
+        or PONAPI::DAO::Exception->throw(message => "Bad limit value ($page->{limit}) in `page`");
+
+    !exists $page->{offset} || looks_like_number($page->{offset})
+        or PONAPI::DAO::Exception->throw(message => "Bad offset value in `page`");
+
+    $page->{offset} ||= 0;
+
     return;
 }
 
@@ -619,6 +690,7 @@ sub _fetchall_relationships {
         my $rel_id_column = $rel_table_obj->REL_ID_COLUMN;
 
         my $stmt = $rel_table_obj->select_stmt(
+            %args,
             type   => $rel_table,
             filter => { $id_column => $id },
             fields => [ $rel_id_column ],
