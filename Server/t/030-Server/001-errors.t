@@ -49,17 +49,12 @@ subtest '... include errors' => sub {
 
     {
         my $res = $app->request( GET '/articles/1/relationships/0', %CT );
-        is($res->code, 404, "... error on non-existent '0'");
-        is_deeply(
-            decode_json $res->content,
+        error_test(
+            $res,
             {
-                errors => [{
-                    detail => "Types `articles` and `0` are not related",
-                    status => 404,
-                }],
-                jsonapi => {version => "1.0"}
-            },
-            "false-value relationships are allowed"
+                detail => "Types `articles` and `0` are not related",
+                status => 404,
+            }
         );
     }
 
