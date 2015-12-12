@@ -70,7 +70,8 @@ subtest '... include errors' => sub {
 
     {
         my $res = $app->request( GET '/articles/2?include=asdasd,comments.not_there', %CT );
-        is( $res->code, 404, 'non-existing relationships are not found' );
+        # expecting 400 becuase we have multiple 4xx errors
+        is( $res->code, 400, 'non-existing relationships are not found' );
     }
 
     {

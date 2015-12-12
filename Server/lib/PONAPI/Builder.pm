@@ -37,12 +37,15 @@ sub raise_error {
     $self->find_root->errors_builder->add_error( @_, status => $status );
 
     # set given status, on multiple errors use 500/400
-    if ( $self->has_errors > 1 and $self->status < 500 ) {
-        $self->set_status( ($status >= 500 ? 500 : 400) );
+    my $st = $status;
+    if ( $self->has_errors > 1 ) {
+        if ( $self->status >= 500 or $status >= 500 ) {
+            $st = 500;
+        } elsif ( $self->status >= 400 or $status >= 400 ) {
+            $st = 400;
+        }
     }
-    else {
-        $self->set_status($status);
-    }
+    $self->set_status($st);
 
     # we don't return value to allow condition
     # check when returned from validation methods
