@@ -180,7 +180,6 @@ sub retrieve_by_relationship {
 
 sub create {
     my ( $self, %args ) = @_;
-    my ( $doc, $type, $data ) = @args{qw< document type data >};
 
     my $dbh = $self->dbh;
     $dbh->begin_work;
@@ -229,7 +228,6 @@ sub _create {
     # the DAO takes care of the header, but we need to put it in the doc
     $doc->add_resource( type => $type, id => $new_id );
 
-    $doc->set_status(201);
     return;
 }
 
@@ -334,7 +332,7 @@ sub update {
 
 sub _update {
     my ( $self, %args ) = @_;
-    my ( $doc, $type, $id, $data ) = @args{qw< document type id data >};
+    my ( $type, $id, $data ) = @args{qw< type id data >};
 
     # TODO this needs to be part of $data's validation in Request.pm
     my ($attributes, $relationships) = map $_||{}, @{ $data }{qw/ attributes relationships /};

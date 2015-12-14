@@ -24,6 +24,8 @@ sub execute {
                         . $self->json->encode( $self->data )
             );
 
+            $doc->set_status(201) unless $doc->has_status;
+
             my $document  = $doc->build;
             my $self_link = $document->{data}{links}{self};
             $self_link  //= "/$document->{data}{type}/$document->{data}{id}";
