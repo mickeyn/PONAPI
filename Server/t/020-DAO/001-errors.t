@@ -147,12 +147,6 @@ subtest '... retrieve' => sub {
     }
 
 
-    # Spec says we can either stop processing as soon as we spot an error, or keep going an accumulate·
-    # multiple errors.  Currently we do multiple, so testing that here.
-    my @ret = $dao->retrieve( @TEST_ARGS_TYPE, data => { id => 1 }, page => 1 );
-    my $doc = $ret[2];
-    cmp_ok(scalar(@{ $doc->{errors} }), ">=", 2, "DAO can result multiple error objects for one request");
-
     # Retrieve with nonexistent stuff
     foreach my $tuple (
         [
