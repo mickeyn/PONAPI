@@ -194,16 +194,16 @@ subtest '... mix' => sub {
     test_successful_request($retrieve_by_rel);
     is(
         decode_json($retrieve_by_rel->content)->{links}{self},
-        "/people/88",
-        "... retrieve by rel works"
+        '/articles/2/authors',
+        '... retrieve by rel works'
     );
 
     my $retrieve_rel = $app->request( GET '/articles/1/relationships/authors', %CT );
     test_successful_request($retrieve_rel);
     is(
         decode_json($retrieve_rel->content)->{links}{self},
-        "/people/42",
-        "... retrive relationships"
+        '/articles/1/relationships/authors',
+        '... retrive relationships'
     );
 
     my $create_rel = $app->request(
@@ -246,7 +246,8 @@ subtest '... mix' => sub {
         decode_json($retrieve_2->content),
         {
             %JSONAPI,
-            data => undef,
+            links => { self => '/articles/2' },
+            data  => undef,
         },
         "... retrieved a now-deleted resource, got data => undef"
     );

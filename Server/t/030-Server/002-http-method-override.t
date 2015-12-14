@@ -69,7 +69,7 @@ subtest '... method override (middleware loaded)' => sub {
     }
 
     {
-        my $res  = $app->request(
+        my $res = $app->request(
             POST '/articles/2/relationships/authors',
             'Content-Type' => $JSONAPI_MEDIATYPE,
             'X-HTTP-Method-Override' => 'PATCH',
@@ -94,7 +94,7 @@ subtest '... method override (middleware loaded)' => sub {
             {
                 jsonapi => { version => '1.0' },
                 meta    => {
-                    detail => 'successfully modified /articles/2/authors => {"id":5,"type":"people"}',
+                    detail => 'successfully modified /articles/2/relationships/authors => {"id":5,"type":"people"}',
                 },
             },
             "... got the right response",

@@ -129,24 +129,15 @@ has req_base => (
     default => sub { '/' },
 );
 
-sub get_self_link {
-    my $self = shift;
-    return unless $self->_has_resource_builders;
-
-    my $rec = $self->_get_resource_builder(0)->build;
-    return unless $rec;
-
-    my $link = $self->req_base . $rec->{type} . ( $self->is_collection ? '' : '/' . $rec->{id} );
-    return $link;
-}
+has req_path => (
+    is      => 'ro',
+    isa     => 'Str',
+    default => sub { '/' },
+);
 
 sub add_self_link {
     my $self = shift;
-
-    my $link = $self->get_self_link;
-    $self->links_builder->add_link( self => $link )
-        if $link;
-
+    $self->links_builder->add_link( self => $self->req_path );
     return $self;
 }
 

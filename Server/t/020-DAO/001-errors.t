@@ -679,6 +679,7 @@ subtest '... delete_relationships' => sub {
         # http://jsonapi.org/format/#crud-updating-relationship-responses-204
         my @ret = $dao->delete_relationships(
             @TEST_ARGS_TYPE_ID,
+            req_path => '/articles/1/comments',
             rel_type => 'comments',
             data     => [ { type => comments => id => 99 }, ],
         );
