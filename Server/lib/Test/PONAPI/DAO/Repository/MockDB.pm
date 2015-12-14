@@ -354,20 +354,22 @@ sub _update {
 
         # We had a successful update, but it updated nothing
         if ( !$sth->rows ) {
-            return PONAPI_UPDATED_NOTHING;
+            $return = PONAPI_UPDATED_NOTHING;
         }
     }
 
-    if ( %$relationships ) {
-        foreach my $rel_type ( keys %$relationships ) {
-            $self->_update_relationships(
-                document => $doc,
-                type     => $type,
-                id       => $id,
-                rel_type => $rel_type,
-                data     => $relationships->{$rel_type},
-            );
-        }
+    foreach my $rel_type ( keys %$relationships ) {
+        my $update_rel_return = $self->_update_relationships(
+            type     => $type,
+            id       => $id,
+            rel_type => $rel_type,
+            data     => $relationships->{$rel_type},
+        );
+
+        # We tried updating the attributes but
+        $return = $update_rel_return
+            if $return            == PONAPI_UPDATED_NOTHING
+            && $update_rel_return != PONAPI_UPDATED_NOTHING;
     }
 
     return $return;
@@ -377,42 +379,44 @@ sub _update_relationships {
     my ($self, %args) = @_;
     my ( $type, $id, $rel_type, $data ) = @args{qw< type id rel_type data >};
 
-    if ( $data ) {
-        $data = [ keys(%$data) ? $data : () ] if ref($data) eq 'HASH';
+    my $table_obj    = $self->tables->{$type};
+    my $relation_obj = $table_obj->RELATIONS->{$rel_type};
 
-        $self->_clear_relationships(%args);
-        if ( @$data ) {
-            my $table_obj = $self->tables->{$type};
-            my $relation_obj = $table_obj->RELATIONS->{$rel_type};
+    my $column_rel_type = $relation_obj->TYPE;
+    my $rel_table       = $relation_obj->TABLE;
 
-            my $rel_table       = $relation_obj->TABLE;
-            my $column_rel_type = $relation_obj->TYPE;
+    my $id_column     = $relation_obj->ID_COLUMN;
+    my $rel_id_column = $relation_obj->REL_ID_COLUMN;
 
-            my $id_column     = $relation_obj->ID_COLUMN;
-            my $rel_id_column = $relation_obj->REL_ID_COLUMN;
+    # Let's have an arrayref
+    $data = $data
+            ? ref($data) eq 'HASH' ? [ keys(%$data) ? $data : () ] : $data
+            : [];
 
-            foreach my $insert ( @$data ) {
-                my %insert = %$insert;
-                my $rel_id = delete $insert{id};
+    # Let's start by clearing all relationships; this way
+    # we can implement the SQL below without adding special cases
+    # for ON DUPLICATE KEY UPDATE and sosuch.
+    my $stmt = $relation_obj->delete_stmt(
+        table => $rel_table,
+        where => { $id_column => $id },
+    );
+    $self->_db_execute( $stmt );
 
-                delete $insert{type};
+    my $return = PONAPI_UPDATED_NORMAL;
+    foreach my $insert ( @$data ) {
+        my ($stmt, $insert_return, $extra) = $table_obj->insert_stmt(
+            table  => $rel_table,
+            values => {
+                $id_column     => $id,
+                $rel_id_column => $insert->{id},
+            },
+        );
+        $self->_db_execute( $stmt );
 
-                $insert{$id_column}     = $id;
-                $insert{$rel_id_column} = $rel_id;
-
-                my ($stmt, $return, $extra) = $table_obj->insert_stmt(
-                    table  => $rel_table,
-                    values => \%insert,
-                );
-
-                $self->_db_execute( $stmt );
-            }
-        }
-        return PONAPI_UPDATED_NORMAL;
+        $return = $insert_return if $insert_return;
     }
-    else {
-        return $self->_clear_relationships(%args);
-    }
+
+    return $return;
 }
 
 sub update_relationships {
@@ -433,26 +437,6 @@ sub update_relationships {
 
     return $ret;
     # TODO: add missing login
-}
-
-sub _clear_relationships {
-    my ( $self, %args ) = @_;
-    my ( $type, $id, $rel_type ) = @args{qw< type id rel_type >};
-
-    my $table_obj    = $self->tables->{$type};
-    my $relation_obj = $table_obj->RELATIONS->{$rel_type};
-
-    my $table     = $relation_obj->TABLE;
-    my $id_column = $relation_obj->ID_COLUMN;
-
-    my $stmt = $relation_obj->delete_stmt(
-        table => $table,
-        where => { $id_column => $id },
-    );
-
-    $self->_db_execute( $stmt );
-
-    return PONAPI_UPDATED_NORMAL;
 }
 
 sub delete : method {
