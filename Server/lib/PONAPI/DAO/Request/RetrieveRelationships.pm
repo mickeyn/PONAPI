@@ -5,9 +5,7 @@ use Moose;
 
 extends 'PONAPI::DAO::Request';
 
-with 'PONAPI::DAO::Request::Role::HasFields',
-     'PONAPI::DAO::Request::Role::HasFilter',
-     'PONAPI::DAO::Request::Role::HasInclude',
+with 'PONAPI::DAO::Request::Role::HasFilter',
      'PONAPI::DAO::Request::Role::HasPage',
      'PONAPI::DAO::Request::Role::HasSort',
      'PONAPI::DAO::Request::Role::HasID',

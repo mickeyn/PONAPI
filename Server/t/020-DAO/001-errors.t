@@ -728,24 +728,25 @@ subtest '... illegal params' => sub {
         page     => { expected_detail => $ERR_PAGE_NOT_ALLOWED,    page => {} },
         fields   => { fields => { articles => [qw/title/] } },
         include  => { include => [ qw/comments/ ] },
+        sort     => { sort => [] },
     );
 
     my %request = (
         retrieve_all => {
             args    => \@TEST_ARGS_TYPE,
-            allowed => [qw/ page include fields /],
+            allowed => [qw/ page include fields sort /],
         },
         retrieve     => {
             args    => \@TEST_ARGS_TYPE_ID,
-            allowed => [qw/ include fields id /],
+            allowed => [qw/ page include fields id sort /],
         },
         retrieve_relationships => {
             args    => [@TEST_ARGS_TYPE_ID, rel_type => 'authors'],
-            allowed => [qw/ page include fields id rel_type /],
+            allowed => [qw/ page id rel_type sort /],
         },
         retrieve_by_relationship => {
             args    => [@TEST_ARGS_TYPE_ID, rel_type => 'authors'],
-            allowed => [qw/ page include fields id rel_type /],
+            allowed => [qw/ page include fields id rel_type sort /],
         },
 
         create => {
