@@ -108,12 +108,6 @@ subtest '... retrieve all' => sub {
             "..."
         );
     }
-
-    my @empty_fields = $dao->retrieve_all(
-        type => 'articles',
-        fields  => { articles => [] },
-    );
-    use Data::Dumper; warn Dumper(\@empty_fields);
 };
 
 subtest '... retrieve' => sub {

@@ -2,6 +2,7 @@
 use strict;
 use warnings;
 
+use Storable qw[ dclone ];
 use Scalar::Util qw[ blessed ];
 use JSON::XS qw[ decode_json ];
 
@@ -75,27 +76,27 @@ subtest '... retrieve all' => sub {
         "...retrieve_all + include works"
     );
 
+    my $fields = {
+            articles => [qw/title authors/],
+            people   => [qw/name/],
+            comments => [qw/id/],
+        };
     my @include_fields = $dao->retrieve_all(
         type => 'articles',
         send_doc_self_link => 1,
         include => [qw/comments authors/],
-        fields  => {
-            articles => [qw/title authors/],
-            people   => [qw/name/],
-            comments => [qw/id/],
-        },
+        fields  => $fields,
     );
+    test_fields_response(\@include_fields, $fields);
 
-#    use Data::Dumper; warn Dumper(\@include_fields);
-
+    $fields = { articles => ["title"], comments => ["id"] };
     my @include_comments_no_body = $dao->retrieve_all(
         type => 'articles',
         send_doc_self_link => 1,
         include => [qw/comments authors/],
-        fields  => { articles => ["title"], comments => ["id"] },
+        fields  => $fields,
     );
-
-#    use Data::Dumper; warn Dumper(\@include_fields);
+    test_fields_response(\@include_comments_no_body, $fields);
 
     {
         # page!
@@ -141,7 +142,7 @@ subtest '... retrieve all' => sub {
             sort => [ @$sort_by ],
         );
         my $doc = $sort[2];
-        is( scalar @{ $doc->{data}}, 2, "... we fetched 2 resources, with sort" );
+        is( scalar @{ $doc->{data} || []}, 2, "... we fetched 2 resources, with sort" );
         my $ids = join "|", map $_->{id}, @{ $doc->{data} };
         my $expect = '12|5';
         is( $ids, $expect, "got them in the correct order" );
@@ -202,13 +203,15 @@ subtest '... retrieve' => sub {
     }
 
     {
+        my $fields = { people => [qw/ articles /], articles => [qw/id/] };
         my @ret = $dao->retrieve(
+            type => 'articles',
             id => 2,
             include => [qw/authors/],
-            fields  => { people => [qw/ articles /], articles => [qw/id/] },
+            fields  => $fields,
         );
-#        use Data::Dumper; warn Dumper(\@ret);
-    }
+        test_fields_response(\@ret, $fields);
+   }
 };
 
 subtest '... retrieve relationships' => sub {
@@ -461,7 +464,6 @@ subtest '... update' => sub {
     delete $updated[2]->{data}{attributes}{updated};
     is_deeply(\@updated, \@orig, "... can clear relationships via update");
 
-    use Storable qw/dclone/;
     my $data_for_restore = dclone( $backup[2]->{data} );
     $data_for_restore->{relationships}{$_} = delete $data_for_restore->{relationships}{$_}{data}
         for keys %{ $data_for_restore->{relationships} };
@@ -863,6 +865,33 @@ subtest '... create + create_relationship' => sub {
     }
 
 };
+
+sub test_fields_response {
+    my ($response, $fields) = @_;
+
+    my $included = $response->[2]{included} || [];
+    my $data     = $response->[2]{data};
+    $data = [ $data ] if ref $data ne 'ARRAY';
+
+    foreach my $resource_orig ( @$included, @$data ) {
+        my $resource     = dclone $resource_orig;
+        my ($type, $id) = @{$resource}{qw/type id/};
+        my $has_fields = $fields->{$type};
+        delete @{$resource->{$_}}{@$has_fields} for qw/attributes relationships/;
+        is_deeply(
+            $resource,
+            {
+                type          => $type,
+                id            => $id,
+                attributes    => {},
+                relationships => {},
+                links         => { self => "/$type/$id" },
+            },
+            "... fields fetches exactly what we asked for"
+        ) or diag(Dumper($resource_orig));
+    }
+
+}
 
 # TODO
 #
