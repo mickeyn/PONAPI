@@ -50,10 +50,11 @@ sub BUILDARGS {
     my $version = delete $args{version}
         || die "[__PACKAGE__] missing arg `version`";
 
-    my @doc_params = ( version => $version );
-    push @doc_params => ( req_base => $args{req_base} ) if $args{req_base};
-
-    $args{document} = PONAPI::Builder::Document->new( @doc_params );
+    $args{document} = PONAPI::Builder::Document->new(
+        version  => $version,
+        req_path => $args{req_path} // '/',
+        req_base => $args{req_base} // '/',
+    );
 
     return \%args;
 }
@@ -157,19 +158,6 @@ sub _server_failure {
         detail => 'A fatal error has occured, please check server logs'
     });
     return;
-}
-
-sub _get_resource_for_meta {
-    my $self = shift;
-
-    my $self_link = $self->document->get_self_link
-        // ( join "/" => grep defined, '', @{$self}{qw/type id rel_type/} );
-
-    my $resource = $self_link
-                 . " => "
-                 . $self->json->encode( $self->data );
-
-    return $resource;
 }
 
 sub _handle_error {

@@ -20,7 +20,13 @@ my $REQ_BASE = '<<TEST_REQ_BASE>>/';
 
 subtest '... providing a request base string' => sub {
 
-    my @ret = $dao->retrieve( type => 'articles', id => 2, send_doc_self_link => 1, req_base => $REQ_BASE  );
+    my @ret = $dao->retrieve(
+        req_path           => "$REQ_BASE/articles/2",
+        req_base           => $REQ_BASE,
+        type               => 'articles',
+        id                 => 2,
+        send_doc_self_link => 1,
+    );
     my $doc = $ret[2];
 
     my $qr_prefix = qr/^$REQ_BASE/;

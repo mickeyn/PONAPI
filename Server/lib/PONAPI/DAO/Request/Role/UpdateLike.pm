@@ -45,7 +45,7 @@ sub _verify_update_response {
     }
 
     return 1;
-};
+}
 
 sub _add_success_meta {
     my ($self, $return_status) = @_;
@@ -60,7 +60,18 @@ sub _add_success_meta {
     }
 
     $self->document->add_meta( detail => $detail );
-};
+}
+
+sub _get_resource_for_meta {
+    my $self = shift;
+
+    my $link = $self->document->req_path
+        // ( join "/" => grep defined, '', @{$self}{qw/type id rel_type/} );
+
+    return $link . " => " . $self->json->encode( $self->data );
+}
+
+
 
 no PONAPI::DAO::Constants;
 no Moose::Role; 1;

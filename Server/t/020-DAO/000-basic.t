@@ -248,6 +248,7 @@ subtest '... update' => sub {
 
     @update_200 = $dao->update(
         @TEST_ARGS_TYPE_ID,
+        req_path => '/articles/2',
         data => {
             @TEST_ARGS_TYPE_ID,
             attributes => {
@@ -308,6 +309,7 @@ subtest '... delete_relationships' => sub {
 
     my @res = $dao->delete_relationships(
         @TEST_ARGS_TYPE_ID,
+        req_path => '/articles/2/comments',
         rel_type => "comments",
         data     => [
             { type => comments => id => 5 },
@@ -512,9 +514,10 @@ subtest '... create + create_relationship' => sub {
 
     my @update_rel = $dao->update_relationships(
         @TEST_ARGS_TYPE,
-        id   => $article_id,
+        req_path => "/articles/$article_id/comments",
+        id       => $article_id,
         rel_type => "comments",
-        data => [],
+        data     => [],
     );
     is_deeply( \@update_rel, [
             202,
@@ -575,6 +578,7 @@ subtest '... create + create_relationship' => sub {
     {
         my @author_update_rel = $dao->update_relationships(
             @TEST_ARGS_TYPE,
+            req_path => "/articles/$article_id/authors",
             id       => $article_id,
             rel_type => "authors",
             data     => undef,
@@ -586,8 +590,9 @@ subtest '... create + create_relationship' => sub {
 
         my @author_update = $dao->update(
             @TEST_ARGS_TYPE,
-            id   => $article_id,
-            data => {
+            req_path => "/articles/$article_id",
+            id       => $article_id,
+            data     => {
                 type => "articles",
                 id   => $article_id,
                 relationships => {
