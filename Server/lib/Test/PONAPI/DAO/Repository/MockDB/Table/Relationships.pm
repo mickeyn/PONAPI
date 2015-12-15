@@ -1,4 +1,6 @@
+# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package Test::PONAPI::DAO::Repository::MockDB::Table::Relationships;
+
 use Moose;
 
 extends 'Test::PONAPI::DAO::Repository::MockDB::Table';
@@ -17,4 +19,5 @@ has ONE_TO_ONE => (
 
 __PACKAGE__->meta->make_immutable;
 no Moose; 1
+
 __END__
