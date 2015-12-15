@@ -8,7 +8,7 @@ use Module::Runtime    ();
 use Return::MultiLevel ();
 use Path::Class::File  ();
 use YAML::XS           ();
-use JSON::XS           qw{ decode_json encode_json };
+use JSON::XS           ();
 
 use PONAPI::Server::ConfigReader;
 
@@ -71,7 +71,7 @@ sub _request_headers {
     my ( $self, $req ) = @_;
 
     return Hash::MultiValue->from_mixed(
-        map { $_ => +[ split ', ' => $req->headers->header($_) ] }
+        map { $_ => +[ split ', ' => scalar $req->headers->header($_) ] }
         $req->headers->header_field_names
     );
 }
@@ -203,9 +203,8 @@ sub _ponapi_query_params {
 
         # check we have values for a given key
         # (for 'fields' an empty list is valid)
-        unless ( $p eq 'fields' ) {
-            $wr->(ERR_BAD_REQ) if exists $query_params->{$k} and !@values;
-        }
+        $wr->(ERR_BAD_REQ)
+            if $p ne 'fields' and exists $query_params->{$k} and !@values;
 
         # values passed on in array-ref
         grep { $p eq $_ } qw< fields filter >
@@ -235,7 +234,7 @@ sub _ponapi_data {
     $wr->(ERR_BAD_REQ) if $req->method eq 'GET';
 
     my $body;
-    eval { $body = decode_json( $req->content ); 1 };
+    eval { $body = JSON::XS::decode_json( $req->content ); 1 };
 
     $wr->(ERR_BAD_REQ)
         unless $body and ref $body eq 'HASH' and exists $body->{data};
@@ -251,7 +250,7 @@ sub _response {
     $res->content_type( $self->{'ponapi.mediatype'} );
     $res->header( 'X-PONAPI-Server-Version' => $self->{'ponapi.spec_version'} )
         if $self->{'ponapi.send_version_header'};
-    $res->content( encode_json $content ) if ref $content;
+    $res->content( JSON::XS::encode_json $content ) if ref $content;
     $res->finalize;
 }
 

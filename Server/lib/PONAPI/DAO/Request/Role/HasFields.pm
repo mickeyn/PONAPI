@@ -18,7 +18,8 @@ sub _validate_fields {
     return unless $self->has_fields;
 
     my $fields = $self->fields;
-    my $repo = $self->repository;
+    my $repo   = $self->repository;
+
     foreach my $fields_type ( keys %$fields ) {
         if ( !$repo->has_type( $fields_type ) ) {
             $self->_bad_request( "Type `$fields_type` doesn't exist.", 404 );

@@ -10,7 +10,7 @@ sub BUILDARGS {
     my $class = shift;
     my %args = @_ == 1 ? %{ $_[0] } : @_;
 
-    my $to_articles = 
+    my $to_articles =
         Test::PONAPI::DAO::Repository::MockDB::Table::Relationships->new(
             TYPE          => 'articles',
             TABLE         => 'rel_articles_comments',
@@ -28,7 +28,7 @@ sub BUILDARGS {
         RELATIONS => { articles => $to_articles, },
         %args,
     );
-    
+
     return \%args;
 }
 

@@ -226,7 +226,7 @@ sub build {
                     if $self->has_resource;
             }
 
-            
+
             # http://jsonapi.org/format/#document-compound-documents
             # "A compound document MUST NOT include more than one resource
             # object for each type and id pair."
