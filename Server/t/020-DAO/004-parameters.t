@@ -139,8 +139,8 @@ subtest '... filter' => sub {
         ok(ref $data eq 'ARRAY', '... the document has multiple resources');
         is(@$data, 2, '... exactly 2 of them');
         is_deeply(
-            [ sort map { $_->{id} } @$data ],
-            [2,3],
+            [ sort { $a <=> $b } map { $_->{id} } @$data ],
+            [ 2, 3 ],
             'and we have the correct ids'
         )
 
@@ -148,7 +148,47 @@ subtest '... filter' => sub {
 
 };
 
-# TODO: include
+subtest '... include' => sub {
+
+    subtest '... include with no values' => sub {
+
+        my @ret = $dao->retrieve( type => 'articles', id => 2, include => [] );
+        my $doc = $ret[2];
+
+        my $errors = $doc->{errors};
+        ok($errors, '... the document has an `errors` key');
+        ok(ref $errors eq 'ARRAY', "and it's an array-ref");
+        is(@$errors, 1, '... we have one error');
+        is_deeply(
+            $errors->[0],
+            {
+                detail => "`include` is missing values",
+                status => 400
+            },
+            '... and it contains what we expected'
+        );
+    };
+
+    subtest '... filter for specific ids' => sub {
+
+        my @ret = $dao->retrieve( type => 'articles', id => 2, include => [qw< comments >] );
+        my $doc = $ret[2];
+
+        my $included = $doc->{included};
+        ok($included, '... the document has an `included` key');
+        ok(ref $included eq 'ARRAY', '... `included` value is an array-ref ');
+        is(@$included, 2, '... of exactly 2 elements');
+        is_deeply(
+            [ sort { $a <=> $b } map { $_->{id} } @$included ],
+            [ 5, 12 ],
+            'and we have the correct ids'
+        )
+
+    };
+
+
+};
+
 # TODO: sort
 # TODO: page
 
