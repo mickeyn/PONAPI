@@ -606,8 +606,26 @@ subtest '... delete_relationships' => sub {
           ];
     is_deeply(\@retrieve, $expect, "... and the correct changes are retrieved");
 
-    # Multiple deletes, what does meta say?
-    # TODO with 200s + extra changes, need to do the retrieve dance
+    # try the same delete again
+    subtest '... try to delete the same relationship again' => sub {
+        my @res2 = $dao->delete_relationships(
+            @TEST_ARGS_TYPE_ID,
+            req_path => '/articles/2/comments',
+            rel_type => "comments",
+            data     => [
+                { type => comments => id => 5 },
+            ],
+        );
+        is($res2[0], 204, '... got the correct status code');
+        my $meta = $res2[2]->{meta};
+        isa_ok($meta, 'HASH');
+        ok(exists $meta->{detail}, '... `meta` has a `detail` key');
+        is_deeply(
+            $meta->{detail},
+            'modified nothing for /articles/2/comments => [{"id":5,"type":"comments"}]',
+            '... got the correct message in `meta`'
+        );
+    };
 
 };
 
