@@ -74,7 +74,7 @@ L<PONAPI::Server>: C<server>, which influences how the server behaves, and
 C<repository>, which is the class that controls how the data is acquired.
 See L<CREATING A REPOSITORY> for more on the latter.
 
-=over *
+=over
 
 =item spec_version
 
@@ -253,11 +253,8 @@ some amount of validation will have already happened, like
 if the requested relationships exists.
 
 =for TODO
-
 Need to make sure to document what sort of validation repos NEED to do,
 vs what was already done
-
-=end
 
 =head3 retrieve_all( type => $type, %optional_arguments )
 
@@ -318,8 +315,8 @@ tables:
 
     -- articles-to-authors, one to one
     CREATE TABLE rel_articles_people (
-        id_articles   INTEGER     UNIQUE     NOT NULL,
-        id_people     INTEGER     UNIQUE     NOT NULL
+        id_articles   INTEGER     NOT NULL PRIMARY KEY,
+        id_people     INTEGER     NOT NULL
     )
 
     -- articles-to-comments, one to many
@@ -403,7 +400,7 @@ Then, we can change C<%relationships> to have that same information:
 With this as our starting base, let's go over all the potential arguments we
 can receive, and see how we can implement them.
 
-=over *
+=over
 
 =item include
 
@@ -834,10 +831,7 @@ L<Spec|http://jsonapi.org/format/#crud-deleting>.
 Removes a single resource.
 
 =for TODO
-
 Code sample
-
-=end
 
 =head3 create(type => $type, data => $data, %optinal_arguments)
 
@@ -859,10 +853,7 @@ C<$data> will be in this format:
     }
 
 =for TODO
-
 Code sample
-
-=end
 
 =head3 update( type => $type, id => $id, data => { ... } )
 
@@ -1062,10 +1053,7 @@ pointed by $type and $rel_type.
 Like C<update>, C<create_relationships> has a strict return value.
 
 =for TODO
-
 Code sample
-
-=end
 
 =head3 update_relationships( type => $type, id => $id, rel_type => $rel_type, data => ... )
 
