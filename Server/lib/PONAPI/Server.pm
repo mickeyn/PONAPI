@@ -277,16 +277,52 @@ sub _error_response {
 __END__
 =encoding UTF-8
 
-=NAME
+=head1 NAME
 
-PONAPI::Server - TODO
+PONAPI::Server - A {json:api} server.
 
-=SYNOPSIS
+=head1 SYNOPSIS
 
     # Run the server
-    $ plackup -MPONAPI::Server -e 'PONAPI::Server->new("repository.class" => "Test::PONAPI::DAO::Repository::MockDB", "ponapi.spec_version" => "1.0")->to_app'
+    $ plackup -MPONAPI::Server -e 'PONAPI::Server->new("repository.class" => "Test::PONAPI::DAO::Repository::MockDB")->to_app'
     
-    $ perl -Ilib -MPONAPI::Client -E 'say PONAPI::Client->new->retrieve(type => "people", id => 88)->{data}{attributes}{name}'
+    $ perl -MPONAPI::Client -E 'say Dumper(PONAPI::Client->new->retrieve(type => "people", id => 88))'
     
     # Or with cURL:
     $ curl -X GET -H "Content-Type: application/vnd.api+json" 'http://0:5000/people/88'
+
+=head1 DESCRIPTION
+
+PONAPI::Server is a small plack server that implements the
+L<{json:api}|http://jsonapi.org/> specification.
+
+You'll have to set up a repository (to provide access to the data
+you want to server) and tweak some server configurations, so
+hop over to L<PONAPI::Manual> for instructions on how to use this!
+
+=head1 BUGS, CONTACT AND SUPPORT
+
+For reporting bugs (or submitting patches wink wink) please use the github
+bug tracker at L<https://github.com/mickeyn/PONAPI>.
+
+=head1 AUTHORS
+
+=over 4
+
+=item * Mickey Nasriachi <mickey@cpan.org>
+
+=item * Stevan Little <stevan@cpan.org>
+
+=item * Brian Fraser <hugmeir@cpan.org>
+
+=back
+
+=head1 LICENSE
+
+This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
+
+=head1 COPYRIGHT
+
+Copyright (C) 2015 Mickey Nasriachi <mickey AT cpan DOT org>
+
+=end
