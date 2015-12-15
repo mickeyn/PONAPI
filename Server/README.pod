@@ -1,0 +1,74 @@
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+PONAPI::Server - PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
+
+=head1 VERSION
+
+version 0.001000
+
+=head1 SYNOPSIS
+
+    # Run the server
+    $ plackup -MPONAPI::Server -e 'PONAPI::Server->new("repository.class" => "Test::PONAPI::DAO::Repository::MockDB")->to_app'
+
+    $ perl -MPONAPI::Client -E 'say Dumper(PONAPI::Client->new->retrieve(type => "people", id => 88))'
+
+    # Or with cURL:
+    $ curl -X GET -H "Content-Type: application/vnd.api+json" 'http://0:5000/people/88'
+
+=head1 DESCRIPTION
+
+PONAPI::Server is a small plack server that implements the
+L<{json:api}|http://jsonapi.org/> specification.
+
+You'll have to set up a repository (to provide access to the data
+you want to server) and tweak some server configurations, so
+hop over to L<PONAPI::Manual> for the next steps!
+
+=head1 NAME
+
+PONAPI::Server - A {json:api} server.
+
+=head1 BUGS, CONTACT AND SUPPORT
+
+For reporting bugs or submitting patches, please use the github
+bug tracker at L<https://github.com/mickeyn/PONAPI>.
+
+=head1 AUTHORS
+
+=over 4
+
+=item * Mickey Nasriachi <mickey AT cpan DOT org>
+
+=item * Stevan Little <stevan AT cpan DOT org>
+
+=item * Brian Fraser <hugmeir AT cpan DOT org>
+
+=back
+
+=head1 LICENSE
+
+This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
+
+=head1 COPYRIGHT
+
+Copyright (C) 2015 Mickey Nasriachi <mickey AT cpan DOT org>
+
+=end
+
+=head1 AUTHOR
+
+Mickey Nasriachi <mickey AT cpan DOT org>, Stevan Little <stevan AT cpan DOT org>, Brian Fraser <hugmeir AT cpan DOT org>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2015 by Mickey Nasriachi, Stevan Little, Brian Fraser.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
