@@ -261,7 +261,9 @@ if the requested relationships exists.
 Need to make sure to document what sort of validation repos NEED to do,
 vs what was already done
 
-=head3 retrieve_all( type => $type, %optional_arguments )
+=head3 retrieve_all
+
+    retrieve_all( type => $type, %optional_arguments )
 
 Our starting point:
 
@@ -765,7 +767,9 @@ of the spec, or extended in future versions of C<PONAPI>.
 
 =back
 
-=head3 retrieve( type => $type, id => $id, %optional_arguments )
+=head3 retrieve
+
+    retrieve( type => $type, id => $id, %optional_arguments )
 
 L<Spec|http://jsonapi.org/format/#fetching-resources>.
 
@@ -786,7 +790,9 @@ C<retrieve> based on top of that:
         return $self->retrieve_all(%args);
     }
 
-=head3 retrieve_relationships( type => $type, id => $id, rel_type => $rel_type, %optional_arguments )
+=head3 retrieve_relationships
+
+    retrieve_relationships( type => $type, id => $id, rel_type => $rel_type, %optional_arguments )
 
 L<Spec|http://jsonapi.org/format/#fetching-relationships>.
 
@@ -823,12 +829,16 @@ this:
 
 With the added functionality that they may C<page> the results.
 
-=head3 retrieve_by_relationship( type => $type, id => $id, rel_type => $rel_type, %optional_arguments )
+=head3 retrieve_by_relationship
+
+    retrieve_by_relationship( type => $type, id => $id, rel_type => $rel_type, %optional_arguments )
 
 Similar to C<retrieve_relationships>, but returns full resources,
 rather than just resource identifiers.
 
-=head3 delete(type => $type, id => $id)
+=head3 delete
+
+    delete(type => $type, id => $id)
 
 L<Spec|http://jsonapi.org/format/#crud-deleting>.
 
@@ -836,17 +846,19 @@ Removes a single resource.
 
     sub delete {
         my ($self, %args) = @_;
-    
+
         my $table = $self->quote($type);
         my $sth   = $dbh->prepare(qq{ DELETE FROM $table WHERE id = ? });
-    
+
         $sth->execute($args{id});
     }
 
 It's up to the repo if it also wants to remove any relationships what
 the resource may have.
 
-=head3 create(type => $type, data => $data, %optinal_arguments)
+=head3 create
+
+    create(type => $type, data => $data, %optinal_arguments)
 
 L<Spec|http://jsonapi.org/format/#crud-creating>.
 
@@ -868,7 +880,9 @@ C<$data> will be in this format:
 =for TODO
 Code sample
 
-=head3 update( type => $type, id => $id, data => { ... } )
+=head3 update
+
+    update( type => $type, id => $id, data => { ... } )
 
 L<Spec|http://jsonapi.org/format/#crud-updating>.
 
@@ -1000,7 +1014,9 @@ Code example:
 Since we're not adding any extra columns, we can ignore
 C<PONAPI_UPDATED_EXTENDED>.
 
-=head3 delete_relationships( type => $type, id => $id, rel_type => $rel_type, data => [ { ... }, ... ] )
+=head3 delete_relationships
+
+    delete_relationships( type => $type, id => $id, rel_type => $rel_type, data => [ { ... }, ... ] )
 
 L<Spec|http://jsonapi.org/format/#crud-updating-to-many-relationships>.
 
@@ -1056,7 +1072,9 @@ Like C<update>, C<delete_relationships> has a strict return value.
     }
 
 
-=head3 create_relationships( type => $type, id => $id, rel_type => $rel_type, data => [ { ... }, ... ] )
+=head3 create_relationships
+
+    create_relationships( type => $type, id => $id, rel_type => $rel_type, data => [ { ... }, ... ] )
 
 L<Spec|http://jsonapi.org/format/#crud-updating-to-many-relationships>.
 
@@ -1068,7 +1086,9 @@ Like C<update>, C<create_relationships> has a strict return value.
 =for TODO
 Code sample
 
-=head3 update_relationships( type => $type, id => $id, rel_type => $rel_type, data => ... )
+=head3 update_relationships
+
+    update_relationships( type => $type, id => $id, rel_type => $rel_type, data => ... )
 
 L<Spec|http://jsonapi.org/format/#crud-updating-relationships>.
 
