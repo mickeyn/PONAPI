@@ -9,7 +9,8 @@ use PONAPI::Builder::Errors;
 
 with 'PONAPI::Builder',
      'PONAPI::Builder::Role::HasLinksBuilder',
-     'PONAPI::Builder::Role::HasMeta';
+     'PONAPI::Builder::Role::HasMeta',
+     'PONAPI::Builder::Role::HasPagination';
 
 has version => (
     is       => 'ro',
@@ -27,6 +28,25 @@ has status => (
     predicate => 'has_status',
 );
 
+has req_base => (
+    is      => 'ro',
+    isa     => 'Str',
+    default => sub { '/' },
+);
+
+has req_path => (
+    is      => 'ro',
+    isa     => 'Str',
+    default => sub { '/' },
+);
+
+has 'is_collection' => (
+    is      => 'ro',
+    writer  => '_set_is_collection',
+    isa     => 'Bool',
+    default => 0
+);
+
 has '_included' => (
     init_arg => undef,
     traits   => [ 'Array' ],
@@ -40,25 +60,6 @@ has '_included' => (
         '_add_included' => 'push',
     }
 );
-
-sub add_included {
-    my ($self, %args) = @_;
-    my $builder = PONAPI::Builder::Resource->new( parent => $self, %args );
-    $self->_add_included( $builder );
-    return $builder;
-}
-
-has 'is_collection' => (
-    is      => 'ro',
-    writer  => '_set_is_collection',
-    isa     => 'Bool',
-    default => 0
-);
-
-sub convert_to_collection {
-    my $self = $_[0];
-    $self->_set_is_collection(1);
-}
 
 has '_resource_builders' => (
     init_arg  => undef,
@@ -75,6 +76,29 @@ has '_resource_builders' => (
         '_get_resource_builder'  => 'get',
     }
 );
+
+has 'errors_builder' => (
+    init_arg  => undef,
+    is        => 'ro',
+    isa       => 'PONAPI::Builder::Errors',
+    lazy      => 1,
+    predicate => 'has_errors_builder',
+    builder   => '_build_errors_builder',
+);
+
+sub _build_errors_builder { PONAPI::Builder::Errors->new( parent => $_[0] ) }
+
+sub convert_to_collection {
+    my $self = $_[0];
+    $self->_set_is_collection(1);
+}
+
+sub has_errors {
+    my $self = shift;
+    return $self->errors_builder->has_errors
+        if $self->has_errors_builder and $self->errors_builder->has_errors;
+    return 0;
+}
 
 sub has_resource {
     my $self = $_[0];
@@ -105,103 +129,17 @@ sub add_null_resource {
     return $builder;
 }
 
-has 'errors_builder' => (
-    init_arg  => undef,
-    is        => 'ro',
-    isa       => 'PONAPI::Builder::Errors',
-    lazy      => 1,
-    predicate => 'has_errors_builder',
-    builder   => '_build_errors_builder',
-);
-
-sub _build_errors_builder { PONAPI::Builder::Errors->new( parent => $_[0] ) }
-
-sub has_errors {
-    my $self = shift;
-    return $self->errors_builder->has_errors
-        if $self->has_errors_builder and $self->errors_builder->has_errors;
-    return 0;
-}
-
-has req_base => (
-    is      => 'ro',
-    isa     => 'Str',
-    default => sub { '/' },
-);
-
-has req_path => (
-    is      => 'ro',
-    isa     => 'Str',
-    default => sub { '/' },
-);
-
-use URI;
-use URI::QueryParam;
-sub _hash_to_uri_query {
-    my ($self, $data) = @_;
-    my $u = URI->new("", "http");
-
-    for my $d_k ( sort keys %$data ) {
-        my $d_v = $data->{$d_k};
-        defined($d_v) or next;
-
-        if ( ref $d_v ne 'HASH' ) {
-            $u->query_param( $d_k =>
-                             join ',' => ( ref $d_v eq 'ARRAY' ? @{$d_v} : $d_v ) );
-            next;
-        }
-
-        # HASH
-        for my $k ( sort keys %{$d_v} ) {
-            my $v = $d_v->{$k};
-            defined($v) or next;
-
-            die "_hash_to_uri_query: nested value can be scalar/arrayref only"
-                unless !ref $v or ref $v eq 'ARRAY';
-
-            $u->query_param( $d_k . '[' . $k . ']' =>
-                             join ',' => ( ref $v eq 'ARRAY' ? @{$v} : $v ) );
-        }
-    }
-
-    return $u->query;
+sub add_included {
+    my ($self, %args) = @_;
+    my $builder = PONAPI::Builder::Resource->new( parent => $self, %args );
+    $self->_add_included( $builder );
+    return $builder;
 }
 
 sub add_self_link {
     my $self = shift;
     $self->links_builder->add_link( self => $self->req_path );
     return $self;
-}
-
-# self isn't really part of pagination, but it can be overriden here
-my %allowed_page_keys = map +($_=>1), qw/
-    first
-    last
-    next
-    prev
-    self
-/;
-sub add_pagination_links {
-    my ($self, %page_links) = @_;
-
-    $page_links{self} ||= delete $page_links{current}
-        if exists $page_links{current};
-
-    foreach my $link_name ( keys %page_links ) {
-        if ( !exists $allowed_page_keys{ $link_name } ) {
-            die "Tried to add pagination link `$link_name`, not allowed by the spec";
-        }
-    }
-
-    my $self_link = $self->req_path;
-    $self->links_builder->add_links(
-        map {
-            my $query = $self->_hash_to_uri_query({page => $page_links{$_}});
-            ( $_ => $self_link . '?' . $query)
-        }
-        grep scalar keys %{ $page_links{$_} || {} },
-        keys %page_links
-    );
 }
 
 sub build {
