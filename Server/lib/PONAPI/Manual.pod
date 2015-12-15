@@ -948,7 +948,7 @@ out, so implementations may chose to just return C<PONAPI_UPDATED_NORMAL>
 instead.
 
 (in C<DBD::mysql>, you'll need to either connect to the database with
-C<mysql_client_found_rows>, or parse C<$dbh->{mysql_info}> for C<Changed>
+C<mysql_client_found_rows>, or parse C<< $dbh->{mysql_info} >> for C<Changed>
 immediately after the UPDATE)
 
 =item PONAPI_UPDATED_EXTENDED
@@ -1157,7 +1157,7 @@ the different of more specific exceptions you can throw.
 =head2 Responding with a particular status
 
 Usually this is not needed, but it's possible to manually set
-the status of most responses by using C<$document->set_status($n)>
+the status of most responses by using C<< $document->set_status($n) >>
 in any API method.
 
 =head2 Repos without relationships
