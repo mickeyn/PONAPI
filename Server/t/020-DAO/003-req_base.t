@@ -37,7 +37,7 @@ subtest '... providing a request base string' => sub {
 
     my $data = $doc->{data};
     ok($data, '... the document has a `data` key');
-    ok(ref $data eq 'HASH', '... the document has one resource');
+    is(ref $data, 'HASH', '... the document has one resource');
 
     ok($data->{links}, '... the data has a `links` key');
     ok($data->{links}{self}, '... the data has a `links.self` key');

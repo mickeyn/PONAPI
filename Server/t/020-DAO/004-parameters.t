@@ -27,7 +27,7 @@ subtest '... fields' => sub {
 
         my $data = $doc->{data};
         ok($data, '... the document has a `data` key');
-        ok(ref $data eq 'HASH', '... the document has one resource');
+        is(ref $data, 'HASH', '... the document has one resource');
 
         ok($data->{attributes}, '... the `data` has an `attributes` key');
         is_deeply(
@@ -45,7 +45,7 @@ subtest '... fields' => sub {
 
         my $data = $doc->{data};
         ok($data, '... the document has a `data` key');
-        ok(ref $data eq 'HASH', '... the document has one resource');
+        is(ref $data, 'HASH', '... the document has one resource');
 
         ok(!exists $data->{attributes}, "... the `data` doesn't have an `attributes` key");
 
@@ -58,7 +58,7 @@ subtest '... fields' => sub {
 
         my $data = $doc->{data};
         ok($data, '... the document has a `data` key');
-        ok(ref $data eq 'HASH', '... the document has one resource');
+        is(ref $data, 'HASH', '... the document has one resource');
 
         ok($data->{relationships}, '... the `data` has a `relationships` key');
         ok(exists $data->{relationships}{comments}, "... `data.relationships` has a `comments` key");
@@ -73,11 +73,11 @@ subtest '... fields' => sub {
 
         my $included = $doc->{included};
         ok($included, '... the document has an `included` key');
-        ok(ref($included) eq 'ARRAY', '... `included` is an array');
+        is(ref $included, 'ARRAY', '... `included` is an array');
         ok(@{$included} == 1, '... `included` has one resource');
-        ok(ref($included->[0]) eq 'HASH', '... included resource is an object');
+        is(ref $included->[0], 'HASH', '... included resource is an object');
         ok(exists $included->[0]{attributes}, '... included resource has an `attributes` key');
-        ok(ref($included->[0]{attributes}) eq 'HASH', '... the `attributes` points to a hash');
+        is(ref $included->[0]{attributes}, 'HASH', '... the `attributes` points to a hash');
         is_deeply(
             [ sort keys %{ $included->[0]{attributes} } ],
             [qw< age name >],
@@ -106,7 +106,7 @@ subtest '... filter' => sub {
 
         my $errors = $doc->{errors};
         ok($errors, '... the document has an `errors` key');
-        ok(ref $errors eq 'ARRAY', "and it's an array-ref");
+        is(ref $errors, 'ARRAY', "and it's an array-ref");
         is(@$errors, 1, '... we have one error');
         is_deeply(
             $errors->[0],
@@ -125,7 +125,7 @@ subtest '... filter' => sub {
 
         my $data = $doc->{data};
         ok($data, '... the document has a `data` key');
-        ok(ref $data eq 'ARRAY', '... the document has multiple resources');
+        is(ref $data, 'ARRAY', '... the document has multiple resources');
         is(@$data, 0, '... but is an empty list');
     };
 
@@ -136,7 +136,7 @@ subtest '... filter' => sub {
 
         my $data = $doc->{data};
         ok($data, '... the document has a `data` key');
-        ok(ref $data eq 'ARRAY', '... the document has multiple resources');
+        is(ref $data, 'ARRAY', '... the document has multiple resources');
         is(@$data, 2, '... exactly 2 of them');
         is_deeply(
             [ sort { $a <=> $b } map { $_->{id} } @$data ],
@@ -157,7 +157,7 @@ subtest '... include' => sub {
 
         my $errors = $doc->{errors};
         ok($errors, '... the document has an `errors` key');
-        ok(ref $errors eq 'ARRAY', "and it's an array-ref");
+        is(ref $errors, 'ARRAY', "and it's an array-ref");
         is(@$errors, 1, '... we have one error');
         is_deeply(
             $errors->[0],
@@ -176,7 +176,7 @@ subtest '... include' => sub {
 
         my $included = $doc->{included};
         ok($included, '... the document has an `included` key');
-        ok(ref $included eq 'ARRAY', '... `included` value is an array-ref ');
+        is(ref $included, 'ARRAY', '... `included` value is an array-ref ');
         is(@$included, 2, '... of exactly 2 elements');
         is_deeply(
             [ sort { $a <=> $b } map { $_->{id} } @$included ],

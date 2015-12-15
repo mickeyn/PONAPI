@@ -49,7 +49,7 @@ sub error_test {
     my ($status, $headers, $doc) = @$ret;
 
     my $errors = $doc->{errors};
-    isa_ok( $errors, 'ARRAY' );
+    is( ref $errors, 'ARRAY', '... `errors` is an array-ref' );
     is_deeply($headers, [], "... no location headers since it was an error");
 
     my $expect_is_re = ref($expect->{detail}) eq ref(qr//);

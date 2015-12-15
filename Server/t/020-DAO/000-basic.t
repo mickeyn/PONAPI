@@ -187,7 +187,7 @@ subtest '... retrieve' => sub {
 
     my $data = $doc->{data};
     ok($data, '... the document has a `data` key');
-    ok(ref $data eq 'HASH', '... the document has one resource');
+    is(ref $data, 'HASH', '... the document has one resource');
 
     ok(scalar keys %{ $data->{attributes} } == 1, '... one key in `attributes`');
     ok(exists $data->{attributes}->{title}, '... the attribute `title` key exists');
@@ -228,9 +228,9 @@ subtest '... retrieve relationships' => sub {
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');
 
     my $data = $doc->{data};
-    ok(ref $data eq 'ARRAY', '... the document has multiple resources');
+    is(ref $data, 'ARRAY', '... the document has multiple resources');
     ok(scalar @{$data} == 2, '... the document has 2 resources');
-    ok(ref $data->[0] eq 'HASH', '... the 1st resouce is a HASH ref');
+    is(ref $data->[0], 'HASH', '... the 1st resouce is a HASH ref');
     ok(exists $data->[0]->{type}, '... the 1st resouce has a `type` key');
     ok(exists $data->[0]->{id}, '... the 1st resouce has an `id` key');
     is(keys( %{ $data->[0] } ), 2, "... that those are the only keys it returns");
@@ -300,7 +300,7 @@ subtest '... retrieve by relationship' => sub {
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');
 
     my $data = $doc->{data};
-    ok(ref $data eq 'HASH', '... the document has one resource');
+    is(ref $data, 'HASH', '... the document has one resource');
     ok(exists $data->{attributes}->{age}, '... the attribute `age` key exists');
     ok(exists $data->{attributes}->{gender}, '... the attribute `gender` key exists');
     ok(exists $data->{attributes}->{name}, '... the attribute `name` key exists');
@@ -324,7 +324,7 @@ subtest '... retrieve by relationship' => sub {
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');
 
     $data = $doc->{data};
-    ok(ref $data eq 'ARRAY', '... the document has multiple resources');
+    is(ref $data, 'ARRAY', '... the document has multiple resources');
     is(scalar(@$data), 2, "... two resources, in fact");
 
     {
@@ -618,7 +618,7 @@ subtest '... delete_relationships' => sub {
         );
         is($res2[0], 204, '... got the correct status code');
         my $meta = $res2[2]->{meta};
-        isa_ok($meta, 'HASH');
+        is(ref $meta, 'HASH', '... `meta` is a hash-ref');
         ok(exists $meta->{detail}, '... `meta` has a `detail` key');
         is_deeply(
             $meta->{detail},

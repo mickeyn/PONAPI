@@ -47,12 +47,12 @@ subtest '... basic server - startup' => sub {
                 PONAPI::Server->new( 'repository.class' => 'X' )->to_app
             );
         };
-        ok(ref($app) ne 'Plack::Test::MockHTTP', '... server fails to start with bad repository class');
+        isnt(ref $app, 'Plack::Test::MockHTTP', '... server fails to start with bad repository class');
     }
 
     {
         my $app = Plack::Test->create( PONAPI::Server->new()->to_app );
-        ok(ref($app) eq 'Plack::Test::MockHTTP', '... server started successfully');
+        is(ref $app, 'Plack::Test::MockHTTP', '... server started successfully');
     }
 
 };

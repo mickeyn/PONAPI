@@ -29,7 +29,7 @@ sub error_test {
 
     my $content = decode_json $res->content;
     my $errors = $content->{errors};
-    isa_ok( $errors, 'ARRAY' );
+    is( ref $errors, 'ARRAY', '... `errors` is an array-ref' );
 
     my ($err) = grep { $_->{detail} eq $expected->{detail} } @{ $errors };
     is( $err->{detail}, $expected->{detail}, $desc );
