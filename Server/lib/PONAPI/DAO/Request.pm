@@ -165,6 +165,7 @@ sub _handle_error {
     {
         local $@;
         if ( !eval { $e->isa('PONAPI::DAO::Exception'); } ) {
+            $e ||= 'Unknown error';
             warn "$e";
             return $self->_server_failure;
         }

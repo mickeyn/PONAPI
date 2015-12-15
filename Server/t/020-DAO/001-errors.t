@@ -36,6 +36,15 @@ my $SERVER_ERROR = [ 500, [], {
     jsonapi => { version => '1.0' }
 }];
 
+{
+    package Horrible::Object::Overloads::To::False;
+    use overload
+        bool => sub {''},
+        '||' => sub {''},
+        fallback => 1;
+    sub new { bless {}, __PACKAGE__ }
+}
+
 sub error_test {
     my ($ret, $expect, $desc) = @_;
     my ($status, $headers, $doc) = @$ret;
@@ -812,24 +821,37 @@ subtest '... illegal params' => sub {
                 );
             }
 
-            my $expected_re = qr/\A\QServer error, halp at\E/;
-            my $w   = '';
-            my @ret = do {
-                no warnings 'redefine';
-                local $SIG{__WARN__} = sub { $w .= shift };
-                local *$glob = sub { die "Server error, halp" };
-                $dao->$action(@$args);
-            };
-            is_deeply(
-                \@ret,
-                $SERVER_ERROR,
-                "... expected PONAPI response for error on $action"
-            );
-            like( $w, $expected_re, "... expected perl error from $action" );
+            my $overloads_to_false = Horrible::Object::Overloads::To::False->new;
+            foreach my $error (
+                'Server error, halp at',
+                $overloads_to_false,
+            )
+            {
+                my $w   = '';
+                my @ret = do {
+                    no warnings 'redefine';
+                    local $SIG{__WARN__} = sub { $w .= shift };
+                    local *$glob = sub { die $error };
+                    $dao->$action(@$args);
+                };
+                is_deeply(
+                    \@ret,
+                    $SERVER_ERROR,
+                    "... expected PONAPI response for error on $action"
+                );
+                my $expected_re = $error
+                                ? qr/\A\Q$error\E/
+                                : qr/\AUnknown error/;
+                like(
+                    $w,
+                    $expected_re,
+                    "... expected perl error from $action"
+                );
+            }
 
             # See that we catch people using PONAPI::DAO::Exception without
             # an exception type
-            ($w, @ret) = ('');
+            my ($w, @ret) = ('');
             my $msg = "my great exception!";
             @ret = do {
                 no warnings 'redefine';
@@ -887,6 +909,27 @@ subtest '... illegal params' => sub {
                 qr/\Qoperation returned an unexpected value\E/,
                 "... and gives a normal warning, too"
             );
+
+            # Test that we catch execute dying
+            {
+                my $execute_glob = do {
+                    no strict 'refs';
+                    \*{"PONAPI::DAO::Request::BUILD"};
+                };
+                my ($w, @ret) = ('');
+                {
+                    no warnings 'redefine';
+                    local *$execute_glob = sub { die $overloads_to_false };
+                    local $SIG{__WARN__} = sub { $w .= shift    };
+                    @ret = $dao->$action(@$args);
+                }
+                is_deeply(
+                    \@ret,
+                    $SERVER_ERROR,
+                    "... server error when the action dies",
+                );
+                like($w, qr/\AUnknown error/, "... and the unknown error due to the false overload");
+            }
 
         }
     }
