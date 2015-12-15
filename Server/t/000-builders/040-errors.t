@@ -11,12 +11,6 @@ BEGIN {
     use_ok('PONAPI::Builder::Errors');
 }
 
-=pod
-
-TODO:
-
-=cut
-
 subtest '... testing constructor' => sub {
 
     my $builder = PONAPI::Builder::Errors->new;

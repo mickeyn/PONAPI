@@ -10,12 +10,6 @@ BEGIN {
     use_ok('PONAPI::Builder::Document');
 }
 
-=pod
-
-TODO:
-
-=cut
-
 subtest '... testing relationship with meta' => sub {
 
     my $doc = PONAPI::Builder::Document->new( version => '1.0' );

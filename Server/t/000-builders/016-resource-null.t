@@ -10,12 +10,6 @@ BEGIN {
     use_ok('PONAPI::Builder::Resource::Null');
 }
 
-=pod
-
-TODO:
-
-=cut
-
 subtest '... testing constructor' => sub {
 
     my $doc = PONAPI::Builder::Resource::Null->new();

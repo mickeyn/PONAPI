@@ -185,9 +185,6 @@ subtest '... retrieve' => sub {
 subtest '... retrieve relationships' => sub {
 
     foreach my $tuple (
-
-# TODO
-#[ [ type => 'fake', id => 1 ], "type \'fake\' not allowed", "DAO itself doesn't give errors for nonexistent types" ],
         [
             [ @TEST_ARGS_TYPE ],
             $ERR_ID_MISSING,

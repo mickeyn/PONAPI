@@ -10,12 +10,6 @@ BEGIN {
     use_ok('PONAPI::Builder::Relationship');
 }
 
-=pod
-
-TODO:
-
-=cut
-
 subtest '... testing constructor' => sub {
 
     my $builder = PONAPI::Builder::Relationship->new( resource => { id => 10, type => 'foo' }, name => 'author' );

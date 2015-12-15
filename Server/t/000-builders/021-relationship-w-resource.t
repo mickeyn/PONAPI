@@ -10,12 +10,6 @@ BEGIN {
     use_ok('PONAPI::Builder::Relationship');
 }
 
-=pod
-
-TODO:
-
-=cut
-
 subtest '... testing links sub-building' => sub {
 
     my $builder = PONAPI::Builder::Relationship->new( name => 'author' );

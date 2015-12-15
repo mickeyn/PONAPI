@@ -10,12 +10,6 @@ BEGIN {
     use_ok('PONAPI::Builder::Resource::Identifier');
 }
 
-=pod
-
-TODO:
-
-=cut
-
 subtest '... testing constructor' => sub {
 
     my $builder = PONAPI::Builder::Resource::Identifier->new(
