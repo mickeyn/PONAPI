@@ -583,10 +583,9 @@ Now, we could do something like this in retrieve_all and _add_included:
     ...
 
 (At this point, you should be seriously looking into alternatives to
-composing your own SQL.  For the final sample implementation, found in
-L<Test::PONAPI::DAO::Repository::MockDB>, we used L<SQL::Composer>; for
-the rest of this document will still roll it's own SQL, but please don't
-do that.  For your sanity.)
+composing your own SQL.  For the implementation used for testing this module,
+we used L<SQL::Composer>; we'll continue rolling our own SQL here, but
+please don't do that.  For your sanity.)
 
 We'll also want to modify our _fetch_relationships to handle C<fields>
 requesting only certain relationships:
