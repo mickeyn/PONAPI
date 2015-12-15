@@ -292,7 +292,7 @@ Our starting point:
         return;
     }
 
-A call to C<$dao->retrive_all(type => 'articles', ...)> will then return
+A call to C<< $dao->retrive_all(type => 'articles', ...) >> will then return
 something like this:
 
     {
