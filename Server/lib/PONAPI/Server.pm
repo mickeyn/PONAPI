@@ -302,10 +302,6 @@ You'll have to set up a repository (to provide access to the data
 you want to server) and tweak some server configurations, so
 hop over to L<PONAPI::Manual> for the next steps!
 
-=head1 VERSION
-
-0.001000
-
 =head1 BUGS, CONTACT AND SUPPORT
 
 For reporting bugs or submitting patches, please use the github
