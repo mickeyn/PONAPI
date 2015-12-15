@@ -8,7 +8,7 @@ PONAPI::Server - PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/
 
 =head1 VERSION
 
-version 0.001000
+version 0.001001
 
 =head1 SYNOPSIS
 
@@ -42,11 +42,11 @@ bug tracker at L<https://github.com/mickeyn/PONAPI>.
 
 =over 4
 
-=item * Mickey Nasriachi <mickey AT cpan DOT org>
+=item * Mickey Nasriachi <mickey@cpan.org>
 
-=item * Stevan Little <stevan AT cpan DOT org>
+=item * Stevan Little <stevan@cpan.org>
 
-=item * Brian Fraser <hugmeir AT cpan DOT org>
+=item * Brian Fraser <hugmeir@cpan.org>
 
 =back
 
@@ -56,13 +56,13 @@ This library is free software; you can redistribute it and/or modify it under th
 
 =head1 COPYRIGHT
 
-Copyright (C) 2015 Mickey Nasriachi <mickey AT cpan DOT org>
+Copyright (C) 2015 Mickey Nasriachi <mickey@cpan.org>
 
 =end
 
 =head1 AUTHOR
 
-Mickey Nasriachi <mickey AT cpan DOT org>, Stevan Little <stevan AT cpan DOT org>, Brian Fraser <hugmeir AT cpan DOT org>
+Mickey Nasriachi <mickey@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 

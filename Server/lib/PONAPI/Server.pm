@@ -1,7 +1,7 @@
 # ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::Server;
 
-our $VERSION = '0.001000';
+our $VERSION = '0.001001';
 
 use Plack::Request;
 use Plack::Response;
@@ -311,11 +311,11 @@ bug tracker at L<https://github.com/mickeyn/PONAPI>.
 
 =over 4
 
-=item * Mickey Nasriachi <mickey AT cpan DOT org>
+=item * Mickey Nasriachi <mickey@cpan.org>
 
-=item * Stevan Little <stevan AT cpan DOT org>
+=item * Stevan Little <stevan@cpan.org>
 
-=item * Brian Fraser <hugmeir AT cpan DOT org>
+=item * Brian Fraser <hugmeir@cpan.org>
 
 =back
 
@@ -325,6 +325,6 @@ This library is free software; you can redistribute it and/or modify it under th
 
 =head1 COPYRIGHT
 
-Copyright (C) 2015 Mickey Nasriachi <mickey AT cpan DOT org>
+Copyright (C) 2015 Mickey Nasriachi <mickey@cpan.org>
 
 =end
