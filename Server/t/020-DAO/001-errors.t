@@ -40,7 +40,6 @@ my $SERVER_ERROR = [ 500, [], {
     package Horrible::Object::Overloads::To::False;
     use overload
         bool => sub {''},
-        '||' => sub {''},
         fallback => 1;
     sub new { bless {}, __PACKAGE__ }
 }
