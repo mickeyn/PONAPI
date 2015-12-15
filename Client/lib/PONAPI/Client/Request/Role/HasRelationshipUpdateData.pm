@@ -1,3 +1,4 @@
+# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::Client::Request::Role::HasRelationshipUpdateData;
 
 use Moose::Role;
@@ -9,6 +10,7 @@ has data => (
 );
 
 no Moose::Role; 1;
+
 __END__
 =encoding UTF-8
 
@@ -21,7 +23,7 @@ but also undef, or an arrayref.
     # Replaces the specified relationship(s) with a one-to-one relationship to foo.
     $client->update_relationships( ..., data => { type => "foo", id => 4 } );
 
-    # Replaces the 
+    # Replaces the
     $client->update_relationships( ..., data => [ { type => "foo", id => 4 }, { ... } ] );
 
     # Clears the relationship
@@ -30,4 +32,3 @@ but also undef, or an arrayref.
 
 The underlaying repository decides whether the one-to-one or one-to-many difference is
 significant.
-

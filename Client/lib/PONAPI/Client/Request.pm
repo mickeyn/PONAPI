@@ -1,3 +1,4 @@
+# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::Client::Request;
 
 use Moose::Role;
@@ -50,6 +51,6 @@ sub _build_query_string {
     return to_uri( \%u );
 }
 
-
 no Moose::Role; 1;
+
 __END__

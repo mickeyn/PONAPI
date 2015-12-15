@@ -1,3 +1,4 @@
+# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::Utils::URI;
 
 use URI;
@@ -38,6 +39,6 @@ sub to_uri {
     return $u->query;
 }
 
-
 1;
+
 __END__

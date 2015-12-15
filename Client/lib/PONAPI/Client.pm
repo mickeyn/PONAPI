@@ -1,3 +1,4 @@
+# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::Client;
 
 use Moose;
@@ -117,9 +118,7 @@ sub _send_ponapi_request {
     return decode_json( $res->{body} );
 }
 
-
 __PACKAGE__->meta->make_immutable;
-
 no Moose; 1;
 
 __END__
