@@ -10,7 +10,9 @@ PONAPI::Manual - An introduction to using PONAPI::Server
 
 =head1 DESCRIPTION
 
-=head1 USAGE
+This document describes how to use and set up C<PONAPI::Server>.
+The latter parts describe how to set up a manual from scratch,
+including a set-by-step of the implementation.
 
 The recommended usage is to use L<PONAPI::Server> directly as a PSGI
 application:

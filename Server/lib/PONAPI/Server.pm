@@ -1,6 +1,8 @@
 # ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::Server;
 
+our $VERSION = '0.001000';
+
 use Plack::Request;
 use Plack::Response;
 use Hash::MultiValue;
@@ -299,6 +301,10 @@ L<{json:api}|http://jsonapi.org/> specification.
 You'll have to set up a repository (to provide access to the data
 you want to server) and tweak some server configurations, so
 hop over to L<PONAPI::Manual> for the next steps!
+
+=head1 VERSION
+
+0.001000
 
 =head1 BUGS, CONTACT AND SUPPORT
 
