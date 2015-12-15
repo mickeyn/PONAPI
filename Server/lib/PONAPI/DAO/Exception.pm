@@ -120,5 +120,70 @@ sub _moose_type_to_nice_description {
 
 __PACKAGE__->meta->make_immutable;
 no Moose; 1;
-
 __END__
+=encoding UTF-8
+
+=head1 NAME
+
+PONAPI::DAO::Exception - Exceptions for PONAPI
+
+=head1 SYNOPSIS
+
+    use PONAPI::DAO::Exception;
+    PONAPI::DAO::Exception->throw( message => "Generic exception" );
+    PONAPI::DAO::Exception->throw(
+        message => "Explanation for the sql error, maybe $DBI::errstr",
+        sql     => 1,
+    );
+    PONAPI::DAO::Exception->throw(
+        message          => "Data had type `foo` but we wanted `bar`",
+        bad_request_data => 1,
+    );
+
+=head1 DESCRIPTION
+
+I<PONAPI::DAO::Exception> can be used by repositories to signal errors;
+exceptions thrown this way will be caught by L<the DAO|PONAPI::DAO> and
+handled gracefully.
+
+Different kinds of exceptions can be thrown by changing the arguments
+to C<throw>; C<sql =E<gt> 1> will throw a SQL exception,
+C<bad_request_data =E<gt> 1> will throw an exception due to the
+input data being wrong, and not passing any of those will
+throw a generic exception.
+
+The human-readable C<message> for all of those will end up in the
+error response returned to the user.
+
+=head1 METHODS
+
+=head2 message
+
+This attribute contains the exception message.
+
+=head2 stack_trace
+
+This contains the stack trace of the exception.
+
+=head2 as_string
+
+Returns a stringified form of the exception.  The object is overloaded
+to return this if used in string context.
+
+=head2 as_response
+
+Returns the exception as a 3-element list that may be fed directly
+to plack as a {json:api} response.
+
+    $e->as_response; # ( $status, [], { errors => [ { detail => $message } ] } )
+
+=head2 json_api_version
+
+Defaults to 1.0; only used in C<as_response>.
+
+=head2 status
+
+HTTP Status code for the exception; in most cases you don't need to
+set this manually.
+
+=end

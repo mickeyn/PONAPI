@@ -298,11 +298,11 @@ L<{json:api}|http://jsonapi.org/> specification.
 
 You'll have to set up a repository (to provide access to the data
 you want to server) and tweak some server configurations, so
-hop over to L<PONAPI::Manual> for instructions on how to use this!
+hop over to L<PONAPI::Manual> for the next steps!
 
 =head1 BUGS, CONTACT AND SUPPORT
 
-For reporting bugs (or submitting patches wink wink) please use the github
+For reporting bugs or submitting patches, please use the github
 bug tracker at L<https://github.com/mickeyn/PONAPI>.
 
 =head1 AUTHORS

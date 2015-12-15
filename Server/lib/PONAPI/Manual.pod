@@ -28,10 +28,9 @@ to run the application:
 
 Any L<{json:api}|http://jsonapi.org/> compliant client can then access your application:
 
-    $ perl -Ilib -MPONAPI::Client -E 'say PONAPI::Client->new->retrieve(type => "people", id => 88)->{data}{attributes}{name}'
+    $ perl -MPONAPI::Client -MData::Dumper -E 'say Dumper(PONAPI::Client->new->retrieve(type => "people", id => 88))'
 
     $ curl -X GET -H "Content-Type: application/vnd.api+json" 'http://0:5000/people/88
-    http://localhost:5000
 
 That'll give you the default options, with the default repository; for a real
 world scenario, you'll have to get your hands dirty.
@@ -834,8 +833,17 @@ L<Spec|http://jsonapi.org/format/#crud-deleting>.
 
 Removes a single resource.
 
-=for TODO
-Code sample
+    sub delete {
+        my ($self, %args) = @_;
+    
+        my $table = $self->quote($type);
+        my $sth   = $dbh->prepare(qq{ DELETE FROM $table WHERE id = ? });
+    
+        $sth->execute($args{id});
+    }
+
+It's up to the repo if it also wants to remove any relationships what
+the resource may have.
 
 =head3 create(type => $type, data => $data, %optinal_arguments)
 
