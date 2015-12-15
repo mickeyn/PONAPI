@@ -29,8 +29,18 @@ my $qr_member_name_prefix = qr/^[a-zA-Z0-9]/;
 sub prepare_app {
     my $self = shift;
 
-    my %conf = PONAPI::Server::ConfigReader->new( dir => 'conf' )->read_config;
+    my %conf;
+    local $@;
+    eval {
+        %conf = PONAPI::Server::ConfigReader->new( dir => 'conf' )->read_config;
+    };
     $self->{$_} //= $conf{$_} for keys %conf;
+
+    # Some defaults
+    my $default_media_type           = 'application/vnd.api+json';
+    $self->{'ponapi.spec_version'} //= '1.0';
+    $self->{'ponapi.mediatype'}    //= $default_media_type;
+    $self->{'ponapi.qr_mediatype'} //= qr<\Q$default_media_type\E>;
 
     $self->_load_dao();
 }
@@ -265,3 +275,18 @@ sub _error_response {
 1;
 
 __END__
+=encoding UTF-8
+
+=NAME
+
+PONAPI::Server - TODO
+
+=SYNOPSIS
+
+    # Run the server
+    $ plackup -MPONAPI::Server -e 'PONAPI::Server->new("repository.class" => "Test::PONAPI::DAO::Repository::MockDB", "ponapi.spec_version" => "1.0")->to_app'
+    
+    $ perl -Ilib -MPONAPI::Client -E 'say PONAPI::Client->new->retrieve(type => "people", id => 88)->{data}{attributes}{name}'
+    
+    # Or with cURL:
+    $ curl -X GET -H "Content-Type: application/vnd.api+json" 'http://0:5000/people/88'

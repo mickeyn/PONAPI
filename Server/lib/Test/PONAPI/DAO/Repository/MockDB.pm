@@ -493,7 +493,7 @@ sub _delete_relationships {
 
     my @all_values;
     foreach my $resource ( @$data ) {
-        my $data_type = delete $resource->{type};
+        my $data_type = $resource->{type};
 
         if ( $data_type ne $key_type ) {
             PONAPI::DAO::Exception->throw(
