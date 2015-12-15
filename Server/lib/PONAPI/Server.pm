@@ -285,9 +285,9 @@ PONAPI::Server - A {json:api} server.
 
     # Run the server
     $ plackup -MPONAPI::Server -e 'PONAPI::Server->new("repository.class" => "Test::PONAPI::DAO::Repository::MockDB")->to_app'
-    
+
     $ perl -MPONAPI::Client -E 'say Dumper(PONAPI::Client->new->retrieve(type => "people", id => 88))'
-    
+
     # Or with cURL:
     $ curl -X GET -H "Content-Type: application/vnd.api+json" 'http://0:5000/people/88'
 
@@ -309,11 +309,11 @@ bug tracker at L<https://github.com/mickeyn/PONAPI>.
 
 =over 4
 
-=item * Mickey Nasriachi <mickey@cpan.org>
+=item * Mickey Nasriachi <mickey AT cpan DOT org>
 
-=item * Stevan Little <stevan@cpan.org>
+=item * Stevan Little <stevan AT cpan DOT org>
 
-=item * Brian Fraser <hugmeir@cpan.org>
+=item * Brian Fraser <hugmeir AT cpan DOT org>
 
 =back
 
