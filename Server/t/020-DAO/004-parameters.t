@@ -18,11 +18,6 @@ isa_ok($dao, 'PONAPI::DAO');
 
 my %TYPE_ID = ( type => 'articles', id => 2 );
 
-# TODO: filter
-# TODO: include
-# TODO: sort
-# TODO: page
-
 subtest '... fields' => sub {
 
     subtest '... fields set for type' => sub {
@@ -101,5 +96,60 @@ subtest '... fields' => sub {
     };
 
 };
+
+subtest '... filter' => sub {
+
+    subtest '... filter with no keys or values' => sub {
+
+        my @ret = $dao->retrieve_all( type => 'articles', filter => {} );
+        my $doc = $ret[2];
+
+        my $errors = $doc->{errors};
+        ok($errors, '... the document has an `errors` key');
+        ok(ref $errors eq 'ARRAY', "and it's an array-ref");
+        is(@$errors, 1, '... we have one error');
+        is_deeply(
+            $errors->[0],
+            {
+                detail => "`filter` is missing values",
+                status => 400
+            },
+            '... and it contains what we expected'
+        );
+    };
+
+    subtest '... filter key with no values' => sub {
+
+        my @ret = $dao->retrieve_all( type => 'articles', filter => { id => [] } );
+        my $doc = $ret[2];
+
+        my $data = $doc->{data};
+        ok($data, '... the document has a `data` key');
+        ok(ref $data eq 'ARRAY', '... the document has multiple resources');
+        is(@$data, 0, '... but is an empty list');
+    };
+
+    subtest '... filter for specific ids' => sub {
+
+        my @ret = $dao->retrieve_all( type => 'articles', filter => { id => [3,2] } );
+        my $doc = $ret[2];
+
+        my $data = $doc->{data};
+        ok($data, '... the document has a `data` key');
+        ok(ref $data eq 'ARRAY', '... the document has multiple resources');
+        is(@$data, 2, '... exactly 2 of them');
+        is_deeply(
+            [ sort map { $_->{id} } @$data ],
+            [2,3],
+            'and we have the correct ids'
+        )
+
+    };
+
+};
+
+# TODO: include
+# TODO: sort
+# TODO: page
 
 done_testing;

@@ -135,10 +135,73 @@ has req_path => (
     default => sub { '/' },
 );
 
+use URI;
+use URI::QueryParam;
+sub _hash_to_uri_query {
+    my ($self, $data) = @_;
+    my $u = URI->new("", "http");
+
+    for my $d_k ( sort keys %$data ) {
+        my $d_v = $data->{$d_k};
+        defined($d_v) or next;
+
+        if ( ref $d_v ne 'HASH' ) {
+            $u->query_param( $d_k =>
+                             join ',' => ( ref $d_v eq 'ARRAY' ? @{$d_v} : $d_v ) );
+            next;
+        }
+
+        # HASH
+        for my $k ( sort keys %{$d_v} ) {
+            my $v = $d_v->{$k};
+            defined($v) or next;
+
+            die "_hash_to_uri_query: nested value can be scalar/arrayref only"
+                unless !ref $v or ref $v eq 'ARRAY';
+
+            $u->query_param( $d_k . '[' . $k . ']' =>
+                             join ',' => ( ref $v eq 'ARRAY' ? @{$v} : $v ) );
+        }
+    }
+
+    return $u->query;
+}
+
 sub add_self_link {
     my $self = shift;
     $self->links_builder->add_link( self => $self->req_path );
     return $self;
+}
+
+# self isn't really part of pagination, but it can be overriden here
+my %allowed_page_keys = map +($_=>1), qw/
+    first
+    last
+    next
+    prev
+    self
+/;
+sub add_pagination_links {
+    my ($self, %page_links) = @_;
+
+    $page_links{self} ||= delete $page_links{current}
+        if exists $page_links{current};
+
+    foreach my $link_name ( keys %page_links ) {
+        if ( !exists $allowed_page_keys{ $link_name } ) {
+            die "Tried to add pagination link `$link_name`, not allowed by the spec";
+        }
+    }
+
+    my $self_link = $self->req_path;
+    $self->links_builder->add_links(
+        map {
+            my $query = $self->_hash_to_uri_query({page => $page_links{$_}});
+            ( $_ => $self_link . '?' . $query)
+        }
+        grep scalar keys %{ $page_links{$_} || {} },
+        keys %page_links
+    );
 }
 
 sub build {
@@ -163,8 +226,20 @@ sub build {
                     if $self->has_resource;
             }
 
-            $result->{included} = +[ map { $_->build( %args ) } @{ $self->_included } ]
-                if $self->has_included;
+
+            # http://jsonapi.org/format/#document-compound-documents
+            # "A compound document MUST NOT include more than one resource
+            # object for each type and id pair."
+            # So in short, we need to check that we don't have any duplicates.
+            if ( $self->has_included ) {
+                my $included_builders = $self->_included;
+                my (@included, %seen);
+                foreach my $builder ( @$included_builders ) {
+                    next if $seen{$builder->{type}}{$builder->{id}}++;
+                    push @included, $builder->build( %args );
+                }
+                $result->{included} = \@included;
+            }
         }
         else {
             if ( $self->is_collection ) {

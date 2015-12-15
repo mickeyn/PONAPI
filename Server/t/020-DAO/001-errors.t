@@ -108,7 +108,6 @@ subtest '... retrieve all' => sub {
             "..."
         );
     }
-
 };
 
 subtest '... retrieve' => sub {
@@ -147,12 +146,6 @@ subtest '... retrieve' => sub {
         );
     }
 
-
-    # Spec says we can either stop processing as soon as we spot an error, or keep going an accumulate·
-    # multiple errors.  Currently we do multiple, so testing that here.
-    my @ret = $dao->retrieve( @TEST_ARGS_TYPE, data => { id => 1 }, page => 1 );
-    my $doc = $ret[2];
-    cmp_ok(scalar(@{ $doc->{errors} }), ">=", 2, "DAO can result multiple error objects for one request");
 
     # Retrieve with nonexistent stuff
     foreach my $tuple (
@@ -729,24 +722,25 @@ subtest '... illegal params' => sub {
         page     => { expected_detail => $ERR_PAGE_NOT_ALLOWED,    page => {} },
         fields   => { fields => { articles => [qw/title/] } },
         include  => { include => [ qw/comments/ ] },
+        sort     => { sort => [] },
     );
 
     my %request = (
         retrieve_all => {
             args    => \@TEST_ARGS_TYPE,
-            allowed => [qw/ page include fields /],
+            allowed => [qw/ page include fields sort /],
         },
         retrieve     => {
             args    => \@TEST_ARGS_TYPE_ID,
-            allowed => [qw/ include fields id /],
+            allowed => [qw/ page include fields id sort /],
         },
         retrieve_relationships => {
             args    => [@TEST_ARGS_TYPE_ID, rel_type => 'authors'],
-            allowed => [qw/ page include fields id rel_type /],
+            allowed => [qw/ page id rel_type sort /],
         },
         retrieve_by_relationship => {
             args    => [@TEST_ARGS_TYPE_ID, rel_type => 'authors'],
-            allowed => [qw/ page include fields id rel_type /],
+            allowed => [qw/ page include fields id rel_type sort /],
         },
 
         create => {

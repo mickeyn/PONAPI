@@ -14,7 +14,7 @@ sub execute {
     if ( $self->is_valid ) {
         local $@;
         eval {
-            my @ret = $self->repository->delete( %{ $self } );
+            $self->repository->delete( %{ $self } );
             $doc->add_meta(
                 detail => "successfully deleted the resource /"
                         . $self->type

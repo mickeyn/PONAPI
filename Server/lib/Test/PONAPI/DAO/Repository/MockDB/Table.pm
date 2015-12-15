@@ -5,6 +5,26 @@ use Moose;
 
 use SQL::Composer;
 
+use Test::PONAPI::DAO::Repository::MockDB::Table::Relationships;
+
+has [qw/TYPE TABLE ID_COLUMN/] => (
+    is       => 'ro',
+    isa      => 'Str',
+    required => 1,
+);
+
+has COLUMNS => (
+    is       => 'ro',
+    isa      => 'ArrayRef',
+    required => 1,
+);
+
+has RELATIONS => (
+    is  => 'ro',
+    isa => 'HashRef[Test::PONAPI::DAO::Repository::MockDB::Table::Relationships]',
+    default => sub { {} },
+);
+
 sub insert_stmt {
     my ($self, %args) = @_;
 
@@ -35,16 +55,27 @@ sub delete_stmt {
     return $stmt;
 }
 
-
 sub select_stmt {
     my ($self, %args) = @_;
 
     my $type    = $args{type};
     my $filters = $self->_stmt_filters($type, $args{filter});
+
+    my %limit   = %{ $args{page} || {} };
+    my $sort    = $args{sort} || [];
+
+    my %order_by = map {
+        my ($desc, $col) = /\A(-?)(.+)\z/s;
+        ( $col => ( $desc ? 'desc' : 'asc' ) );
+    } @$sort;
+
+    my $columns = $self->_stmt_columns(\%args);
     my $stmt = SQL::Composer::Select->new(
+        %limit,
         from    => $type,
-        columns => $self->_stmt_columns(\%args),
+        columns => $columns,
         where   => [ %{ $filters } ],
+        (%order_by ? (order_by => [ %order_by ]) : ()),
     );
 
     return $stmt;
@@ -81,16 +112,18 @@ sub _stmt_columns {
     my $args = shift;
     my ( $fields, $type ) = @{$args}{qw< fields type >};
 
-    return $fields if $self->TABLE ne $type;
+    my $ref = ref $fields;
 
-    ref $fields eq 'HASH' and exists $fields->{$type}
+    return [ $self->ID_COLUMN, @$fields ] if $ref eq 'ARRAY';
+
+    $ref eq 'HASH' and exists $fields->{$type}
         or return $self->COLUMNS;
 
     my @fields_minus_relationship_keys =
         grep { !exists $self->RELATIONS->{$_} }
         @{ $fields->{$type} };
 
-    return +[ 'id', @fields_minus_relationship_keys ];
+    return +[ $self->ID_COLUMN, @fields_minus_relationship_keys ];
 }
 
 sub _stmt_filters {

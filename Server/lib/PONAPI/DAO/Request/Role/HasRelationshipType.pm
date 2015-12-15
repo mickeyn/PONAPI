@@ -18,8 +18,9 @@ sub _validate_rel_type {
     my $type     = $self->type;
     my $rel_type = $self->rel_type;
 
-    $self->_bad_request( "Types `$type` and `$rel_type` are not related", 404 )
-        unless $self->repository->has_relationship( $type, $rel_type );
+    if ( !$self->repository->has_relationship( $type, $rel_type ) ) {
+        return $self->_bad_request( "Types `$type` and `$rel_type` are not related", 404 )
+    }
 }
 
 no Moose::Role; 1;

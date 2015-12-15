@@ -2,6 +2,7 @@
 use strict;
 use warnings;
 
+use Storable qw[ dclone ];
 use Scalar::Util qw[ blessed ];
 use JSON::XS qw[ decode_json ];
 
@@ -62,6 +63,115 @@ subtest '... retrieve all' => sub {
         ok(exists $person->{attributes}->{gender}, '... the attribute `gender` key exists');
     }
 
+    my @include = $dao->retrieve_all(
+        type => 'articles',
+        send_doc_self_link => 1,
+        include => [qw/comments/],
+    );
+    my @comment_ids = sort { $a <=> $b }
+                      map $_->{id}, @{ $include[2]->{included} || [] };
+    is_deeply(
+        \@comment_ids,
+        [5, 12],
+        "...retrieve_all + include works"
+    );
+
+    my $fields = {
+            articles => [qw/title authors/],
+            people   => [qw/name/],
+            comments => [qw/id/],
+        };
+    my @include_fields = $dao->retrieve_all(
+        type => 'articles',
+        send_doc_self_link => 1,
+        include => [qw/comments authors/],
+        fields  => $fields,
+    );
+    test_fields_response(\@include_fields, $fields);
+
+    $fields = { articles => ["title"], comments => ["id"] };
+    my @include_comments_no_body = $dao->retrieve_all(
+        type => 'articles',
+        send_doc_self_link => 1,
+        include => [qw/comments authors/],
+        fields  => $fields,
+    );
+    test_fields_response(\@include_comments_no_body, $fields);
+
+    {
+        # page!
+        my @page = $dao->retrieve_all(
+            @TEST_ARGS_TYPE,
+            req_path => '/articles',
+            page => {
+                offset => 1,
+                limit  => 1,
+            },
+        );
+        my $doc = $page[2];
+        is( scalar @{ $doc->{data}}, 1, "... we only fetched one resource, as requested" );
+        is( $doc->{data}[0]{id}, 2, "... and the resource has id=2" )
+            or diag("Honestly, this should break, since we are not using sort");
+        my $expect = {
+            first => '/articles?page%5Blimit%5D=1&page%5Boffset%5D=0',
+            next  => '/articles?page%5Blimit%5D=1&page%5Boffset%5D=2',
+            prev  => '/articles?page%5Blimit%5D=1&page%5Boffset%5D=0',
+            self  => '/articles?page%5Blimit%5D=1&page%5Boffset%5D=1',
+        };
+        my $links = $doc->{links};
+        is_deeply(
+            $links,
+            $expect,
+            "... all the pagination links are there"
+        );
+    }
+
+    # sort
+    foreach my $sort_by (
+        [qw/-id/],
+        [qw/-body/],
+        # Nope. Not going to implement these for MockDB, since they
+        # require joins, or doing the sorts in perl
+        # [qw/authors.name/],
+        # [qw/body authors.name/],
+    )
+    {
+        my @sort = $dao->retrieve_all(
+            send_doc_self_link => 1,
+            type => 'comments',
+            sort => [ @$sort_by ],
+        );
+        my $doc = $sort[2];
+        is( scalar @{ $doc->{data} || []}, 2, "... we fetched 2 resources, with sort" );
+        my $ids = join "|", map $_->{id}, @{ $doc->{data} };
+        my $expect = '12|5';
+        is( $ids, $expect, "got them in the correct order" );
+
+        TODO: {
+            local $TODO = "Not yet implemented";
+            like( $doc->{links}{self}, qr/&sort=/, "sort is included in the self link" );
+        }
+    }
+
+    {
+        my @sort_page = $dao->retrieve_all(
+            type => 'comments',
+            sort => [qw/ -id /],
+            page => { offset => 1, limit => 1 },
+        );
+        my $doc = $sort_page[2];
+        is( scalar @{ $doc->{data}}, 1, "... we only fetched one resource with sort+page" );
+        is( $doc->{data}[0]{id}, 5, "... and it was what we wanted (id=5)" );
+
+        my @sort_page_prev = $dao->retrieve_all(
+            type => 'comments',
+            sort => [qw/ -id /],
+            page => { offset => 0, limit => 1 },
+        );
+        $doc = $sort_page_prev[2];
+        is( scalar @{ $doc->{data}}, 1, "... fetched the previous result" );
+        is( $doc->{data}[0]{id}, 12, "... and it was what we wanted (id=12)" );
+    }
 };
 
 subtest '... retrieve' => sub {
@@ -92,12 +202,24 @@ subtest '... retrieve' => sub {
         );
     }
 
+    {
+        my $fields = { people => [qw/ articles /], articles => [qw/id/] };
+        my @ret = $dao->retrieve(
+            type => 'articles',
+            id => 2,
+            include => [qw/authors/],
+            fields  => $fields,
+        );
+        test_fields_response(\@ret, $fields);
+   }
 };
 
 subtest '... retrieve relationships' => sub {
 
     my @ret = $dao->retrieve_relationships(
         @TEST_ARGS_TYPE_ID,
+        req_path => '/articles/2/comments',
+        send_doc_self_link => 1,
         rel_type => 'comments',
     );
     my $doc = $ret[2];
@@ -111,14 +233,65 @@ subtest '... retrieve relationships' => sub {
     ok(ref $data->[0] eq 'HASH', '... the 1st resouce is a HASH ref');
     ok(exists $data->[0]->{type}, '... the 1st resouce has a `type` key');
     ok(exists $data->[0]->{id}, '... the 1st resouce has an `id` key');
-    is(keys( %{ $data->[0] } ), 2, "... that those are the only keys it returns")
+    is(keys( %{ $data->[0] } ), 2, "... that those are the only keys it returns");
 
+    is(
+        $doc->{links}{self},
+        '/articles/2/comments',
+        "... we get the correct self link"
+    );
+
+    {
+        # page!
+        my @page = $dao->retrieve_relationships(
+            @TEST_ARGS_TYPE_ID,
+            rel_type => "comments",
+            req_path => '/articles/2/comments',
+            page => {
+                offset => 1,
+                limit  => 1,
+            },
+        );
+        my $doc = $page[2];
+        is( scalar @{ $doc->{data}}, 1, "... we only fetched one resource, as requested" );
+
+        is( $doc->{data}[0]{id}, 12, "... and the resource has id=12" )
+            or diag("Honestly, this should break, since we are not using sort");
+        my $expect = {
+            first => '/articles/2/comments?page%5Blimit%5D=1&page%5Boffset%5D=0',
+            prev  => '/articles/2/comments?page%5Blimit%5D=1&page%5Boffset%5D=0',
+            self  => '/articles/2/comments?page%5Blimit%5D=1&page%5Boffset%5D=1',
+        };
+        my $links = $doc->{links};
+
+        is_deeply(
+            $links,
+            $expect,
+            "... all the pagination links are there"
+        );
+    }
+
+    {
+        # sort
+        my @sort = $dao->retrieve_relationships(
+            @TEST_ARGS_TYPE_ID,
+            rel_type => "comments",
+            sort => [qw/ -id /],
+        );
+        my $doc = $sort[2];
+        is( scalar @{ $doc->{data}}, 2, "... we fetched 2 resources, with sort" );
+        my $ids = join "|", map $_->{id}, @{ $doc->{data} };
+        my $expect = "12|5";
+        is( $ids, $expect, "got them in the correct order" );
+    }
 };
 
 subtest '... retrieve by relationship' => sub {
 
     my @ret = $dao->retrieve_by_relationship(
         @TEST_ARGS_TYPE_ID,
+        req_path => '/articles/2/authors',
+        send_doc_self_link => 1,
         rel_type => 'authors',
     );
     my $doc = $ret[2];
@@ -135,6 +308,12 @@ subtest '... retrieve by relationship' => sub {
     # of people, so type for whatever was retrieved has to be 'person'
     is($data->{type}, 'people', '... retrieved document is of the correct type');
 
+    is(
+        $doc->{links}{self},
+        '/articles/2/authors',
+        "... we get the correct self link"
+    );
+
     @ret = $dao->retrieve_by_relationship(
         @TEST_ARGS_TYPE_ID,
         rel_type => 'comments',
@@ -148,6 +327,60 @@ subtest '... retrieve by relationship' => sub {
     ok(ref $data eq 'ARRAY', '... the document has multiple resources');
     is(scalar(@$data), 2, "... two resources, in fact");
 
+    {
+        # page!
+        my @page = $dao->retrieve_by_relationship(
+            @TEST_ARGS_TYPE_ID,
+            req_path => '/articles/2/comments',
+            rel_type => "comments",
+            page => {
+                offset => 1,
+                limit  => 1,
+            },
+        );
+        my $doc = $page[2];
+        is( scalar @{ $doc->{data}}, 1, "... we only fetched one resource, as requested" );
+
+        is( $doc->{data}[0]{id}, 12, "... and the resource has id=12" )
+            or diag("Honestly, this should break, since we are not using sort");
+        my $expect = {
+            first => '/articles/2/comments?page%5Blimit%5D=1&page%5Boffset%5D=0',
+            prev  => '/articles/2/comments?page%5Blimit%5D=1&page%5Boffset%5D=0',
+            self  => '/articles/2/comments?page%5Blimit%5D=1&page%5Boffset%5D=1',
+            next  => '/articles/2/comments?page%5Blimit%5D=1&page%5Boffset%5D=2',
+        };
+        my $links = $doc->{links};
+
+        is_deeply(
+            $links,
+            $expect,
+            "... all the pagination links are there"
+        );
+    }
+
+    {
+        # sort
+        my @sort = $dao->retrieve_by_relationship(
+            @TEST_ARGS_TYPE_ID,
+            rel_type => "comments",
+            sort => [qw/ -id /],
+        );
+        my $doc = $sort[2];
+        is( scalar @{ $doc->{data}}, 2, "... we fetched 2 resources, with sort(-d)" );
+        my $ids = join "|", map $_->{id}, @{ $doc->{data} };
+        my $expect = "12|5";
+        is( $ids, $expect, "... got them in the correct order" );
+
+        my @sort_title = $dao->retrieve_by_relationship(
+            @TEST_ARGS_TYPE_ID,
+            rel_type => "comments",
+            sort => [qw/ -body /],
+        );
+        $doc = $sort_title[2];
+        is( scalar @{ $doc->{data}}, 2, "... we fetched 2 resources, with sort(body)" );
+        $ids = join "|", map $_->{id}, @{ $doc->{data} };
+        is( $ids, $expect, "... got them in the correct order" );
+    }
 };
 
 subtest '... update' => sub {
@@ -231,7 +464,6 @@ subtest '... update' => sub {
     delete $updated[2]->{data}{attributes}{updated};
     is_deeply(\@updated, \@orig, "... can clear relationships via update");
 
-    use Storable qw/dclone/;
     my $data_for_restore = dclone( $backup[2]->{data} );
     $data_for_restore->{relationships}{$_} = delete $data_for_restore->{relationships}{$_}{data}
         for keys %{ $data_for_restore->{relationships} };
@@ -444,6 +676,29 @@ subtest '... create + create_relationship' => sub {
         ],
     );
 
+    # Let's use the work so far to test that retrieve_all+include shouldn't
+    # return more than one resource per type&id pair
+    {
+        # Now $author_id will be the author of two articles
+        my @update_rel = $dao->update_relationships(
+            type     => 'articles',
+            id       => 2,
+            rel_type => 'authors',
+            data     => { type => people => id => $author_id }
+        );
+        my @retrieve_all = $dao->retrieve_all(
+            send_doc_self_link => 1,
+            type => 'articles', include => [qw/authors/],
+        );
+        my @author_ids = sort { $a <=> $b }
+                      map $_->{id}, @{ $retrieve_all[2]->{included} || [] };
+        my %uniq = map +($_=>1), @author_ids;
+        # http://jsonapi.org/format/#document-compound-documents
+        # A compound document MUST NOT include more than one resource object for each type and id pair.
+        is(scalar(@author_ids), scalar(keys %uniq), "include has no duplicates")
+            or diag("include has duplicates! Got <@author_ids>");
+    }
+
     my @retrieved = $dao->retrieve(
         @TEST_ARGS_TYPE,
         id      => $article_id,
@@ -610,6 +865,33 @@ subtest '... create + create_relationship' => sub {
     }
 
 };
+
+sub test_fields_response {
+    my ($response, $fields) = @_;
+
+    my $included = $response->[2]{included} || [];
+    my $data     = $response->[2]{data};
+    $data = [ $data ] if ref $data ne 'ARRAY';
+
+    foreach my $resource_orig ( @$included, @$data ) {
+        my $resource     = dclone $resource_orig;
+        my ($type, $id) = @{$resource}{qw/type id/};
+        my $has_fields = $fields->{$type};
+        delete @{$resource->{$_}}{@$has_fields} for qw/attributes relationships/;
+        is_deeply(
+            $resource,
+            {
+                type          => $type,
+                id            => $id,
+                attributes    => {},
+                relationships => {},
+                links         => { self => "/$type/$id" },
+            },
+            "... fields fetches exactly what we asked for"
+        ) or diag(Dumper($resource_orig));
+    }
+
+}
 
 # TODO
 #

@@ -5,9 +5,7 @@ use Moose;
 
 extends 'PONAPI::DAO::Request';
 
-with 'PONAPI::DAO::Request::Role::HasFields',
-     'PONAPI::DAO::Request::Role::HasFilter',
-     'PONAPI::DAO::Request::Role::HasInclude',
+with 'PONAPI::DAO::Request::Role::HasFilter',
      'PONAPI::DAO::Request::Role::HasPage',
      'PONAPI::DAO::Request::Role::HasSort',
      'PONAPI::DAO::Request::Role::HasID',
@@ -19,7 +17,17 @@ sub execute {
     if ( $self->is_valid ) {
         local $@;
         eval {
-            $self->repository->retrieve_relationships( %{ $self } );
+            my $repo        = $self->repository;
+            my $document    = $self->document;
+            my $one_to_many = $repo->has_one_to_many_relationship($self->type, $self->rel_type);
+
+            $document->convert_to_collection if $one_to_many;
+
+            $repo->retrieve_relationships( %{ $self } );
+
+            $document->add_null_resource
+                unless $one_to_many or $document->_has_resource_builders;
+
             1;
         } or do {
             my $e = $@;

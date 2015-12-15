@@ -6,6 +6,7 @@ use Moose;
 use DBI;
 use DBD::SQLite::Constants qw/:result_codes/;;
 use SQL::Composer;
+use Scalar::Util qw/looks_like_number/;
 
 use Test::PONAPI::DAO::Repository::MockDB::Loader;
 
@@ -63,7 +64,7 @@ sub has_one_to_many_relationship {
     if ( my $table = $self->tables->{$type} ) {
         my $relations = $table->RELATIONS;
         return if !exists $relations->{ $rel_name };
-        return !$relations->{ $rel_name }{one_to_one};
+        return !$relations->{ $rel_name }->ONE_TO_ONE;
     }
     return;
 }
@@ -83,6 +84,8 @@ sub retrieve_all {
     my ( $self, %args ) = @_;
     my $type = $args{type};
 
+    $self->_validate_page($args{page}) if $args{page};
+
     my $stmt = $self->tables->{$type}->select_stmt(%args);
     $self->_add_resources( stmt => $stmt, %args );
 }
@@ -95,31 +98,63 @@ sub retrieve {
 
 sub retrieve_relationships {
     my ( $self, %args ) = @_;
-    my $doc = $args{document};
+    my ($type, $rel_type, $doc) = @args{qw/type rel_type document/};
 
-    my $rels = $self->_find_resource_relationships(%args);
+    my $page = $args{page};
+    $self->_validate_page($page) if $page;
 
-    if ( !@$rels ) {
-        $doc->add_null_resource;
+    my $sort = $args{sort} || [];
+    if ( @$sort ) {
+        # TODO move to the request:
+        PONAPI::DAO::Exception->throw(
+            message => "You can only sort by id in retrieve_relationships"
+        ) if @$sort > 1 || $sort->[0] !~ /\A(-)?id\z/;
+
+        my $desc = !!$1;
+
+        my $table_obj    = $self->tables->{$type};
+        my $relation_obj = $table_obj->RELATIONS->{$rel_type};
+
+        my $id_column     = $relation_obj->REL_ID_COLUMN;
+
+        @$sort = ($desc ? '-' : '') . $id_column;
     }
-    else {
-        $doc->convert_to_collection
-            if $self->has_one_to_many_relationship(@args{qw/type rel_type/});
 
-        $doc->add_resource( %$_ ) for @{$rels};
-    }
+    my $rels = $self->_find_resource_relationships(
+        %args,
+        # No need to fetch other relationship types
+        fields => { $type => [ $rel_type ] },
+    );
+
+    return unless @{ $rels || [] };
+
+    $doc->add_resource( %$_ ) for @$rels;
+
+    $self->_add_pagination_links(
+        page     => $page,
+        document => $doc,
+    ) if $page;
+
 }
 
 sub retrieve_by_relationship {
     my ( $self, %args ) = @_;
     my ( $doc, $type, $rel_type, $fields, $include ) = @args{qw< document type rel_type fields include >};
 
-    my $rels = $self->_find_resource_relationships(%args);
+    my $sort = delete $args{sort} || [];
+    my $page = delete $args{page};
+    $self->_validate_page($page) if $page;
 
-    if ( !@$rels ) {
-        $doc->add_null_resource;
-        return;
-    }
+    # We need to avoid passing sort and page here, since sort
+    # will have columns for the actual data, not the relationship
+    # table, and page needs to happen after sorting
+    my $rels = $self->_find_resource_relationships(
+        %args,
+        # No need to fetch other relationship types
+        fields => { $type => [ $rel_type ] },
+    );
+
+    return unless @$rels;
 
     my $q_type = $rels->[0]{type};
     my $q_ids  = [ map { $_->{id} } @{$rels} ];
@@ -128,21 +163,23 @@ sub retrieve_by_relationship {
         type   => $q_type,
         fields => $fields,
         filter => { id => $q_ids },
+        sort   => $sort,
+        page   => $page,
     );
 
     $self->_add_resources(
-        document              => $doc,
-        stmt                  => $stmt,
-        type                  => $q_type,
-        fields                => $fields,
-        include               => $include,
-        convert_to_collection => $self->has_one_to_many_relationship($type, $rel_type),
+        document => $doc,
+        stmt     => $stmt,
+        type     => $q_type,
+        fields   => $fields,
+        include  => $include,
+        page     => $page,
+        sort     => $sort,
     );
 }
 
 sub create {
     my ( $self, %args ) = @_;
-    my ( $doc, $type, $data ) = @args{qw< document type data >};
 
     my $dbh = $self->dbh;
     $dbh->begin_work;
@@ -191,7 +228,6 @@ sub _create {
     # the DAO takes care of the header, but we need to put it in the doc
     $doc->add_resource( type => $type, id => $new_id );
 
-    $doc->set_status(201);
     return;
 }
 
@@ -200,13 +236,18 @@ sub _create_relationships {
     my ( $type, $id, $rel_type, $data ) = @args{qw< type id rel_type data >};
 
     my $table_obj     = $self->tables->{$type};
-    my $all_relations = $table_obj->RELATIONS->{$rel_type};
+    my $relation_obj = $table_obj->RELATIONS->{$rel_type};
+
+    my $rel_table = $relation_obj->TABLE;
+    my $key_type  = $relation_obj->TYPE;
+
+    my $id_column     = $relation_obj->ID_COLUMN;
+    my $rel_id_column = $relation_obj->REL_ID_COLUMN;
 
     my @all_values;
     foreach my $orig ( @$data ) {
         my $relationship = { %$orig };
         my $data_type = delete $relationship->{type};
-        my $key_type = $all_relations->{type};
 
         if ( $data_type ne $key_type ) {
             PONAPI::DAO::Exception->throw(
@@ -215,18 +256,17 @@ sub _create_relationships {
             );
         }
 
-        $relationship->{'id_' . $type}     = $id;
-        $relationship->{'id_' . $key_type} = delete $relationship->{id};
+        $relationship->{$id_column}     = $id;
+        $relationship->{$rel_id_column} = delete $relationship->{id};
 
         push @all_values, $relationship;
     }
 
-    my $table = $all_relations->{rel_table};
     my $one_to_one = !$self->has_one_to_many_relationship($type, $rel_type);
 
     foreach my $values ( @all_values ) {
-        my ($stmt, $return, $extra) = $table_obj->insert_stmt(
-            table  => $table,
+        my ($stmt, $return, $extra) = $relation_obj->insert_stmt(
+            table  => $rel_table,
             values => $values,
         );
 
@@ -237,9 +277,9 @@ sub _create_relationships {
             if ( $one_to_one && eval { $e->sql_error } ) {
                 # Can't quite do ::Upsert
                 $stmt = SQL::Composer::Update->new(
-                    table  => $table,
+                    table  => $rel_table,
                     values => [ %$values ],
-                    where  => [ 'id_' . $type => $id ],
+                    where  => [ $id_column => $id ],
                     driver => 'sqlite',
                 );
                 $self->_db_execute( $stmt );
@@ -292,7 +332,7 @@ sub update {
 
 sub _update {
     my ( $self, %args ) = @_;
-    my ( $doc, $type, $id, $data ) = @args{qw< document type id data >};
+    my ( $type, $id, $data ) = @args{qw< type id data >};
 
     # TODO this needs to be part of $data's validation in Request.pm
     my ($attributes, $relationships) = map $_||{}, @{ $data }{qw/ attributes relationships /};
@@ -314,20 +354,22 @@ sub _update {
 
         # We had a successful update, but it updated nothing
         if ( !$sth->rows ) {
-            return PONAPI_UPDATED_NOTHING;
+            $return = PONAPI_UPDATED_NOTHING;
         }
     }
 
-    if ( %$relationships ) {
-        foreach my $rel_type ( keys %$relationships ) {
-            $self->_update_relationships(
-                document => $doc,
-                type     => $type,
-                id       => $id,
-                rel_type => $rel_type,
-                data     => $relationships->{$rel_type},
-            );
-        }
+    foreach my $rel_type ( keys %$relationships ) {
+        my $update_rel_return = $self->_update_relationships(
+            type     => $type,
+            id       => $id,
+            rel_type => $rel_type,
+            data     => $relationships->{$rel_type},
+        );
+
+        # We tried updating the attributes but
+        $return = $update_rel_return
+            if $return            == PONAPI_UPDATED_NOTHING
+            && $update_rel_return != PONAPI_UPDATED_NOTHING;
     }
 
     return $return;
@@ -337,34 +379,44 @@ sub _update_relationships {
     my ($self, %args) = @_;
     my ( $type, $id, $rel_type, $data ) = @args{qw< type id rel_type data >};
 
-    if ( $data ) {
-        $data = [ keys(%$data) ? $data : () ] if ref($data) eq 'HASH';
+    my $table_obj    = $self->tables->{$type};
+    my $relation_obj = $table_obj->RELATIONS->{$rel_type};
 
-        $self->_clear_relationships(%args);
-        if ( @$data ) {
-            my $table_obj = $self->tables->{$type};
-            my ( $column_rel_type, $rel_table ) =
-                    @{ $table_obj->RELATIONS->{$rel_type} }{qw< type rel_table >};
+    my $column_rel_type = $relation_obj->TYPE;
+    my $rel_table       = $relation_obj->TABLE;
 
-            foreach my $insert ( @$data ) {
-                my %insert = (%$insert, 'id_' . $type => $id);
+    my $id_column     = $relation_obj->ID_COLUMN;
+    my $rel_id_column = $relation_obj->REL_ID_COLUMN;
 
-                delete $insert{type};
-                $insert{'id_' . $column_rel_type} = delete $insert{id};
+    # Let's have an arrayref
+    $data = $data
+            ? ref($data) eq 'HASH' ? [ keys(%$data) ? $data : () ] : $data
+            : [];
 
-                my ($stmt, $return, $extra) = $table_obj->insert_stmt(
-                    table  => $rel_table,
-                    values => \%insert,
-                );
+    # Let's start by clearing all relationships; this way
+    # we can implement the SQL below without adding special cases
+    # for ON DUPLICATE KEY UPDATE and sosuch.
+    my $stmt = $relation_obj->delete_stmt(
+        table => $rel_table,
+        where => { $id_column => $id },
+    );
+    $self->_db_execute( $stmt );
 
-                $self->_db_execute( $stmt );
-            }
-        }
-        return PONAPI_UPDATED_NORMAL;
+    my $return = PONAPI_UPDATED_NORMAL;
+    foreach my $insert ( @$data ) {
+        my ($stmt, $insert_return, $extra) = $table_obj->insert_stmt(
+            table  => $rel_table,
+            values => {
+                $id_column     => $id,
+                $rel_id_column => $insert->{id},
+            },
+        );
+        $self->_db_execute( $stmt );
+
+        $return = $insert_return if $insert_return;
     }
-    else {
-        return $self->_clear_relationships(%args);
-    }
+
+    return $return;
 }
 
 sub update_relationships {
@@ -385,23 +437,6 @@ sub update_relationships {
 
     return $ret;
     # TODO: add missing login
-}
-
-sub _clear_relationships {
-    my ( $self, %args ) = @_;
-    my ( $type, $id, $rel_type ) = @args{qw< type id rel_type >};
-
-    my $table_obj = $self->tables->{$type};
-    my $table     = $table_obj->RELATIONS->{$rel_type}{rel_table};
-
-    my $stmt = $table_obj->delete_stmt(
-        table => $table,
-        where => { 'id_' . $type => $id },
-    );
-
-    $self->_db_execute( $stmt );
-
-    return PONAPI_UPDATED_NORMAL;
 }
 
 sub delete : method {
@@ -447,11 +482,14 @@ sub _delete_relationships {
     my ( $self, %args ) = @_;
     my ( $type, $id, $rel_type, $data ) = @args{qw< type id rel_type data >};
 
-    my $table_obj     = $self->tables->{$type};
-    my $relation_info = $table_obj->RELATIONS->{$rel_type};
+    my $table_obj    = $self->tables->{$type};
+    my $relation_obj = $table_obj->RELATIONS->{$rel_type};
 
-    my $table    = $relation_info->{rel_table};
-    my $key_type = $relation_info->{type};
+    my $table    = $relation_obj->TABLE;
+    my $key_type = $relation_obj->TYPE;
+
+    my $id_column     = $relation_obj->ID_COLUMN;
+    my $rel_id_column = $relation_obj->REL_ID_COLUMN;
 
     my @all_values;
     foreach my $resource ( @$data ) {
@@ -465,8 +503,8 @@ sub _delete_relationships {
         }
 
         my $delete_where = {
-            'id_' . $type     => $id,
-            'id_' . $key_type => $resource->{id},
+            $id_column     => $id,
+            $rel_id_column => $resource->{id},
         };
 
         push @all_values, $delete_where;
@@ -477,7 +515,7 @@ sub _delete_relationships {
     my $rows_modified = 0;
     DELETE:
     foreach my $where ( @all_values ) {
-        my $stmt = $table_obj->delete_stmt(
+        my $stmt = $relation_obj->delete_stmt(
             table => $table,
             where => $where,
         );
@@ -497,14 +535,10 @@ sub _delete_relationships {
 
 sub _add_resources {
     my ( $self, %args ) = @_;
-    my ( $doc, $stmt, $type, $convert_to_collection ) =
-        @args{qw< document stmt type convert_to_collection >};
+    my ( $doc, $stmt, $type ) =
+        @args{qw< document stmt type >};
 
     my $sth = $self->_db_execute( $stmt );
-
-    if ( $convert_to_collection ) {
-        $doc->convert_to_collection;
-    }
 
     while ( my $row = $sth->fetchrow_hashref() ) {
         my $id = delete $row->{id};
@@ -515,7 +549,57 @@ sub _add_resources {
         $self->_add_resource_relationships($rec, %args);
     }
 
-    $doc->has_resources or $doc->add_null_resource;
+    $self->_add_pagination_links(
+        page => $args{page},
+        rows => scalar $sth->rows,
+        document => $doc,
+    ) if $args{page};
+
+    return;
+}
+
+sub _add_pagination_links {
+    my ($self, %args) = @_;
+    my ($page, $rows_fetched, $document) = @args{qw/page rows document/};
+    $rows_fetched ||= -1;
+
+    my ($offset, $limit) = @{$page}{qw/offset limit/};
+
+    my %current = %$page;
+    my %first = ( %current, offset => 0, );
+    my (%previous, %next);
+
+    if ( ($offset - $limit) >= 0 ) {
+        %previous = %current;
+        $previous{offset} -= $current{limit};
+    }
+
+    if ( $rows_fetched >= $limit ) {
+        %next = %current;
+        $next{offset} += $limit;
+    }
+
+    $document->add_pagination_links(
+        first => \%first,
+        self  => \%current,
+        prev  => \%previous,
+        next  => \%next,
+    );
+}
+
+sub _validate_page {
+    my ($self, $page) = @_;
+
+    exists $page->{limit}
+        or PONAPI::DAO::Exception->throw(message => "Limit missing for `page`");
+
+    looks_like_number($page->{limit})
+        or PONAPI::DAO::Exception->throw(message => "Bad limit value ($page->{limit}) in `page`");
+
+    !exists $page->{offset} || looks_like_number($page->{offset})
+        or PONAPI::DAO::Exception->throw(message => "Bad offset value in `page`");
+
+    $page->{offset} ||= 0;
 
     return;
 }
@@ -527,6 +611,10 @@ sub _add_resource_relationships {
     my $fields = $args{fields};
     my %include = map { $_ => 1 } @{ $args{include} };
 
+    # Do not add sort or page here -- those were for the primary resource
+    # *only*.
+    # TODO any way to make them happen here? Fetching a resource with a million
+    # relationships seems bad.
     my $rels = $self->_fetchall_relationships(
         type     => $type,
         id       => $rec->id,
@@ -567,6 +655,9 @@ sub _add_included {
 
     $filter->{id} = $ids;
 
+    # Do NOT add sort -- sort here was for the *main* resource!
+    # TODO spec is vague regarding page here.  How do you paginate included
+    # resources?
     my $stmt = $self->tables->{$type}->select_stmt(
         type   => $type,
         filter => $filter,
@@ -609,23 +700,29 @@ sub _fetchall_relationships {
     my @errors;
 
     for my $name ( keys %{ $self->tables->{$type}->RELATIONS } ) {
+        # If we have fields, and this relationship is not mentioned, skip
+        # it.
         next if keys %type_fields > 0 and !exists $type_fields{$name};
 
-        my $table_obj = $self->tables->{$type};
-        my ( $rel_type, $rel_table ) =
-            @{ $table_obj->RELATIONS->{$name} }{qw< type rel_table >};
+        my $table_obj     = $self->tables->{$type};
+        my $rel_table_obj = $table_obj->RELATIONS->{$name};
+        my $rel_type      = $rel_table_obj->TYPE;
+        my $rel_table     = $rel_table_obj->TABLE;
+        my $id_column     = $rel_table_obj->ID_COLUMN;
+        my $rel_id_column = $rel_table_obj->REL_ID_COLUMN;
 
-        my $stmt = $table_obj->select_stmt(
+        my $stmt = $rel_table_obj->select_stmt(
+            %args,
             type   => $rel_table,
-            filter => { 'id_' . $type => $id },
-            fields => [ 'id_' . $rel_type ],
+            filter => { $id_column => $id },
+            fields => [ $rel_id_column ],
         );
 
         my $sth = $self->_db_execute( $stmt );
 
         $ret{$name} = +[
-            map +{ type => $rel_type, id => @$_ },
-            @{ $sth->fetchall_arrayref() }
+            map +{ type => $rel_type, id => $_->{$rel_id_column} },
+            @{ $sth->fetchall_arrayref({}) }
         ];
     }
 

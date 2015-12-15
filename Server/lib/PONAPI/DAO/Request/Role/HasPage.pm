@@ -7,7 +7,6 @@ has page => (
     traits   => [ 'Hash' ],
     is       => 'ro',
     isa      => 'HashRef',
-    default  => sub { +{} },
     handles  => {
         "has_page" => 'count',
     },

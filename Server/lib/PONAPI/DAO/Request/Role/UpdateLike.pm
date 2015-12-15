@@ -71,8 +71,6 @@ sub _get_resource_for_meta {
     return $link . " => " . $self->json->encode( $self->data );
 }
 
-
-
 no PONAPI::DAO::Constants;
 no Moose::Role; 1;
 

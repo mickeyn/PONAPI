@@ -16,6 +16,8 @@ has data => (
     predicate => 'has_data',
 );
 
+sub check_data_type_match { 1 } # to avoid code duplications in HasDataMethods
+
 sub execute {
     my $self = shift;
     if ( $self->is_valid ) {
@@ -36,14 +38,6 @@ sub execute {
     return $self->response();
 }
 
-sub _validate_data {
-    my $self = shift;
-
-    # these are chained to avoid multiple errors on the same issue
-    $self->check_data_has_type
-        and $self->check_data_attributes()
-        and $self->check_data_relationships();
-}
 
 __PACKAGE__->meta->make_immutable;
 no Moose; 1;

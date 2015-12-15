@@ -34,7 +34,7 @@ has is_valid => (
     is      => 'ro',
     isa     => 'Bool',
     default => sub { 1 },
-    writer  => 'set_is_valid',
+    writer  => '_set_is_valid',
 );
 
 has json => (
@@ -47,11 +47,11 @@ sub BUILDARGS {
     my $class = shift;
     my %args = @_ == 1 ? %{ $_[0] } : @_;
 
-    my $version = delete $args{version}
-        || die "[__PACKAGE__] missing arg `version`";
+    die "[__PACKAGE__] missing arg `version`"
+        unless defined $args{version};
 
     $args{document} = PONAPI::Builder::Document->new(
-        version  => $version,
+        version  => $args{version},
         req_path => $args{req_path} // '/',
         req_base => $args{req_base} // '/',
     );
@@ -61,9 +61,9 @@ sub BUILDARGS {
 
 sub BUILD {
     my ( $self, $args ) = @_;
-    my $type = $self->type;
 
     # `type` exists
+    my $type = $self->type;
     return $self->_bad_request( "Type `$type` doesn't exist.", 404 )
         unless $self->repository->has_type( $type );
 
@@ -140,7 +140,7 @@ sub response {
     my $doc = $self->document;
 
     $doc->add_self_link
-        if $self->send_doc_self_link;
+        if $self->send_doc_self_link && !$doc->has_link('self');
 
     return ( $doc->status, \@headers, $doc->build );
 }
@@ -148,7 +148,7 @@ sub response {
 sub _bad_request {
     my ( $self, $detail, $status ) = @_;
     $self->document->raise_error( $status||400, { detail => $detail } );
-    $self->set_is_valid(0);
+    $self->_set_is_valid(0);
     return;
 }
 

@@ -14,7 +14,8 @@ sub to_uri {
     my $u = URI->new("", "http");
 
     for my $d_k ( sort keys %{ $data } ) {
-        my $d_v = $data->{$d_k} or next;
+        my $d_v = $data->{$d_k};
+        defined($d_v) or next;
 
         if ( ref $d_v ne 'HASH' ) {
             $u->query_param( $d_k =>
