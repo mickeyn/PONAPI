@@ -1,3 +1,7 @@
+# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
+# PODNAME: PONAPI::Manual
+__END__
+
 =encoding UTF-8
 
 =head1 NAME
@@ -25,14 +29,14 @@ to run the application:
 Any L<{json:api}|http://jsonapi.org/> compliant client can then access your application:
 
     $ perl -Ilib -MPONAPI::Client -E 'say PONAPI::Client->new->retrieve(type => "people", id => 88)->{data}{attributes}{name}'
-    
+
     $ curl -X GET -H "Content-Type: application/vnd.api+json" 'http://0:5000/people/88
     http://localhost:5000
 
 That'll give you the default options, with the default repository; for a real
 world scenario, you'll have to get your hands dirty.
 
-Because {json:api} extensively uses the C<PATCH> method, we recommend using 
+Because {json:api} extensively uses the C<PATCH> method, we recommend using
 L<Plack::Middleware::MethodOverride> or another similar middleware to enable
 HTTP method overriding; this is to allow clients without PATCH to still use
 the API:
@@ -40,7 +44,7 @@ the API:
     # myapp.psgi
     use PONAPI::Server;
     use Plack::Middleware::MethodOverride;
-    
+
     my $app = PONAPI::Server->to_app(
         'repository.class' => 'Test::PONAPI::DAO::Repository::MockDB',
     )
@@ -78,12 +82,12 @@ See L<CREATING A REPOSITORY> for more on the latter.
 
 =item spec_version
 
-The L<{json:api}|http://jsonapi.org/> version that the server is serving. 
+The L<{json:api}|http://jsonapi.org/> version that the server is serving.
 B<Must> be present.
 
 =item sort_allowed
 
-true/false. If true, server-side sorting is supported.  If false, requests 
+true/false. If true, server-side sorting is supported.  If false, requests
 including the C<sort> parameter will immediately return an error, without
 ever reaching the repository.
 
@@ -133,7 +137,7 @@ look something like this:
       class:  "My::Repository::Yadda"
       args:   []
 
-Where C<My::Repository::Yadda> is a class that consumes the 
+Where C<My::Repository::Yadda> is a class that consumes the
 C<PONAPI::DAO::Repository> role; args will be passed to the
 repo when it is instantiated.
 
@@ -163,14 +167,14 @@ And in SQL, the tables might look something like this:
         created       DATETIME    NOT NULL   DEFAULT CURRENT_TIMESTAMP,
         updated       DATETIME    NOT NULL   DEFAULT CURRENT_TIMESTAMP
     );
-    
+
     CREATE TABLE people (
         id            INTEGER     PRIMARY KEY,
         name          CHAR(64)    NOT NULL   DEFAULT "anonymous",
         age           INTEGER     NOT NULL   DEFAULT "100",
         gender        CHAR(10)    NOT NULL   DEFAULT "unknown"
     );
-    
+
     CREATE TABLE comments (
         id            INTEGER     PRIMARY KEY,
         body          TEXT        NOT NULL DEFAULT ""
@@ -264,16 +268,16 @@ Our starting point:
         my ($self, %args) = @_;
         my $type     = $args{type};
         my $document = $args{document};
-    
+
         my $dbh   = $self->dbh;
         my $table = $self->quote($type);
         my $sth   = $dbh->prepare(qq{ SELECT * FROM $table });
-    
+
         return unless $sth->execute;
-    
+
         while ( my $row = $sth->fetchrow_hashref ) {
             my $id = delete $row->{id};
-            
+
             # Add a new resource, identified by $type and $id
             my $resource = $doc->add_resource( type => $type, id => $id );
             # These will show up under the attributes key
@@ -281,7 +285,7 @@ Our starting point:
             # Add a links key, with pointer to ourselves
             $resource->add_self_link();
         }
-    
+
         return;
     }
 
@@ -344,10 +348,10 @@ Then, we can change C<%relationships> to have that same information:
     sub _fetch_relationships {
         my ($self, %args) = @_;
         my ($type, $id)   = @args{qw/ type id /};
-    
+
         my $type_relationships = $relationships{$type} || {};
         return unless %$type_relationships;
-    
+
         my $dbh = $self->dbh;
         my %rels;
         foreach my $rel_type ( keys %$type_relationships ) {
@@ -355,29 +359,29 @@ Then, we can change C<%relationships> to have that same information:
             my $table             = $relationship_info->{rel_table};
             my $id_col            = $relationship_info->{id_column};
             my $rel_id_col        = $relationship_info->{rel_id_column};
-    
+
             my $sth = $dbh->prepare(
                 "SELECT $rel_id_col FROM $table WHERE $id_col = ?"
             );
             return unless $sth->execute($id);
-    
+
             while ( my $row = $sth->fetchrow_hashref ) {
                 push @{ $rels{$rel_type} ||= []}, $row->{$rel_id_col};
             }
         }
-    
+
         return \%rels;
     }
-    
+
     sub _add_relationships {
         my ($self, %args) = @_;
         my $resource = $args{resource};
-    
+
         my $all_relationships = $self->_fetch_relationships(%args);
         foreach my $rel_type ( keys %$all_relationships )	 {
             my $relationships = $all_relationships->{$rel_type} || [];
             next unless @$relationships;
-    
+
             my $one_to_many = $self->has_one_to_many_relationship($type, $rel_type);
             foreach my $rel_id ( @$relationships ) {
                 $resource->add_relationship( $rel_type, $rel_id, $one_to_many )
@@ -447,13 +451,13 @@ In our repo:
     sub _add_included {
         my ( $self, $type, $ids, %args ) = @_;
         my ( $doc ) = @args{qw< document >};
-    
+
         my $placeholders = join ", ", ('?') x @$ids;
         my $sql = "SELECT * FROM $type WHERE id IN ( $placeholders )";
-    
+
         my $sth = $self->dbh->prepare($sql);
         $sql->execute(@$ids);
-    
+
         while ( my $inc = $sth->fetchrow_hashref() ) {
             my $id = delete $inc->{id};
             $doc->add_included( type => $type, id => $id )
@@ -461,7 +465,7 @@ In our repo:
                 ->add_self_link;
         }
     }
-    
+
     sub _add_relationships {
         ... # same as before
         # Inside the main for loop
@@ -557,7 +561,7 @@ will need to handle C<fields>, let's add a function to abstract that complexity 
         my ($self, %args) = @_;
         my $type    = $args{type};
         my $columns = $columns{$type};
-    
+
         if ( my $fields = $args{fields}{$type} ) {
             my $type_relationships = $relationships{$type} || {};
             $columns = [
@@ -565,7 +569,7 @@ will need to handle C<fields>, let's add a function to abstract that complexity 
                 grep !exists $type_relationships->{$_}, @$fields
             ];
         }
-    
+
         return $columns;
     }
 
@@ -617,34 +621,34 @@ One options is to implement this in terms of a LIMIT:
     # for you!
     my %page        = %{ $args{page} || {} };
     $page{offset} //= 0;
-    
+
     my ($limit, $offset) = @page{qw/limit offset/};
-    
+
     $sql .= "\nLIMIT $offset, $limit" if $limit;
     ...
 
 So far so good, but we may want to provide pagination links for the
-user to fetch the next batch of data.  
+user to fetch the next batch of data.
 
     my ($self, %args) = @_;
     my ($page, $rows_fetched, $document) = @args{qw/page rows document/};
-    
+
     my ($offset, $limit) = @{$page}{qw/offset limit/};
-    
+
     my %current = %$page;
     my %first = ( %current, offset => 0, );
     my (%previous, %next);
-    
+
     if ( ($offset - $limit) >= 0 ) {
         %previous = %current;
         $previous{offset} -= $current{limit};
     }
-    
+
     if ( $rows_fetched >= $limit ) {
         %next = %current;
         $next{offset} += $limit;
     }
-    
+
     $document->add_pagination_links(
         first => \%first,
         self  => \%current,
@@ -690,7 +694,7 @@ attributes, to keep the code simple:
             ? ( $desc ? "$col DESC" : "$col ASC" )
             : ();
     } @$sort;
-    
+
     $sql .= "\n ORDER BY $sort_sql" if $sort_sql;
     ...
 
@@ -704,7 +708,7 @@ specifics of the repo implementation to sort by the primary key:
         type => 'articles',
         sort => [qw/article_id/],
     );
-    
+
     # Good, client just sorts by id, repo handles changing that to id_articles
     $client->retrieve_all(
         type => 'articles',
@@ -733,7 +737,7 @@ And in the code:
     my (@bind, @where);
     foreach my $col ( grep { exists $columns{$type}{$_} } keys %$filer ) {
         my $filter_values = $filter{$col};
-    
+
         my $quoted = $dbh->quote($col);
         my $where;
         if ( ref $filter_values ) {
@@ -744,7 +748,7 @@ And in the code:
             $filter_values = [ $filter_values ];
             $where = "$quoted = ?";
         }
-    
+
         push @where, "($where)";
         push @bind, @$filter_values;
     }
@@ -777,7 +781,7 @@ C<retrieve> based on top of that:
         my $type = $args{type};
         my $id   = delete $args{id};
         $args{filter}{$type} = $id;
-    
+
         # This is missing page+sort of the included arguments
         return $self->retrieve_all(%args);
     }
@@ -921,7 +925,7 @@ out, so implementations may chose to just return C<PONAPI_UPDATED_NORMAL>
 instead.
 
 (in C<DBD::mysql>, you'll need to either connect to the database with
-C<mysql_client_found_rows>, or parse C<$dbh->{mysql_info}> for C<Changed> 
+C<mysql_client_found_rows>, or parse C<$dbh->{mysql_info}> for C<Changed>
 immediately after the UPDATE)
 
 =item PONAPI_UPDATED_EXTENDED
@@ -945,13 +949,13 @@ Code example:
     sub update {
         my ($self, %args) = @_;
         my ($type, $id, $data) = @args{qw/type id data/};
-    
+
         my ($attributes, $relationships) = map $_||{}, @{$data}{qw/attributes relationships/};
-    
+
         my $return_value = PONAPI_UPDATED_NORMAL;
         if ( %$attributes ) {
             my $dbh = $self->dbh;
-    
+
             my ( @update, @values_for_update);
             while ( my ($column, $new_value) = each %$attributes ) {
                push @update, $dbh->quote($_) . " = ?";
@@ -973,7 +977,7 @@ Code example:
                 return PONAPI_UPDATED_NOTHING;
             }
         }
-    
+
         foreach my $rel_type ( keys %$relationships ) {
             # We'll get to this later
             $self->update_relationships(
@@ -984,7 +988,7 @@ Code example:
         }
     }
 
-Since we're not adding any extra columns, we can ignore 
+Since we're not adding any extra columns, we can ignore
 C<PONAPI_UPDATED_EXTENDED>.
 
 =head3 delete_relationships( type => $type, id => $id, rel_type => $rel_type, data => [ { ... }, ... ] )
@@ -999,17 +1003,17 @@ Like C<update>, C<delete_relationships> has a strict return value.
     sub delete_relationships {
         my ( $self, %args ) = @_;
         my ( $type, $id, $rel_type, $data ) = @args{qw< type id rel_type data >};
-    
+
         my $relationship_info = $type_relationships->{$rel_type};
         my $table             = $relationship_info->{rel_table};
         my $id_column         = $relationship_info->{id_column};
         my $rel_id_column     = $relationship_info->{rel_id_column};
         my $key_type          = $relationship_info->{type};
-    
+
         my @all_values;
         foreach my $resource ( @$data ) {
             my $data_type = $resource->{type};
-    
+
             # This is one of the few cases when we need to manually validate
             # that the data is correct -- this catches cases like this:
             # {
@@ -1025,10 +1029,10 @@ Like C<update>, C<delete_relationships> has a strict return value.
                     bad_request_data => 1,
                 );
             }
-    
+
             push @all_values, $resource->{id};
         }
-    
+
         my $rows_modified = 0;
         my $sql = "DELETE FROM $table WHERE $id_column = ? AND $rel_id_column = ?";
         my $sth = $self->dbh->prepare($sql);
@@ -1036,7 +1040,7 @@ Like C<update>, C<delete_relationships> has a strict return value.
             $sth->execute($id, $rel_id);
             $rows_modified += $sth->rows;
         }
-    
+
         return !$rows_modified
             ? PONAPI_UPDATED_NOTHING
             : PONAPI_UPDATED_NORMAL;
@@ -1133,7 +1137,7 @@ This boils down to:
 
     sub has_relationship {}
     sub has_one_to_many_relationship {}
-    
+
     # These four should never be reached if the two has_* methods
     # above return false
     sub retrieve_relationships {}
