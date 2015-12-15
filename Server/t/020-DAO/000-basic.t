@@ -554,7 +554,7 @@ subtest '... delete_relationships' => sub {
             [],
             {
               jsonapi => { version => '1.0' },
-              meta    => { detail  => 'successfully modified /articles/2/comments => [{"id":5}]' }
+              meta    => { detail  => 'successfully modified /articles/2/comments => [{"id":5,"type":"comments"}]' }
             }
          ],
          "... can delete as expected",

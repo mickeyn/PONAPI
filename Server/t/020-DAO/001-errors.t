@@ -692,7 +692,7 @@ subtest '... delete_relationships' => sub {
                         'version' => '1.0'
                     },
                     'meta' => {
-                        'detail' => 'modified nothing for /articles/1/comments => [{"id":99}]'
+                        'detail' => 'modified nothing for /articles/1/comments => [{"id":99,"type":"comments"}]'
                     }
                 }
             ],
