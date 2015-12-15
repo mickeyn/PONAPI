@@ -217,10 +217,9 @@ sub _ponapi_query_params {
         $p eq 'include' and $params{include} = \@values;
 
         # sort values: indicate direction
-        $p eq 'sort' and $params{'sort'} = +[
-            map { /^(\-?)(.+)$/; +[ $2, ( $1 ? 'DESC' : 'ASC' ) ] }
-            @values
-        ];
+        # Not doing any processing here to allow repos to support
+        # complex sorting, if they want to.
+        $p eq 'sort' and $params{'sort'} = \@values;
     }
 
     return %params;
