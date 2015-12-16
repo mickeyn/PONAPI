@@ -636,7 +636,7 @@ subtest '... create_relationships' => sub {
 
     error_test(
         \@ret,
-        { detail => qr/SQL error: Table constraint failed:/, status => 409 },
+        { detail => qr/SQL error/, status => [400, 409] },
         "... no DBD error in detail as expected",
     );
 
