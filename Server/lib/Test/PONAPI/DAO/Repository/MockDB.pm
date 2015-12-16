@@ -4,9 +4,12 @@ package Test::PONAPI::DAO::Repository::MockDB;
 use Moose;
 
 use DBI;
-use DBD::SQLite::Constants qw/:result_codes/;;
 use SQL::Composer;
 use Scalar::Util qw/looks_like_number/;
+
+# We MUST use DBD::SQLite before ::Constants to get anything useful!
+use DBD::SQLite;
+use DBD::SQLite::Constants qw/:result_codes/;
 
 use Test::PONAPI::DAO::Repository::MockDB::Loader;
 
@@ -729,6 +732,11 @@ sub _fetchall_relationships {
     return \%ret;
 }
 
+# Might not be there?
+my $sqlite_constraint_failed = do {
+    local $@;
+    eval { SQLITE_CONSTRAINT() } // undef;
+};
 sub _db_execute {
     my ( $self, $stmt ) = @_;
 
@@ -743,11 +751,11 @@ sub _db_execute {
         1;
     } or do {
         my $e = "$@"||'Unknown error';
-        my $errstr = $DBI::errstr;
-        my $err_id = $DBI::err;
+        my $errstr = $DBI::errstr || "Unknown SQL error";
+        my $err_id = $DBI::err    || 0;
 
         my $message;
-        if ( $err_id && $err_id == SQLITE_CONSTRAINT ) {
+        if ( $sqlite_constraint_failed && $err_id && $err_id == $sqlite_constraint_failed ) {
             PONAPI::DAO::Exception->throw(
                 message   => "Table constraint failed: $errstr",
                 sql_error => 1,

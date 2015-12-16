@@ -327,7 +327,12 @@ subtest '... create' => sub {
     foreach my $tuple (
         [
             { data => { attributes => {} } },
-            409 => qr/\A(?:DBD|SQL error: Table constraint failed:)/,
+            # 409 + SQL Error: Table constraint failed: $etc,
+            # or, if we have an old SQLite,
+            # 400 + SQL Error: $etc
+            # The DBD is there just in case.  It should still
+            # gives us a 400 in that case.
+            [400, 409] => qr/(?:\ASQL error:|DBD)/,
             "... error on bad create values"
         ],
         [
@@ -398,15 +403,17 @@ subtest '... create' => sub {
             local $SIG{__WARN__} = sub { $w .= shift };
             @ret = $dao->create(%{ dclone $copy });
         }
+        error_test(
+            \@ret,
+            { detail => $expected, status => $status },
+            "... $msg",
+        );
         if ( ref($expected) ) {
-            like( $ret[2]->{errors}[0]{detail}, $expected, $msg );
             like( $w, $expected, "... and the warning matches" );
         }
         else {
-            is( $ret[2]->{errors}[0]{detail}, $expected, $msg );
             is( $w, '', "... with no warnings" );
         }
-        is( $ret[0], $status, "... and with the expected status" );
     }
 
 };
