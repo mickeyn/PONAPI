@@ -2,9 +2,16 @@
 package PONAPI::DAO::Exception;
 
 use Moose;
-use Moose::Util qw/find_meta/;
+use Moose::Util  qw/find_meta/;
+use Scalar::Util qw/blessed/;
 
-with 'Throwable', 'StackTrace::Auto';
+with 'StackTrace::Auto';
+
+sub throw {
+  my $class_or_obj = shift;
+  die $class_or_obj if blessed $class_or_obj;
+  die $class_or_obj->new(@_);
+}
 
 use overload
     q{""}    => 'as_string',
