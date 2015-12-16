@@ -8,12 +8,12 @@ __END__
 
 PONAPI::Manual - An introduction to using PONAPI::Server
 
+=head1 DESCRIPTION
+
 The origin of the name PONAPI (pronounced: Po-Na-Pi) is JSONAPI.
 We jokingly decided to replace the JavaScript reference (JS) with a Perl one (P).
 
 Even though 'Perl Object Notaion' is a made-up thing, we liked how it sounds; so we kept it.
-
-=head1 DESCRIPTION
 
 This document describes how to use and set up C<PONAPI::Server>.
 The latter parts describe how to set up a manual from scratch,
@@ -297,7 +297,7 @@ Our starting point:
         return;
     }
 
-A call to C<< $dao->retrive_all(type => 'articles', ...) >> will then return
+A call to C< $dao-E<gt>retrieve_all(type =E<gt> 'articles', ...) > will then return
 something like this:
 
     {
@@ -425,7 +425,7 @@ This will contain an arrayref of relationship names, like one of these:
 
 If present, our response needs to include a top-level C<included> key
 with has full resources for every relationship of the types in the arrayref.
-For instance, if we get C<include => [qw/ comments /]>, and the requested
+For instance, if we get C<include =E<gt> [qw/ comments /]>, and the requested
 resources have two comments, then our C<include> will have those two, with
 the same information as if the user had manually called C<retrieve> on
 each of them.
@@ -953,7 +953,7 @@ out, so implementations may chose to just return C<PONAPI_UPDATED_NORMAL>
 instead.
 
 (in C<DBD::mysql>, you'll need to either connect to the database with
-C<mysql_client_found_rows>, or parse C<< $dbh->{mysql_info} >> for C<Changed>
+C<mysql_client_found_rows>, or parse C< $dbh-E<gt>{mysql_info} > for C<Changed>
 immediately after the UPDATE)
 
 =item PONAPI_UPDATED_EXTENDED
@@ -1162,7 +1162,7 @@ the different of more specific exceptions you can throw.
 =head2 Responding with a particular status
 
 Usually this is not needed, but it's possible to manually set
-the status of most responses by using C<< $document->set_status($n) >>
+the status of most responses by using C< $document-E<gt>set_status($n) >
 in any API method.
 
 =head2 Repos without relationships

@@ -192,7 +192,7 @@ it in the response.
 By default, C<PONAPI::DAO> will simply turn those C<200 OK> into
 C<202 Accepted>, avoiding the need to do the extra fetch.  If needed, the
 full 200 responses can be re-enabled by passing
-C<respond_to_updates_with_200 => 1,> to C<new>.
+C<respond_to_updates_with_200 =E<gt> 1,> to C<new>.
 
 =head1 API METHODS
 
@@ -444,8 +444,8 @@ Meanwhile, if the update was successful but more data than requested was
 updated -- Consider C<updated-at> columns in a table -- then the request
 will return both a top-level C<meta> key, and a top-level C<data> key,
 containing the results of a C<retrieve> operation on the primary updated
-resource.  Since this behavior can be undesirable, unless C<PONAPI::DAO->new>
-was passed C<respond_to_updates_with_200 => 1>, this sort of response is
+resource.  Since this behavior can be undesirable, unless C<PONAPI::DAO-E<gt>new>
+was passed C<respond_to_updates_with_200 =E<gt> 1>, this sort of response is
 disabled, and the server will instead respond with a L</"202 Accepted">,
 described below.
 
