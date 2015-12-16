@@ -187,16 +187,22 @@ sub create {
     my $dbh = $self->dbh;
     $dbh->begin_work;
 
-    local $@;
-    eval {
-        $self->_create(%args);
-        $dbh->commit;
+    my ($e, $failed);
+    {
+        local $@;
+        eval  { $self->_create( %args ); 1; }
+        or do {
+            ($failed, $e) = (1, $@||'Unknown error');
+        };
     }
-    or do {
-        my $e = $@;
+    if ( $failed ) {
         $dbh->rollback;
         die $e;
-    };
+    }
+
+    $dbh->commit;
+
+    return;
 }
 
 sub _create {
@@ -273,11 +279,16 @@ sub _create_relationships {
             values => $values,
         );
 
-        eval  { $self->_db_execute( $stmt ); 1; }
-        or do {
-            my $e = $@;
-            local $@ = $@;
-            if ( $one_to_one && eval { $e->sql_error } ) {
+        my ($failed, $e);
+        {
+            local $@;
+            eval  { $self->_db_execute( $stmt ); 1; }
+            or do {
+                ($failed, $e) = (1, $@||'Unknown error');
+            };
+        }
+        if ( $failed ) {
+            if ( $one_to_one && do { local $@; eval { $e->sql_error } } ) {
                 # Can't quite do ::Upsert
                 $stmt = SQL::Composer::Update->new(
                     table  => $rel_table,
@@ -302,13 +313,18 @@ sub create_relationships {
     my $dbh = $self->dbh;
     $dbh->begin_work;
 
-    my $ret;
-    eval  { $ret = $self->_create_relationships( %args ); 1; }
-    or do {
-        my $e = $@||'Unknown error';
+    my ($ret, $e, $failed);
+    {
+        local $@;
+        eval  { $ret = $self->_create_relationships( %args ); 1; }
+        or do {
+            ($failed, $e) = (1, $@||'Unknown error');
+        };
+    }
+    if ( $failed ) {
         $dbh->rollback;
         die $e;
-    };
+    }
 
     $dbh->commit;
     return $ret;
@@ -321,13 +337,18 @@ sub update {
     my $dbh = $self->dbh;
     $dbh->begin_work;
 
-    my $ret;
-    eval  { $ret = $self->_update( %args ); 1 }
-    or do {
-        my $e = $@;
+    my ($ret, $e, $failed);
+    {
+        local $@;
+        eval  { $ret = $self->_update( %args ); 1 }
+        or do {
+            ($failed, $e) = (1, $@||'Unknown error');
+        };
+    }
+    if ( $failed ) {
         $dbh->rollback;
         die $e;
-    };
+    }
 
     $dbh->commit;
     return $ret;
@@ -428,13 +449,18 @@ sub update_relationships {
     my $dbh = $self->dbh;
     $dbh->begin_work;
 
-    my $ret;
-    eval  { $ret = $self->_update_relationships( %args ); 1 }
-    or do {
-        my $e = $@;
+    my ($ret, $e, $failed);
+    {
+        local $@;
+        eval  { $ret = $self->_update_relationships( %args ); 1 }
+        or do {
+            ($failed, $e) = (1, $@||'Unknown error');
+        };
+    }
+    if ( $failed ) {
         $dbh->rollback;
         die $e;
-    };
+    }
 
     $dbh->commit;
 
@@ -465,16 +491,18 @@ sub delete_relationships {
     my $dbh = $self->dbh;
     $dbh->begin_work;
 
-    my $ret;
-    eval {
-        $ret = $self->_delete_relationships(%args);
-        1;
+    my ($ret, $e, $failed);
+    {
+        local $@;
+        eval  { $ret = $self->_delete_relationships( %args ); 1 }
+        or do {
+            ($failed, $e) = (1, $@||'Unknown error');
+        };
     }
-    or do {
-        my $e = $@;
+    if ( $failed ) {
         $dbh->rollback;
         die $e;
-    };
+    }
 
     $dbh->commit;
 
@@ -740,17 +768,22 @@ my $sqlite_constraint_failed = do {
 sub _db_execute {
     my ( $self, $stmt ) = @_;
 
-    my ($sth, $ret);
-    local $@;
-    eval {
-        $sth = $self->dbh->prepare($stmt->to_sql);
-        $ret = $sth->execute($stmt->to_bind);
-        # This should never happen, since the DB handle is
-        # created with RaiseError.
-        die $DBI::errstr if !$ret;
-        1;
-    } or do {
-        my $e = "$@"||'Unknown error';
+    my ($sth, $ret, $failed, $e);
+    {
+        local $@;
+        eval {
+            $sth = $self->dbh->prepare($stmt->to_sql);
+            $ret = $sth->execute($stmt->to_bind);
+            # This should never happen, since the DB handle is
+            # created with RaiseError.
+            die $DBI::errstr if !$ret;
+            1;
+        } or do {
+            $failed = 1;
+            $e = $@ || 'Unknown error';
+        };
+    };
+    if ( $failed ) {
         my $errstr = $DBI::errstr || "Unknown SQL error";
         my $err_id = $DBI::err    || 0;
 

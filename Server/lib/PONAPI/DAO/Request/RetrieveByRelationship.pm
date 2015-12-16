@@ -17,23 +17,16 @@ sub execute {
     my $self = shift;
 
     if ( $self->is_valid ) {
-        local $@;
-        eval {
-            my $repo        = $self->repository;
-            my $document    = $self->document;
-            my $one_to_many = $repo->has_one_to_many_relationship($self->type, $self->rel_type);
+        my $repo        = $self->repository;
+        my $document    = $self->document;
+        my $one_to_many = $repo->has_one_to_many_relationship($self->type, $self->rel_type);
 
-            $document->convert_to_collection if $one_to_many;
+        $document->convert_to_collection if $one_to_many;
 
-            $repo->retrieve_by_relationship( %{ $self } );
+        $repo->retrieve_by_relationship( %{ $self } );
 
-            $document->add_null_resource
-                unless $one_to_many or $document->_has_resource_builders;
-            1;
-        } or do {
-            my $e = $@;
-            $self->_handle_error($e);
-        };
+        $document->add_null_resource
+            unless $one_to_many or $document->_has_resource_builders;
     }
 
     return $self->response();

@@ -21,18 +21,10 @@ sub check_data_type_match { 1 } # to avoid code duplications in HasDataMethods
 sub execute {
     my $self = shift;
     if ( $self->is_valid ) {
-        local $@;
-        eval {
-            my @ret = $self->repository->update_relationships( %{ $self } );
+        my @ret = $self->repository->update_relationships( %{ $self } );
 
-            $self->_add_success_meta(@ret)
-                if $self->_verify_update_response(@ret);
-
-            1;
-        } or do {
-            my $e = $@;
-            $self->_handle_error($e);
-        };
+        $self->_add_success_meta(@ret)
+            if $self->_verify_update_response(@ret);
     }
 
     return $self->response();

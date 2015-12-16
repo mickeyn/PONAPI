@@ -39,8 +39,13 @@ has sql_error => (
     isa => 'Bool',
 );
 
+has internal => (
+    is  => 'ro',
+    isa => 'Bool',
+);
+
 has json_api_version => (
-    is      => 'ro',
+    is      => 'rw',
     isa     => 'Str',
     default => sub { '1.0' },
 );
@@ -57,6 +62,18 @@ sub as_response {
     my $status = $self->status;
     my $detail = $self->message;
 
+    if ( $self->sql_error ) {
+        $detail = "SQL error: $detail";
+    }
+    elsif ( $self->bad_request_data ) {
+        $detail = "Bad request data: $detail";
+    }
+    else {
+        $status = 500;
+        warn $detail if $detail;
+        $detail = "A fatal error has occured, please check server logs";
+    }
+
     return $status, [], +{
         jsonapi => { version  => $self->json_api_version },
         errors  => [ { detail => $detail, status => $status } ],
@@ -66,17 +83,23 @@ sub as_response {
 sub new_from_exception {
     my ($class, $e, $dao) = @_;
 
-    my ($status, $message) = $class->_handle_exception_obj($e, $dao);
+    if ( blessed($e) && $e->isa($class) ) {
+        $e->json_api_version( $dao->version );
+        return $e;
+    }
 
-    if ( !$status || !$message ) {
-        $status  = 500;
-        $message = "A fatal error has occured, please check server logs";
+    my %args_for_new = $class->_handle_exception_obj($e, $dao);
+
+    if ( !$args_for_new{status} || !$args_for_new{message} ) {
+        %args_for_new = (
+            status  => 500,
+            message => '',
+        );
         warn "$e";
     }
 
     return $class->new(
-        message          => $message,
-        status           => $status,
+        %args_for_new,
         json_api_version => $dao->version,
     );
 }
@@ -89,7 +112,11 @@ sub _handle_exception_obj {
     if ( $e->isa('Moose::Exception::AttributeIsRequired') ) {
         my $attribute = $e->attribute_name;
 
-        return 400, "Parameter `$attribute` is required";
+        return (
+            status  => 400,
+            message => "Parameter `$attribute` is required",
+            bad_request_data => 1,
+        );
     }
     elsif ( $e->isa('Moose::Exception::ValidationFailedForTypeConstraint') || $e->isa('Moose::Exception::ValidationFailedForInlineTypeConstraint') ) {
         my $class      = find_meta( $e->class_name );
@@ -98,7 +125,11 @@ sub _handle_exception_obj {
 
         if ( !$attribute ) {
             my $attr = $e->attribute_name;
-            return 400, "Parameter `$attr` got an expected data type: $value_nice";
+            return (
+                status  => 400,
+                message => "Parameter `$attr` got an expected data type: $value_nice",
+                bad_request_data => 1,
+            );
         }
 
         my $attribute_name = $attribute->name;
@@ -107,7 +138,11 @@ sub _handle_exception_obj {
         my $type_name_nice = _moose_type_to_nice_description($type_name);
         my $message = "Parameter `$attribute_name` expected $type_name_nice, but got a $value_nice";
 
-        return 400, $message;
+        return (
+            status  => 400,
+            message => $message,
+            bad_request_data => 1,
+        );
     }
 
     return;

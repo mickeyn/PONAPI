@@ -25,7 +25,8 @@ sub _verify_update_response {
     my ( $self, $ret, @extra ) = @_;
 
     PONAPI::DAO::Exception->throw(
-        internal => "update-like operation returned an unexpected value"
+        internal => 1,
+        message  => "update-like operation returned an unexpected value"
     ) unless exists $PONAPI_UPDATE_RETURN_VALUES{$ret};
 
     my $doc = $self->document;

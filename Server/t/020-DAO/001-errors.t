@@ -62,7 +62,7 @@ sub error_test {
     if ( !$err ) {
         fail("Didn't get an error, failing") for 1..2;
         my $line = (caller(0))[2];
-        diag(Dumper({"error_test called at line $line, response was " =>  $ret}));
+        diag(Dumper({"error_test called at line $line, response was " =>  $ret}, expect => $expect));
         return;
     }
     my $test = $expect_is_re ? \&like : \&is;
@@ -82,7 +82,7 @@ subtest '... retrieve all' => sub {
         error_test(
             \@ret,
             {
-                detail => "Parameter `type` is required",
+                detail => "Bad request data: Parameter `type` is required",
                 status => 400,
             },
             "type is required"
@@ -125,7 +125,7 @@ subtest '... retrieve' => sub {
         error_test(
             \@ret,
             {
-                detail => "Parameter `type` is required",
+                detail => "Bad request data: Parameter `type` is required",
                 status => 400,
             },
             "Parameter `type` is required"
@@ -668,7 +668,7 @@ subtest '... create_relationships' => sub {
     error_test(
         \@ret,
         {
-            detail => 'Parameter `data` expected Collection[Resource], but got a {"id":3333,"type":"comments"}',
+            detail => 'Bad request data: Parameter `data` expected Collection[Resource], but got a {"id":3333,"type":"comments"}',
             status => 400,
         },
         "... create relationships MUST pass an arrayref of hashrefs"

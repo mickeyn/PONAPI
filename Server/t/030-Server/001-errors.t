@@ -206,7 +206,7 @@ subtest '... bad requests (POST)' => sub {
         error_test(
             $create_rel,
             {
-                detail => 'Parameter `data` expected Collection[Resource], but got a {"id":5,"type":"people"}',
+                detail => 'Bad request data: Parameter `data` expected Collection[Resource], but got a {"id":5,"type":"people"}',
                 status => 400,
             }
         )

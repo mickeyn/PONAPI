@@ -18,16 +18,9 @@ sub execute {
     my $self = shift;
 
     if ( $self->is_valid ) {
-        local $@;
-        eval {
-            $self->repository->retrieve( %{ $self } );
-            $self->document->add_null_resource
-                unless $self->document->_has_resource_builders;
-            1;
-        } or do {
-            my $e = $@;
-            $self->_handle_error($e);
-        };
+        $self->repository->retrieve( %{ $self } );
+        $self->document->add_null_resource
+            unless $self->document->_has_resource_builders;
     }
 
     return $self->response();

@@ -12,20 +12,13 @@ sub execute {
     my $doc = $self->document;
 
     if ( $self->is_valid ) {
-        local $@;
-        eval {
-            $self->repository->delete( %{ $self } );
-            $doc->add_meta(
-                detail => "successfully deleted the resource /"
-                        . $self->type
-                        . "/"
-                        . $self->id
-            );
-            1;
-        } or do {
-            my $e = $@;
-            $self->_handle_error($e);
-        };
+        $self->repository->delete( %{ $self } );
+        $doc->add_meta(
+            detail => "successfully deleted the resource /"
+                    . $self->type
+                    . "/"
+                    . $self->id
+        );
     }
 
     return $self->response();

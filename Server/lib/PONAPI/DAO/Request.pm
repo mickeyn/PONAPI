@@ -152,43 +152,6 @@ sub _bad_request {
     return;
 }
 
-sub _server_failure {
-    my $self = shift;
-    $self->document->raise_error( 500, {
-        detail => 'A fatal error has occured, please check server logs'
-    });
-    return;
-}
-
-sub _handle_error {
-    my ($self, $e) = @_;
-    {
-        local $@;
-        if ( !eval { $e->isa('PONAPI::DAO::Exception'); } ) {
-            $e ||= 'Unknown error';
-            warn "$e";
-            return $self->_server_failure;
-        }
-    }
-
-    my $status = $e->status;
-    if ( $e->sql_error ) {
-        my $msg = $e->message;
-        $self->_bad_request( "SQL error: $msg", $status );
-    }
-    elsif ( $e->bad_request_data ) {
-        my $msg = $e->message;
-        $self->_bad_request( "Bad request data: $msg", $status );
-    }
-    else {
-        # Unknown error..?
-        warn $e->as_string;
-        $self->_server_failure;
-    }
-
-    return;
-}
-
 __PACKAGE__->meta->make_immutable;
 no Moose; 1;
 

@@ -17,14 +17,7 @@ sub execute {
 
     if ( $self->is_valid ) {
         $doc->convert_to_collection;
-        local $@;
-        eval {
-            $self->repository->retrieve_all( %{ $self } );
-            1;
-        } or do {
-            my $e = $@;
-            $self->_handle_error($e);
-        };
+        $self->repository->retrieve_all( %{ $self } );
     }
 
     return $self->response();

@@ -14,29 +14,21 @@ sub execute {
 
     my @headers;
     if ( $self->is_valid ) {
-        local $@;
-        eval {
-            $self->repository->create( %{ $self } );
-            $doc->add_meta(
-                detail => "successfully created the resource: "
-                        . $self->type
-                        . " => "
-                        . $self->json->encode( $self->data )
-            );
+        $self->repository->create( %{ $self } );
+        $doc->add_meta(
+            detail => "successfully created the resource: "
+                    . $self->type
+                    . " => "
+                    . $self->json->encode( $self->data )
+        );
 
-            $doc->set_status(201) unless $doc->has_status;
+        $doc->set_status(201) unless $doc->has_status;
 
-            my $document  = $doc->build;
-            my $self_link = $document->{data}{links}{self};
-            $self_link  //= "/$document->{data}{type}/$document->{data}{id}";
+        my $document  = $doc->build;
+        my $self_link = $document->{data}{links}{self};
+        $self_link  //= "/$document->{data}{type}/$document->{data}{id}";
 
-            push @headers, Location => $self_link;
-
-            1;
-        } or do {
-            my $e = $@;
-            $self->_handle_error($e);
-        };
+        push @headers, Location => $self_link;
     }
 
     return $self->response( @headers );
