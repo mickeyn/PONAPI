@@ -45,9 +45,10 @@ has internal => (
 );
 
 has json_api_version => (
-    is      => 'rw',
+    is      => 'ro',
     isa     => 'Str',
     default => sub { '1.0' },
+    writer  => '_set_json_api_version'
 );
 
 # Picked from Throwable::Error
@@ -84,7 +85,7 @@ sub new_from_exception {
     my ($class, $e, $dao) = @_;
 
     if ( blessed($e) && $e->isa($class) ) {
-        $e->json_api_version( $dao->version );
+        $e->_set_json_api_version( $dao->version );
         return $e;
     }
 
