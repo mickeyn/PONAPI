@@ -1,5 +1,11 @@
 Revision history for PONAPI-Server
 
+0.001002     2015-Dec-17
+             * Support Perl 5.10+ (was 5.14)
+             * Reduced dependencies
+             * Improved testing
+             * Document updates
+
 0.001001     2015-Dec-15
              * Docuemnt updates
 
