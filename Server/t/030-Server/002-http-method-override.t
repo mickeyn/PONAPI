@@ -9,6 +9,7 @@ use HTTP::Request::Common;
 use Plack::Middleware::MethodOverride;
 
 use JSON::XS;
+use Data::Dumper;
 
 BEGIN {
     use_ok('PONAPI::Server');
@@ -75,7 +76,7 @@ subtest '... method override (middleware loaded)' => sub {
             'X-HTTP-Method-Override' => 'PATCH',
             Content => encode_json({ data => { id => 5, type => 'people'} }),
         );
-        ok( $res->is_success, 'Successful request to ' . $res->request->method . " " .$res->request->uri );
+        ok( $res->is_success, 'Successful request to ' . $res->request->method . " " .$res->request->uri ) or diag(Dumper($res));
         my $h = $res->headers;
         is(
             $h->header('Content-Type')||'',
@@ -98,9 +99,8 @@ subtest '... method override (middleware loaded)' => sub {
                 },
             },
             "... got the right response",
-        );
+        ) or diag(Dumper($content));
     }
-
 };
 
 done_testing;
