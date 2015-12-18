@@ -115,7 +115,17 @@ sub _send_ponapi_request {
         ],
     });
 
-    return decode_json( $res->{body} );
+    my ($content, $failed, $e);
+    if ( $res->{body} ) {
+        local $@;
+        eval  { $content = decode_json( $res->{body} ); 1; }
+        or do { ($failed, $e) = (1, $@);                   };
+    }
+    if ( $failed ) {
+        warn "Invalid JSON response in body. Body is <$res->{body}>, error: $e";
+    }
+
+    return $res->{status}, $content;
 }
 
 __PACKAGE__->meta->make_immutable;
