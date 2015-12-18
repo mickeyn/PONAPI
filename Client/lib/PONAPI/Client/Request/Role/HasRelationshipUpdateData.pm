@@ -3,6 +3,7 @@ package PONAPI::Client::Request::Role::HasRelationshipUpdateData;
 
 use Moose::Role;
 
+with 'PONAPI::Client::Request::Role::HasData';
 has data => (
     is       => 'ro',
     isa      => 'Maybe[HashRef|ArrayRef]',

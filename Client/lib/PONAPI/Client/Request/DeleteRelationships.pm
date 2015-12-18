@@ -8,7 +8,7 @@ with 'PONAPI::Client::Request',
      'PONAPI::Client::Request::Role::HasType',
      'PONAPI::Client::Request::Role::HasId',
      'PONAPI::Client::Request::Role::HasRelationshipType',
-     'PONAPI::Client::Request::Role::HasData';
+     'PONAPI::Client::Request::Role::HasOneToManyData';
 
 sub path   {
     my $self = shift;
