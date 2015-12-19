@@ -113,6 +113,29 @@ sub basic_retrieve_all_test {
         or diag(Dumper($res));
 }
 
+sub _get_a_new_author {
+    my ($client) = @_;
+
+    return $client->create(
+        type => 'people',
+        data => {
+            type       => 'people',
+            attributes => $author_attributes,
+        }
+    )->{data};
+}
+sub _get_a_new_comments {
+    my ($client) = @_;
+
+    return $client->create(
+        type => 'comments',
+        data => {
+            type => 'comments',
+            attributes => { body => "Text yadda " . rand(250) },
+        },
+    )->{data};
+}
+
 foreach my $implementation (
     'PONAPI::Client',
     ($have_http_tiny ? 'PONAPI::Client::HTTP::Tiny' : ()),
@@ -130,7 +153,7 @@ foreach my $implementation (
     }
 
     my $port   = $app->port;
-    subtest "... $implementation" => sub { SKIP: {
+    subtest "... $implementation" => sub {
         my $client = $implementation->new( port => $port );
 
         isa_ok($client, 'PONAPI::Client', '..we can create a client pointing to our test server');
@@ -277,29 +300,6 @@ foreach my $implementation (
             );
         };
 
-        sub _get_a_new_author {
-            my ($client) = @_;
-
-            return $client->create(
-                type => 'people',
-                data => {
-                    type       => 'people',
-                    attributes => $author_attributes,
-                }
-            )->{data};
-        }
-        sub _get_a_new_comments {
-            my ($client) = @_;
-
-            return $client->create(
-                type => 'comments',
-                data => {
-                    type => 'comments',
-                    attributes => { body => "Text yadda " . rand(250) },
-                },
-            )->{data};
-        }
-
         subtest '... (update|create|delete)_relationships' => sub {
             # First, let's create an author, two comments,
             # and then add them to articles.
@@ -383,7 +383,7 @@ foreach my $implementation (
             }
         };
 
-        subtest '... create + update +delete (with relationships)' => sub {
+        subtest '... create + update + delete (with relationships)' => sub {
             my $author   = _get_a_new_author($client);
             my @comments = map _get_a_new_comments($client), 1, 2;
 
@@ -434,11 +434,10 @@ foreach my $implementation (
                     ) or diag( Dumper($update_res) );
                 }
             }
-        }
-    }  # skip
+        };
+        
     }; # '... $test_name' subtest
 }
-
 
 BEGIN {
 {
@@ -478,13 +477,7 @@ package PONAPI::Client::cURL;
 
     our @ISA = 'PONAPI::Client';
     sub BUILD {
-        my $builder     = Test::More->builder;
-        my $good_so_far = $builder->is_passing;
-        if ( !$good_so_far ) {
-            $builder->plan( skip_all => "cURL tests are really fragile and something has already failed, so skipping them" );
-        }
-
-        bless $builder, "Test::Builder::ButReallyLaxAboutFailing"
+        bless Test::More->builder, "Test::Builder::ButReallyLaxAboutFailing";
     }
     sub _send_ponapi_request {
         my ($self, %args) = @_;
@@ -509,7 +502,7 @@ package PONAPI::Client::cURL;
         return 204, ($success && $content) ? decode_json($content) : undef;
     }
 
-    sub DESTROY {
+    sub DEMOLISH {
         bless Test::More->builder, 'Test::Builder';
     }
 }
@@ -542,13 +535,13 @@ EORANT
     }
 
     foreach my $function ( qw/ok is like is_deeply/ ) {
-        eval qq{
-            sub $function {
-                my \$self = shift;
-                my \$ret  = \$self->SUPER::$function(\@_);
-                \$self->_enough_messing_around;
-                return \$ret;
-            }
+        my $glob = do { no strict 'refs'; \*{ $function } };
+        *$glob = sub {
+            my $self   = shift;
+            my $method = "SUPER::$function";
+            my $ret    = $self->$method(@_);
+            $self->_enough_messing_around;
+            return $ret;
         };
     }
 }
