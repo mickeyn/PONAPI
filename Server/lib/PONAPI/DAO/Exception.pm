@@ -9,8 +9,7 @@ with 'StackTrace::Auto';
 
 sub throw {
   my $class_or_obj = shift;
-  die $class_or_obj if blessed $class_or_obj;
-  die $class_or_obj->new(@_);
+  die ( blessed $class_or_obj ? $class_or_obj : $class_or_obj->new(@_) );
 }
 
 use overload
@@ -58,7 +57,7 @@ sub as_string {
 }
 
 sub as_response {
-    my ($self) = @_;
+    my $self = shift;
 
     my $status = $self->status;
     my $detail = $self->message;
@@ -82,7 +81,7 @@ sub as_response {
 }
 
 sub new_from_exception {
-    my ($class, $e, $dao) = @_;
+    my ( $class, $e, $dao ) = @_;
 
     if ( blessed($e) && $e->isa($class) ) {
         $e->_set_json_api_version( $dao->version );
@@ -91,7 +90,7 @@ sub new_from_exception {
 
     my %args_for_new = $class->_handle_exception_obj($e, $dao);
 
-    if ( !$args_for_new{status} || !$args_for_new{message} ) {
+    unless ( $args_for_new{status} and $args_for_new{message} ) {
         %args_for_new = (
             status  => 500,
             message => '',
@@ -106,47 +105,41 @@ sub new_from_exception {
 }
 
 sub _handle_exception_obj {
-    my ($self, $e, $dao) = @_;
-    return unless blessed($e);
-    return unless $e->isa('Moose::Exception');
+    my ( $self, $e, $dao ) = @_;
+    return unless blessed($e) or $e->isa('Moose::Exception');
 
     if ( $e->isa('Moose::Exception::AttributeIsRequired') ) {
         my $attribute = $e->attribute_name;
-
-        return (
-            status  => 400,
-            message => "Parameter `$attribute` is required",
-            bad_request_data => 1,
-        );
+        return _bad_req( "Parameter `$attribute` is required" );
     }
-    elsif ( $e->isa('Moose::Exception::ValidationFailedForTypeConstraint') || $e->isa('Moose::Exception::ValidationFailedForInlineTypeConstraint') ) {
+    elsif (
+        $e->isa('Moose::Exception::ValidationFailedForTypeConstraint') or
+        $e->isa('Moose::Exception::ValidationFailedForInlineTypeConstraint')
+    ) {
         my $class      = find_meta( $e->class_name );
         my $attribute  = $class->get_attribute( $e->attribute_name );
         my $value_nice = $dao->json->encode( $e->value );
 
         if ( !$attribute ) {
             my $attr = $e->attribute_name;
-            return (
-                status  => 400,
-                message => "Parameter `$attr` got an expected data type: $value_nice",
-                bad_request_data => 1,
-            );
+            return _bad_req( "Parameter `$attr` got an expected data type: $value_nice" );
         }
 
         my $attribute_name = $attribute->name;
-        my $type_name      = $attribute->{isa};
+        my $type_name      = _moose_type_to_nice_description( $attribute->{isa} );
 
-        my $type_name_nice = _moose_type_to_nice_description($type_name);
-        my $message = "Parameter `$attribute_name` expected $type_name_nice, but got a $value_nice";
-
-        return (
-            status  => 400,
-            message => $message,
-            bad_request_data => 1,
-        );
+        return _bad_req( "Parameter `$attribute_name` expected $type_name, but got a $value_nice" );
     }
 
     return;
+}
+
+sub _bad_req {
+    return (
+        message          => shift,
+        status           => 400,
+        bad_request_data => 1,
+    );
 }
 
 # THIS IS NOT COMPLETE, NOR IS IT MEANT TO BE
@@ -163,6 +156,7 @@ sub _moose_type_to_nice_description {
 
 __PACKAGE__->meta->make_immutable;
 no Moose; 1;
+
 __END__
 =encoding UTF-8
 
