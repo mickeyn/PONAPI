@@ -694,14 +694,6 @@ subtest '... delete_relationships' => sub {
             [
                 204,
                 [],
-                {
-                    'jsonapi' => {
-                        'version' => '1.0'
-                    },
-                    'meta' => {
-                        'detail' => 'modified nothing for /articles/1/comments => [{"id":99,"type":"comments"}]'
-                    }
-                }
             ],
             "... deleting a non-existent resource returns a 204"
         );

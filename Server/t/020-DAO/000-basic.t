@@ -617,14 +617,7 @@ subtest '... delete_relationships' => sub {
             ],
         );
         is($res2[0], 204, '... got the correct status code');
-        my $meta = $res2[2]->{meta};
-        is(ref $meta, 'HASH', '... `meta` is a hash-ref');
-        ok(exists $meta->{detail}, '... `meta` has a `detail` key');
-        is_deeply(
-            $meta->{detail},
-            'modified nothing for /articles/2/comments => [{"id":5,"type":"comments"}]',
-            '... got the correct message in `meta`'
-        );
+        ok(!$res2[2], '... and no body');
     };
 
 };
