@@ -2,8 +2,6 @@
 use strict;
 use warnings;
 
-use Scalar::Util qw[ blessed ];
-
 use Data::Dumper;
 use Test::More;
 use JSON::XS;

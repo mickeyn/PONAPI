@@ -2,7 +2,6 @@
 use strict;
 use warnings;
 
-use Scalar::Util qw[ blessed ];
 use JSON::XS qw[ decode_json ];
 
 use Test::More;
@@ -40,7 +39,6 @@ subtest '... retrieve all' => sub {
     my @ret = $dao->retrieve_all( type => 'people', send_doc_self_link => 1 );
     my $doc = $ret[2];
 
-    ok(!blessed($doc), '... the document we got is not blessed');
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');
 
     ok(exists $doc->{'jsonapi'}, '... we have a `jsonapi` key');
@@ -181,7 +179,6 @@ subtest '... retrieve' => sub {
     );
     my $doc = $ret[2];
 
-    ok(!blessed($doc), '... the document we got is not blessed');
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');
 
     my $data = $doc->{data};
@@ -223,7 +220,6 @@ subtest '... retrieve relationships' => sub {
     );
     my $doc = $ret[2];
 
-    ok(!blessed($doc), '... the document we got is not blessed');
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');
 
     my $data = $doc->{data};
@@ -295,7 +291,6 @@ subtest '... retrieve by relationship' => sub {
     );
     my $doc = $ret[2];
 
-    ok(!blessed($doc), '... the document we got is not blessed');
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');
 
     my $data = $doc->{data};
@@ -319,7 +314,6 @@ subtest '... retrieve by relationship' => sub {
     );
     $doc = $ret[2];
 
-    ok(!blessed($doc), '... the document we got is not blessed');
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');
 
     $data = $doc->{data};
@@ -403,7 +397,6 @@ subtest '... update' => sub {
 
     my @new = $dao->retrieve( @TEST_ARGS_TYPE_ID );
 
-    ok(!blessed($doc), '... the document we got is not blessed');
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');
 
     ok($doc->{meta}, "... (optional) meta member is present");

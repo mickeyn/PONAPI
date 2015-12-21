@@ -5,7 +5,6 @@ use Moose;
 
 use DBI;
 use SQL::Composer;
-use Scalar::Util qw/looks_like_number/;
 
 # We MUST use DBD::SQLite before ::Constants to get anything useful!
 use DBD::SQLite;
@@ -624,10 +623,10 @@ sub _validate_page {
     exists $page->{limit}
         or PONAPI::DAO::Exception->throw(message => "Limit missing for `page`");
 
-    looks_like_number($page->{limit})
+    $page->{limit} =~ /\A[0-9]+\z/
         or PONAPI::DAO::Exception->throw(message => "Bad limit value ($page->{limit}) in `page`");
 
-    !exists $page->{offset} || looks_like_number($page->{offset})
+    !exists $page->{offset} || ($page->{offset} =~ /\A[0-9]+\z/)
         or PONAPI::DAO::Exception->throw(message => "Bad offset value in `page`");
 
     $page->{offset} ||= 0;

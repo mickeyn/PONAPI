@@ -3,7 +3,6 @@ package PONAPI::DAO::Exception;
 
 use Moose;
 use Moose::Util  qw/find_meta/;
-use Scalar::Util qw/blessed/;
 
 with 'StackTrace::Auto';
 
