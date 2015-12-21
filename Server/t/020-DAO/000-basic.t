@@ -2,7 +2,6 @@
 use strict;
 use warnings;
 
-use Storable qw[ dclone ];
 use Scalar::Util qw[ blessed ];
 use JSON::XS qw[ decode_json ];
 
@@ -464,9 +463,10 @@ subtest '... update' => sub {
     delete $updated[2]->{data}{attributes}{updated};
     is_deeply(\@updated, \@orig, "... can clear relationships via update");
 
-    my $data_for_restore = dclone( $backup[2]->{data} );
-    $data_for_restore->{relationships}{$_} = delete $data_for_restore->{relationships}{$_}{data}
-        for keys %{ $data_for_restore->{relationships} };
+    my $data_for_restore = { %{ $backup[2]->{data} } };
+    my $relationships = delete $data_for_restore->{relationships};
+    $data_for_restore->{relationships}{$_} = $relationships->{$_}{data}
+        for keys %$relationships;
     $dao->update( @TEST_ARGS_TYPE_ID, data => $data_for_restore );
     @updated = $dao->retrieve(@TEST_ARGS_TYPE_ID);
 
@@ -885,7 +885,7 @@ sub test_fields_response {
     $data = [ $data ] if ref $data ne 'ARRAY';
 
     foreach my $resource_orig ( @$included, @$data ) {
-        my $resource     = dclone $resource_orig;
+        my $resource     = { %$resource_orig };
         my ($type, $id) = @{$resource}{qw/type id/};
         my $has_fields = $fields->{$type};
         delete @{$resource->{$_}}{@$has_fields} for qw/attributes relationships/;
