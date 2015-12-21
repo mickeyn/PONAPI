@@ -309,21 +309,6 @@ subtest '... create' => sub {
         );
     }
 
-    my %good_create = (
-        @TEST_ARGS_TYPE,
-        data     => {
-            type => "articles",
-            attributes => {
-                title => "Title!",
-                body  => "Body!",
-            },
-            relationships => {
-                authors => { type => 'people', id => 42 },
-            },
-        }
-    );
-
-    use Storable qw/dclone/;
     foreach my $tuple (
         [
             { data => { attributes => {} } },
@@ -339,7 +324,8 @@ subtest '... create' => sub {
             {
                 data => {
                     attributes => {
-                        %{ $good_create{data}{attributes} },
+                        title => "Title!",
+                        body  => "Body!",
                         extra => 111
                     }
                 }
@@ -384,7 +370,19 @@ subtest '... create' => sub {
         ],
       )
     {
-        my $copy = dclone( \%good_create );
+        my $copy = {
+            @TEST_ARGS_TYPE,
+            data     => {
+                type => "articles",
+                attributes => {
+                    title => "Title!",
+                    body  => "Body!",
+                },
+                relationships => {
+                    authors => { type => 'people', id => 42 },
+                },
+            },
+        };
         my ( $body, $status, $expected, $msg ) = @$tuple;
 
         while ( my ( $k, $v ) = each %$body ) {
@@ -401,7 +399,7 @@ subtest '... create' => sub {
         my ( $w, @ret ) = ('');
         {
             local $SIG{__WARN__} = sub { $w .= shift };
-            @ret = $dao->create(%{ dclone $copy });
+            @ret = $dao->create(%$copy);
         }
         error_test(
             \@ret,
@@ -865,12 +863,14 @@ subtest '... illegal params' => sub {
 
             # Let's also test that all the methods detect unknown types
             $w = '';
-            my %modified_arguments = @{ dclone $args };
+            my %modified_arguments = @$args;
             $modified_arguments{type} = 'fake';
             my $data = $modified_arguments{data} || [];
             $data = [ $data ] if ref($data) ne 'ARRAY';
-            $_->{type} = 'fake' for @$data;
-            @ret = $dao->$action( %modified_arguments );
+            {
+                local $_->{type} = 'fake' for @$data;
+                @ret = $dao->$action( %modified_arguments );
+            }
             error_test(
                 \@ret,
                 {
