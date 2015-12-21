@@ -104,13 +104,18 @@ my $article_2 = {
 
 my @common = ( type => articles => id => 2 );
 sub basic_retrieve_all_test {
-    my ($res, $expected_ids_in_order) = @_;
+    my ($status, $res, $expected_ids_in_order) = @_;
 
     my $ids    = join '|', map $_->{id}, @{ $res->{data} };
     my $expect = join '|', @$expected_ids_in_order;
 
-    is($ids, $expect, "retrieve_all works as expected ($expect)")
+    is($ids, $expect, "... retrieve_all works as expected ($expect)")
         or diag(Dumper($res));
+    is($status, 200, "... and has the correct status");
+}
+
+sub status_is_200 {
+    is(shift(), 200, '... status is good');
 }
 
 sub _get_a_new_author {
@@ -159,13 +164,16 @@ foreach my $implementation (
         isa_ok($client, 'PONAPI::Client', '..we can create a client pointing to our test server');
 
         subtest '... retrieve_all' => sub {
-            my $res = $client->retrieve_all(type => 'articles');
-            basic_retrieve_all_test($res, [1, 2, 3]);
+            my ($status, $res) = $client->retrieve_all(type => 'articles');
+            basic_retrieve_all_test($status, $res, [1, 2, 3]);
 
-            my $res_sorted = $client->retrieve_all(type => 'articles', sort => [qw/-id/]);
-            basic_retrieve_all_test($res_sorted, [3, 2, 1]);
+            my ($status_2, $res_sorted) = $client->retrieve_all(
+                type => 'articles',
+                sort => [qw/-id/],
+            );
+            basic_retrieve_all_test($status_2, $res_sorted, [3, 2, 1]);
 
-            my $res_sorted_page = $client->retrieve_all(
+            my ($status_sorted, $res_sorted_page) = $client->retrieve_all(
                 type => 'articles',
                 sort => [qw/-id/],
                 page => {
@@ -173,7 +181,7 @@ foreach my $implementation (
                     limit  => 1,
                 },
             );
-            basic_retrieve_all_test($res_sorted_page, [2]);
+            basic_retrieve_all_test($status_sorted, $res_sorted_page, [2]);
             is_deeply(
                 $res_sorted_page->{links},
                 {
@@ -187,13 +195,14 @@ foreach my $implementation (
         };
 
         subtest '... retrieve' => sub {
-            my $res = $client->retrieve(@common);
+            my ($status, $res) = $client->retrieve(@common);
             my $clone = dclone $article_2;
             delete $clone->{included};
             is_deeply($res, $clone, "...we retrieved the correct user");
+            status_is_200($status);
 
             # Let's test all of the options here.
-            my $fields_res = $client->retrieve(@common,
+            my ($status_fields, $fields_res) = $client->retrieve(@common,
                 fields => { articles => [qw/title/] },
             );
             delete $fields_res->{data}{links};
@@ -205,8 +214,9 @@ foreach my $implementation (
                 },
                 "... filtering the main resource's attributes works",
             );
+            status_is_200($status_fields);
 
-            my $fields_rel_res = $client->retrieve(@common,
+            my ($fields_rel_status,$fields_rel_res) = $client->retrieve(@common,
                 fields => { articles => [qw/authors/] },
             );
             delete $fields_rel_res->{data}{relationships}{authors}{links};
@@ -215,45 +225,49 @@ foreach my $implementation (
                 { authors => { data => { type => people => id => 88 } }, },
                 "... filtering the main resource's attributes works",
             ) or diag(Dumper($fields_rel_res));
-
+            status_is_200($fields_rel_status);
         };
 
         subtest '... retrieve_by_relationship' => sub {
-            my $res1 = $client->retrieve_by_relationship(@common, rel_type => 'authors');
+            my ($status1, $res1) = $client->retrieve_by_relationship(@common, rel_type => 'authors');
             delete $res1->{data}{relationships};
             is_deeply(
                 [ $res1->{data} ],
                 [ grep $_->{type} eq 'people', @{$article_2->{included}} ],
                 "... got the right data for a one-to-one"
             ) or diag(Dumper($res1));
+            status_is_200($status1);
 
-            my $res2 = $client->retrieve_by_relationship(@common, rel_type => 'comments');
+            my ($status2, $res2) = $client->retrieve_by_relationship(@common, rel_type => 'comments');
             delete $_->{relationships} for @{ $res2->{data} };
             is_deeply(
                 $res2->{data},
                 [ grep $_->{type} eq 'comments', @{$article_2->{included}} ],
                 "... got the right data for a one-to-many"
             ) or diag(Dumper($res2));
+            status_is_200($status2);
         };
 
         subtest '... retrieve_relationships' => sub {
-            my $res1 = $client->retrieve_relationships(@common, rel_type => 'authors');
+            my ($status1, $res1) = $client->retrieve_relationships(@common, rel_type => 'authors');
             is_deeply(
                 $res1->{data},
                 $article_2->{data}{relationships}{authors}{data},
                 "... fetched the correct one-to-one relationship"
             ) or diag(Dumper($res1));
+            status_is_200($status1);
 
-            my $res2 = $client->retrieve_relationships(@common, rel_type => 'comments');
+            my ($status2, $res2) = $client->retrieve_relationships(@common, rel_type => 'comments');
             is_deeply(
                 $res2->{data},
                 $article_2->{data}{relationships}{comments}{data},
                 "... fetched the correct one-to-many relationship",
             ) or diag(Dumper($res2));
+            status_is_200($status2);
         };
 
         subtest '... create + update + delete (without relationships)' => sub {
-            my $create_res = $client->create(
+            my ($create_status, $create_res) = $client->create(
                 type => 'people',
                 data => {
                     type       => 'people',
@@ -262,16 +276,18 @@ foreach my $implementation (
             );
             isa_ok( $create_res->{data}, 'HASH', ".. created and got data back" )
                 or diag(Dumper($create_res));
+            is($create_status, 201, "... and got the correct status");
 
-            my $retrieve_res = $client->retrieve( $create_res->{data} );
+            my ($retrieve_status, $retrieve_res) = $client->retrieve( $create_res->{data} );
             is_deeply(
                 $retrieve_res->{data}{attributes},
                 $author_attributes,
                 ".. and we retrieved it just fine",
             ) or diag(Dumper($retrieve_res));
+            status_is_200($retrieve_status);
 
             foreach my $iteration (1..5) {
-                my $update_res = $client->update(
+                my ($update_status, $update_res) = $client->update(
                     %{ $create_res->{data} },
                     data => {
                         type       => 'people',
@@ -283,21 +299,28 @@ foreach my $implementation (
                     qr/\Asuccessfully modified/,
                     ".. updated attributes successfully ( $iteration )"
                 );
+                # This could be 200, if the server was started with
+                # 'ponapi.respond_to_updates_with_200' => 1
+                is($update_status, 202, "... and got the correct status");
             }
 
-            my $delete_res = $client->delete( $create_res->{data} );
+            my ($del_status, $delete_res) = $client->delete( $create_res->{data} );
             like(
                 $delete_res->{meta}{detail},
                 qr/\Asuccessfully deleted the resource/,
                 "... and deleted it"
             );
+            # Could be 204 depending on the implementation, but our
+            # DAO always returns a meta, so it's fairly safe to test this
+            status_is_200($del_status);
 
-            my $delete_res_again = $client->delete( $create_res->{data} );
+            my ($del_status_agai, $delete_res_again) = $client->delete( $create_res->{data} );
             like(
                 $delete_res->{meta}{detail},
                 qr/\Asuccessfully deleted the resource/,
                 "... and deleted it again, without any issues"
             );
+            status_is_200($del_status);
         };
 
         subtest '... (update|create|delete)_relationships' => sub {
@@ -306,7 +329,7 @@ foreach my $implementation (
             my $author   = _get_a_new_author($client);
             my @comments = map _get_a_new_comments($client), 1, 2;
 
-            my $article = $client->create(
+            my ($create_status, $create_response) = $client->create(
                 type => 'articles',
                 data => {
                     type => 'articles',
@@ -315,22 +338,35 @@ foreach my $implementation (
                         body  => 'bar',
                     },
                 }
-            )->{data};
+            );
+            is($create_status, 201, "... and got the correct status");
+            my $article = $create_response->{data};
 
             # Let's add some relationships:
-            my $create_rel = $client->create_relationships(
+            my ($create_rel_status, $create_rel) = $client->create_relationships(
                 %$article,
                 rel_type => 'comments',
                 data     => \@comments,
             );
             like( $create_rel->{meta}{detail}, qr/\Asuccessfully modified/ );
+            is($create_rel_status, 202, "... and the proper status");
 
-            my $retrieve_rel = $client->retrieve_relationships( %$article, rel_type => 'comments' );
-            is_deeply( $retrieve_rel->{data}, \@comments, "... successfully added two comments to the article" );
-            my $retrieve_rel_backwards = $client->retrieve_relationships(
-                %{$comments[0]}, rel_type => 'articles',
+            my ($retrieve_rel_status, $retrieve_rel) = $client->retrieve_relationships(
+                %$article, rel_type => 'comments',
             );
-            is_deeply( $retrieve_rel_backwards->{data}, $article, "... and we can fetch the article going by the comments, too" );
+            is_deeply( $retrieve_rel->{data}, \@comments, "... successfully added two comments to the article" );
+            status_is_200($retrieve_rel_status);
+
+            my ($status_retrieve_backwards, $retrieve_rel_backwards) =
+                $client->retrieve_relationships(
+                    %{$comments[0]}, rel_type => 'articles',
+                );
+            is_deeply(
+                $retrieve_rel_backwards->{data},
+                $article,
+                "... and we can fetch the article going by the comments, too",
+            );
+            status_is_200($status_retrieve_backwards);
 
             foreach my $iteration (1..5) {
                 my ($code, $delete_rel) = $client->delete_relationships(
@@ -339,20 +375,22 @@ foreach my $implementation (
                     data     => [ $comments[0] ],
                 );
 
-                if ( !$delete_rel ) {
-                    is( $code, 204, "... no body, but status is 204, so that's fine (try $iteration)" );
-                    next;
+                if ( $iteration == 1 ) {
+                    like(
+                        $delete_rel->{meta}{detail},
+                        qr/\Asuccessfully modified/,
+                        "... delete relationships (try $iteration)"
+                    );
+                    is($code, 202, "... and the right code");
                 }
-
-                my $qr = $iteration == 1
-                        ? qr/\Asuccessfully modified/
-                        : qr/\Amodified nothing for/;
-
-                like(
-                    $delete_rel->{meta}{detail},
-                    $qr,
-                    "... delete relationships (try $iteration)"
-                );
+                else {
+                    ok( !$delete_rel, "...no body for iteration $iteration" );
+                    is(
+                        $code,
+                        204,
+                        "... no body, but status is 204, so that's fine (try $iteration)"
+                    );
+                }
             }
 
             # First, try updating the authors, which is one-to-one
@@ -490,6 +528,7 @@ package PONAPI::Client::cURL;
             $curl_path,
             '-s',
             '-X'  => $args{method},
+            '-w'  => '\n%{http_code}',
             '-H'  => "Content-Type: application/vnd.api+json",
             $url,
             ($args{body} ? ('-d' => $args{body}) : ()),
@@ -498,8 +537,10 @@ package PONAPI::Client::cURL;
             command => \@cmd, timeout => 5
         );
 
-        my $content = $stdout_buf->[0];
-        return 204, ($success && $content) ? decode_json($content) : undef;
+        my ($content, $status) = ($stdout_buf->[0] || '')
+                                        =~ /(.*)\n([0-9]+)\z/s;
+
+        return $status, ($success && $content) ? decode_json($content) : undef;
     }
 
     sub DEMOLISH {
