@@ -7,25 +7,21 @@ use Test::More;
 use Plack::Test::Server;
 
 use Data::Dumper;
-use Storable qw/dclone/;
 
 use PONAPI::Server;
-
-use JSON::XS qw/decode_json/;
-use IPC::Cmd qw/can_run run/;
-
-my $have_client = !!eval { require PONAPI::Client; 1 };
-if ( !$have_client ) {
-    plan skip_all => 'Client cannot be loaded, not running these tests';
-}
+use IPC::Cmd qw/can_run/;
 
 # Rather than just testing PONAPI::Client, let's make sure we're
 # working on other backends too.  We always test PONAPI::Client,
 # but if available, we'll also test HTTP::Tiny and curl on the
 # command line.
+my $have_ponapi_client = do { local $@; !!eval { require PONAPI::Client; 1 } };
+my $have_http_tiny     = do { local $@; !!eval { require HTTP::Tiny; 1 } };
+my $have_curl          = can_run('curl');
 
-my $have_http_tiny = do { local $@; eval { require HTTP::Tiny; 1 } };
-my $have_curl      = can_run('curl');
+if ( !$have_ponapi_client && !$have_http_tiny && !$have_curl ) {
+    plan skip_all => 'Client cannot be loaded, not running these tests'
+}
 
 my $author_attributes = {
     name   => 'New!',
@@ -142,9 +138,9 @@ sub _get_a_new_comments {
 }
 
 foreach my $implementation (
-    'PONAPI::Client',
-    ($have_http_tiny ? 'PONAPI::Client::HTTP::Tiny' : ()),
-    ($have_curl      ? 'PONAPI::Client::cURL'       : ()),
+    ($have_ponapi_client ? 'PONAPI::Client'             : ()),
+    ($have_http_tiny     ? 'PONAPI::Client::HTTP::Tiny' : ()),
+    ($have_curl          ? 'PONAPI::Client::cURL'       : ()),
 ) {
 
     my $app = Plack::Test::Server->new(PONAPI::Server->new(
@@ -161,7 +157,7 @@ foreach my $implementation (
     subtest "... $implementation" => sub {
         my $client = $implementation->new( port => $port );
 
-        isa_ok($client, 'PONAPI::Client', '..we can create a client pointing to our test server');
+        ok($client, '..we can create a client pointing to our test server');
 
         subtest '... retrieve_all' => sub {
             my ($status, $res) = $client->retrieve_all(type => 'articles');
@@ -196,7 +192,7 @@ foreach my $implementation (
 
         subtest '... retrieve' => sub {
             my ($status, $res) = $client->retrieve(@common);
-            my $clone = dclone $article_2;
+            my $clone = { %$article_2 };
             delete $clone->{included};
             is_deeply($res, $clone, "...we retrieved the correct user");
             status_is_200($status);
@@ -433,12 +429,13 @@ foreach my $implementation (
                         title => "Base title",
                         body  => "Base body",
                     },
+                    relationships => {
+                        authors  => $author,
+                        comments => \@comments,
+                    },
                 },
-                relationships => {
-                    authors  => $author,
-                    comments => \@comments,
-                }
             );
+
             like(
                 $create_res->{meta}{detail},
                 qr/successfully created the resource/,
@@ -479,9 +476,68 @@ foreach my $implementation (
 
 BEGIN {
 {
-package PONAPI::Client::HTTP::Tiny;
+package
+    PONAPI::Client::Mock;
+    use Moose;
+    with 'PONAPI::Builder::Role::HasPagination';
+
+    has port => (
+        is => 'ro',
+    );
+    has json => (
+        is => 'ro',
+        default => sub { JSON::XS->new->allow_nonref->utf8->canonical },
+    );
+
+    my %action_to_http_method = (
+        create               => 'POST',
+        create_relationships => 'POST',
+
+        update               => 'PATCH',
+        update_relationships => 'PATCH',
+
+        delete               => 'DELETE',
+        delete_relationships => 'DELETE',
+    );
+
+    sub AUTOLOAD {
+        our $AUTOLOAD;
+        my $self = shift;
+        my %args = @_ == 1 ? %{ $_[0] } : @_;
+
+        my $autoloading_method = (split /::/, $AUTOLOAD)[-1];
+        my $method   = $action_to_http_method{$autoloading_method} || 'GET';
+
+        my $type     = delete $args{type};
+        my $id       = delete $args{id};
+        my $rel_type = delete $args{rel_type};
+        my $body     = exists $args{data}
+                     ? $self->json->encode({data => delete $args{data}})
+                     : undef;
+        my $relationships = $autoloading_method =~ /relationships\z/i
+                          ? 'relationships'
+                          : undef;
+
+        my $path = join '/', grep defined,
+                   '', $type, $id, ($id ? ($relationships, $rel_type) : ());
+        my $query_string = $self->_hash_to_uri_query(\%args);
+        return $self->_send_ponapi_request(
+            %args,
+            path         => $path,
+            query_string => $query_string,
+            body         => $body,
+            method       => $method,
+        );
+    }
+}
+{
+package
+    PONAPI::Client::HTTP::Tiny;
+    use Moose;
     use JSON::XS qw/decode_json/;
-    our @ISA = 'PONAPI::Client';
+
+    extends 'PONAPI::Client::Mock';
+
     sub _send_ponapi_request {
         my ($self, %args) = @_;
 
@@ -509,11 +565,14 @@ package PONAPI::Client::HTTP::Tiny;
 # working, 
 
 {
-package PONAPI::Client::cURL;
+package
+    PONAPI::Client::cURL;
+    use Moose;
     use JSON::XS qw/decode_json/;
     use IPC::Cmd qw/can_run run/;
 
-    our @ISA = 'PONAPI::Client';
+    extends 'PONAPI::Client::Mock';
+
     sub BUILD {
         bless Test::More->builder, "Test::Builder::ButReallyLaxAboutFailing";
     }
@@ -550,7 +609,8 @@ package PONAPI::Client::cURL;
 
 {
 my $no_good;
-package Test::Builder::ButReallyLaxAboutFailing;
+package
+    Test::Builder::ButReallyLaxAboutFailing;
     our @ISA = 'Test::Builder';
 
     sub _enough_messing_around {
