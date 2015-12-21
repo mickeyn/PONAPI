@@ -265,10 +265,7 @@ foreach my $implementation (
         subtest '... create + update + delete (without relationships)' => sub {
             my ($create_status, $create_res) = $client->create(
                 type => 'people',
-                data => {
-                    type       => 'people',
-                    attributes => $author_attributes,
-                },
+                data => { attributes => $author_attributes },
             );
             isa_ok( $create_res->{data}, 'HASH', ".. created and got data back" )
                 or diag(Dumper($create_res));
@@ -286,7 +283,6 @@ foreach my $implementation (
                 my ($update_status, $update_res) = $client->update(
                     %{ $create_res->{data} },
                     data => {
-                        type       => 'people',
                         attributes => { name => 'Another name', },
                     },
                 );
@@ -328,7 +324,6 @@ foreach my $implementation (
             my ($create_status, $create_response) = $client->create(
                 type => 'articles',
                 data => {
-                    type => 'articles',
                     attributes => {
                         title => 'foo',
                         body  => 'bar',
@@ -424,7 +419,6 @@ foreach my $implementation (
             my $create_res = $client->create(
                 type => 'articles',
                 data => {
-                    type       => 'articles',
                     attributes => {
                         title => "Base title",
                         body  => "Base body",
@@ -456,7 +450,6 @@ foreach my $implementation (
                     my $update_res = $client->update(
                         %{ $create_res->{data} },
                         data => {
-                            %{ $create_res->{data} },
                             attributes    => { title => 'Update!' },
                             relationships => $rels,
                         }
@@ -511,9 +504,15 @@ package
         my $type     = delete $args{type};
         my $id       = delete $args{id};
         my $rel_type = delete $args{rel_type};
-        my $body     = exists $args{data}
-                     ? $self->json->encode({data => delete $args{data}})
-                     : undef;
+        my $body;
+        if ( exists $args{data} ) {
+            my $data = delete $args{data};
+            if ( ref($data) eq 'HASH' ) {
+                $data->{type} //= $type;
+                $data->{id}   //= $id if defined $id;
+            }
+            $body = $self->json->encode({data => $data});
+        }
         my $relationships = $autoloading_method =~ /relationships\z/i
                           ? 'relationships'
                           : undef;
