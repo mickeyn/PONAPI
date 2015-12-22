@@ -1,4 +1,4 @@
-# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
+# ABSTRACT: document builder - role - pagination
 package PONAPI::Builder::Role::HasPagination;
 
 use Moose::Role;

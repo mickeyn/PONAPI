@@ -1,4 +1,4 @@
-# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
+# ABSTRACT: mock repository - table - Comments
 package Test::PONAPI::DAO::Repository::MockDB::Table::Comments;
 
 use Moose;

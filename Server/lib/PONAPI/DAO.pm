@@ -1,4 +1,4 @@
-# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
+# ABSTRACT: Data Abstraction Object class
 package PONAPI::DAO;
 
 use Moose;

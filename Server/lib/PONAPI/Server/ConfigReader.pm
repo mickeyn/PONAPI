@@ -1,4 +1,4 @@
-# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
+# ABSTRACT: Web-Server - configuration handler
 package PONAPI::Server::ConfigReader;
 
 use Moose;

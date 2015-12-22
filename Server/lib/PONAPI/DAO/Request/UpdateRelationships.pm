@@ -1,4 +1,4 @@
-# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
+# ABSTRACT: DAO request - update relationships
 package PONAPI::DAO::Request::UpdateRelationships;
 
 use Moose;
