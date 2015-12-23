@@ -56,6 +56,7 @@ sub _action {
     my @ret;
     eval {
         @ret = $action_class->new($ponapi_parameters)->execute();
+        1;
     } or do {
         my $e = $@ || 'Unknown error';
         @ret = PONAPI::DAO::Exception
