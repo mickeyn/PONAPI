@@ -9,10 +9,10 @@ with 'PONAPI::Builder',
      'PONAPI::Builder::Role::HasLinksBuilder',
      'PONAPI::Builder::Role::HasMeta';
 
-has 'id'   => ( is => 'ro', isa => 'Str', required => 1 );
-has 'type' => ( is => 'ro', isa => 'Str', required => 1 );
+has id   => ( is => 'ro', isa => 'Str', required => 1 );
+has type => ( is => 'ro', isa => 'Str', required => 1 );
 
-has '_attributes' => (
+has _attributes => (
     init_arg => undef,
     traits   => [ 'Hash' ],
     is       => 'ro',
@@ -29,27 +29,7 @@ has '_attributes' => (
     }
 );
 
-sub add_attribute {
-    my $self  = $_[0];
-    my $key   = $_[1];
-    my $value = $_[2];
-
-    $self->raise_error( 400,
-        title => 'Attribute key conflict, a relation already exists for key: ' . $key
-    ) if $self->has_relationship_for( $key );
-
-    $self->_add_attribute( $key, $value );
-
-    return $self;
-}
-
-sub add_attributes {
-    my ($self, %args) = @_;
-    $self->add_attribute( $_, $args{ $_ } ) foreach keys %args;
-    return $self;
-}
-
-has '_relationships' => (
+has _relationships => (
     init_arg => undef,
     traits   => [ 'Hash' ],
     is       => 'ro',
@@ -66,8 +46,26 @@ has '_relationships' => (
     }
 );
 
+sub add_attribute {
+    my ( $self, $key, $value ) = @_;
+
+    $self->raise_error( 400,
+        title => 'Attribute key conflict, a relation already exists for key: ' . $key
+    ) if $self->has_relationship_for( $key );
+
+    $self->_add_attribute( $key, $value );
+
+    return $self;
+}
+
+sub add_attributes {
+    my ( $self, %args ) = @_;
+    $self->add_attribute( $_, $args{ $_ } ) foreach keys %args;
+    return $self;
+}
+
 sub add_relationship {
-    my ($self, $key, $resource, $collection) = @_;
+    my ( $self, $key, $resource, $collection ) = @_;
 
     $self->raise_error( 400,
         title => 'Relationship key conflict, an attribute already exists for key: ' . $key

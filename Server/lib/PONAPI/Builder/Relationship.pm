@@ -15,7 +15,7 @@ has name => (
     required => 1,
 );
 
-has '_resource_id_builders' => (
+has _resource_id_builders => (
     init_arg  => undef,
     traits    => [ 'Array' ],
     is        => 'ro',
@@ -31,9 +31,9 @@ has '_resource_id_builders' => (
     }
 );
 
-has 'collection' => (
-    is       => 'ro',
-    isa      => 'Bool',
+has collection => (
+    is  => 'ro',
+    isa => 'Bool',
 );
 
 sub has_resource {
@@ -47,7 +47,7 @@ sub has_resources {
 }
 
 sub add_resource {
-    my ($self, $resource) = @_;
+    my ( $self, $resource ) = @_;
     my $b = PONAPI::Builder::Resource::Identifier->new( parent => $self, %$resource );
     $b->add_meta( %{ $resource->{meta} } ) if $resource->{meta};
     $self->_add_resource_id_builder( $b );

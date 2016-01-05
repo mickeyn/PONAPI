@@ -5,7 +5,7 @@ use Moose;
 
 with 'PONAPI::Builder';
 
-has '_errors' => (
+has _errors => (
     init_arg => undef,
     traits   => [ 'Array' ],
     is       => 'ro',
@@ -20,17 +20,13 @@ has '_errors' => (
 );
 
 sub add_error {
-    my $self  = $_[0];
-    my $error = $_[1];
-
+    my ( $self, $error ) = @_;
     $self->_add_error( $error );
 }
 
 sub build {
-    my $self   = $_[0];
-    my $result = [];
-    @$result = @{ $self->_errors };
-    return $result;
+    my $self = $_[0];
+    return +[ @{ $self->_errors } ];
 }
 
 __PACKAGE__->meta->make_immutable;

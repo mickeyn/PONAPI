@@ -6,7 +6,7 @@ use Moose;
 with 'PONAPI::Builder',
      'PONAPI::Builder::Role::HasMeta';
 
-has '_links' => (
+has _links => (
     init_arg => undef,
     traits   => [ 'Hash' ],
     is       => 'ro',
@@ -24,15 +24,13 @@ has '_links' => (
 );
 
 sub add_link {
-    my $self = $_[0];
-    my $rel  = $_[1];
-    my $url  = $_[2];
+    my ( $self, $rel, $url ) = @_;
     $self->_add_link( $rel => $url );
     return $self;
 }
 
 sub add_links {
-    my ($self, %links) = @_;
+    my ( $self, %links ) = @_;
     $self->add_link( $_, $links{ $_ } ) foreach keys %links;
     return $self;
 }

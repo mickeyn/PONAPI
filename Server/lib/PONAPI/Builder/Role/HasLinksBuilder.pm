@@ -7,7 +7,7 @@ use PONAPI::Builder::Links;
 
 requires 'add_self_link';
 
-has 'links_builder' => (
+has links_builder => (
     init_arg  => undef,
     is        => 'ro',
     isa       => 'PONAPI::Builder::Links',

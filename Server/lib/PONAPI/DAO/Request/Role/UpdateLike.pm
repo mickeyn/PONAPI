@@ -6,12 +6,12 @@ use Moose::Role;
 use PONAPI::DAO::Constants;
 use PONAPI::DAO::Exception;
 
-has 'respond_to_updates_with_200' => (
+has respond_to_updates_with_200 => (
     is  => 'ro',
     isa => 'Bool',
 );
 
-has 'update_nothing_status' => (
+has update_nothing_status => (
     is      => 'ro',
     isa     => 'Int',
     # http://jsonapi.org/format/#crud-updating-relationship-responses-204

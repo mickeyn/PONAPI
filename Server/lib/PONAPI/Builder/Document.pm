@@ -40,14 +40,14 @@ has req_path => (
     default => sub { '/' },
 );
 
-has 'is_collection' => (
+has is_collection => (
     is      => 'ro',
     writer  => '_set_is_collection',
     isa     => 'Bool',
     default => 0
 );
 
-has '_included' => (
+has _included => (
     init_arg => undef,
     traits   => [ 'Array' ],
     is       => 'ro',
@@ -61,7 +61,7 @@ has '_included' => (
     }
 );
 
-has '_resource_builders' => (
+has _resource_builders => (
     init_arg  => undef,
     traits    => [ 'Array' ],
     is        => 'ro',
@@ -77,7 +77,7 @@ has '_resource_builders' => (
     }
 );
 
-has 'errors_builder' => (
+has errors_builder => (
     init_arg  => undef,
     is        => 'ro',
     isa       => 'PONAPI::Builder::Errors',

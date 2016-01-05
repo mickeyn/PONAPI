@@ -6,8 +6,8 @@ use Moose;
 with 'PONAPI::Builder',
      'PONAPI::Builder::Role::HasMeta';
 
-has 'id'   => ( is => 'ro', isa => 'Str', required => 1 );
-has 'type' => ( is => 'ro', isa => 'Str', required => 1 );
+has id   => ( is => 'ro', isa => 'Str', required => 1 );
+has type => ( is => 'ro', isa => 'Str', required => 1 );
 
 sub build {
     my $self   = $_[0];
