@@ -20,7 +20,7 @@ sub execute {
     if ( $self->is_valid ) {
         $self->repository->retrieve( %{ $self } );
         $self->document->add_null_resource
-            unless $self->document->_has_resource_builders;
+            unless $self->document->has_resource_builders;
     }
 
     return $self->response();

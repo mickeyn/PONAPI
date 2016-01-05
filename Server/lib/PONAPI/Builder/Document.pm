@@ -68,7 +68,7 @@ has _resource_builders => (
     isa       => 'ArrayRef[ PONAPI::Builder::Resource | PONAPI::Builder::Resource::Null ]',
     lazy      => 1,
     default   => sub { +[] },
-    predicate => '_has_resource_builders',
+    predicate => 'has_resource_builders',
     handles   => {
         '_num_resource_builders' => 'count',
         # private ...
@@ -102,12 +102,12 @@ sub has_errors {
 
 sub has_resource {
     my $self = $_[0];
-    $self->_has_resource_builders && $self->_num_resource_builders > 0;
+    $self->has_resource_builders && $self->_num_resource_builders > 0;
 }
 
 sub has_resources {
     my $self = $_[0];
-    $self->_has_resource_builders && $self->_num_resource_builders > 1;
+    $self->has_resource_builders && $self->_num_resource_builders > 1;
 }
 
 sub add_resource {
@@ -151,7 +151,7 @@ sub build {
         $result->{meta}  = $self->_meta                if $self->has_meta;
         $result->{links} = $self->links_builder->build if $self->has_links_builder;
 
-        if ( $self->_has_resource_builders ) {
+        if ( $self->has_resource_builders ) {
             if ( $self->is_collection ) {
                 # if it is a collection, then
                 # call build on each one ...
