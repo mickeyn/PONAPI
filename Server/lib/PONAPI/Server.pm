@@ -306,16 +306,9 @@ hop over to L<PONAPI::Manual> for the next steps!
 For reporting bugs or submitting patches, please use the github
 bug tracker at L<https://github.com/mickeyn/PONAPI>.
 
-=head1 AUTHORS
+=head2 CONTRIBUTORS
 
-=over 4
-
-=item * Mickey Nasriachi <mickey@cpan.org>
-
-=item * Stevan Little <stevan@cpan.org>
-
-=item * Brian Fraser <hugmeir@cpan.org>
-
-=back
+* Paolo Mazzoncini
+* Andrei Vereha
 
 =cut
