@@ -9,7 +9,6 @@ use Hash::MultiValue;
 use Module::Runtime    ();
 use Return::MultiLevel ();
 use Path::Class::File  ();
-use YAML::XS           ();
 use JSON::XS           ();
 
 use PONAPI::Server::ConfigReader;

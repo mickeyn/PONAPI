@@ -5,6 +5,7 @@ use Moose;
 
 use Moose::Util::TypeConstraints;
 use Path::Class::Dir;
+use YAML::XS ();
 
 use PONAPI::DAO;
 
