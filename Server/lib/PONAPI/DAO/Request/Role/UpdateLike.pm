@@ -57,6 +57,10 @@ sub _add_success_meta {
     if ( $return_status == PONAPI_UPDATED_NOTHING ) {
         my $status = $self->update_nothing_status;
         $self->document->set_status($status);
+        # This should NEVER show up in a response, because it would
+        # mean a 204 with a body; I'm still leaving it here because
+        # a 204+body is preferable to a server error due to an empty
+        # document.
         $detail = "modified nothing for $resource"
     }
 

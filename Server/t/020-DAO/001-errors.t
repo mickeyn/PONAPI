@@ -2,8 +2,6 @@
 use strict;
 use warnings;
 
-use Scalar::Util qw[ blessed ];
-
 use Data::Dumper;
 use Test::More;
 use JSON::XS;
@@ -309,21 +307,6 @@ subtest '... create' => sub {
         );
     }
 
-    my %good_create = (
-        @TEST_ARGS_TYPE,
-        data     => {
-            type => "articles",
-            attributes => {
-                title => "Title!",
-                body  => "Body!",
-            },
-            relationships => {
-                authors => { type => 'people', id => 42 },
-            },
-        }
-    );
-
-    use Storable qw/dclone/;
     foreach my $tuple (
         [
             { data => { attributes => {} } },
@@ -339,7 +322,8 @@ subtest '... create' => sub {
             {
                 data => {
                     attributes => {
-                        %{ $good_create{data}{attributes} },
+                        title => "Title!",
+                        body  => "Body!",
                         extra => 111
                     }
                 }
@@ -384,7 +368,19 @@ subtest '... create' => sub {
         ],
       )
     {
-        my $copy = dclone( \%good_create );
+        my $copy = {
+            @TEST_ARGS_TYPE,
+            data     => {
+                type => "articles",
+                attributes => {
+                    title => "Title!",
+                    body  => "Body!",
+                },
+                relationships => {
+                    authors => { type => 'people', id => 42 },
+                },
+            },
+        };
         my ( $body, $status, $expected, $msg ) = @$tuple;
 
         while ( my ( $k, $v ) = each %$body ) {
@@ -401,7 +397,7 @@ subtest '... create' => sub {
         my ( $w, @ret ) = ('');
         {
             local $SIG{__WARN__} = sub { $w .= shift };
-            @ret = $dao->create(%{ dclone $copy });
+            @ret = $dao->create(%$copy);
         }
         error_test(
             \@ret,
@@ -694,14 +690,6 @@ subtest '... delete_relationships' => sub {
             [
                 204,
                 [],
-                {
-                    'jsonapi' => {
-                        'version' => '1.0'
-                    },
-                    'meta' => {
-                        'detail' => 'modified nothing for /articles/1/comments => [{"id":99,"type":"comments"}]'
-                    }
-                }
             ],
             "... deleting a non-existent resource returns a 204"
         );
@@ -873,12 +861,14 @@ subtest '... illegal params' => sub {
 
             # Let's also test that all the methods detect unknown types
             $w = '';
-            my %modified_arguments = @{ dclone $args };
+            my %modified_arguments = @$args;
             $modified_arguments{type} = 'fake';
             my $data = $modified_arguments{data} || [];
             $data = [ $data ] if ref($data) ne 'ARRAY';
-            $_->{type} = 'fake' for @$data;
-            @ret = $dao->$action( %modified_arguments );
+            {
+                local $_->{type} = 'fake' for @$data;
+                @ret = $dao->$action( %modified_arguments );
+            }
             error_test(
                 \@ret,
                 {

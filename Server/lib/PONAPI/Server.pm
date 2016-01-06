@@ -319,12 +319,4 @@ bug tracker at L<https://github.com/mickeyn/PONAPI>.
 
 =back
 
-=head1 LICENSE
-
-This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
-
-=head1 COPYRIGHT
-
-Copyright (C) 2015 Mickey Nasriachi <mickey@cpan.org>
-
-=end
+=cut

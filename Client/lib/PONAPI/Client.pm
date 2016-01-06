@@ -39,62 +39,62 @@ has send_version_header => (
 ### public methods
 
 sub create {
-    my ( $self, %args ) = @_;
-    my $request = PONAPI::Client::Request::Create->new( %args );
+    my ( $self, @args ) = @_;
+    my $request = PONAPI::Client::Request::Create->new( @args );
     return $self->_send_ponapi_request( $request->request_params );
 }
 
 sub create_relationships {
-    my ( $self, %args ) = @_;
-    my $request = PONAPI::Client::Request::CreateRelationships->new( %args );
+    my ( $self, @args ) = @_;
+    my $request = PONAPI::Client::Request::CreateRelationships->new( @args );
     return $self->_send_ponapi_request( $request->request_params );
 }
 
 sub retrieve_all {
-    my ( $self, %args ) = @_;
-    my $request = PONAPI::Client::Request::RetrieveAll->new( %args );
+    my ( $self, @args ) = @_;
+    my $request = PONAPI::Client::Request::RetrieveAll->new( @args );
     return $self->_send_ponapi_request( $request->request_params );
 }
 
 sub retrieve {
-    my ( $self, %args ) = @_;
-    my $request = PONAPI::Client::Request::Retrieve->new( %args );
+    my ( $self, @args ) = @_;
+    my $request = PONAPI::Client::Request::Retrieve->new( @args );
     return $self->_send_ponapi_request( $request->request_params );
 }
 
 sub retrieve_relationships {
-    my ( $self, %args ) = @_;
-    my $request = PONAPI::Client::Request::RetrieveRelationships->new( %args );
+    my ( $self, @args ) = @_;
+    my $request = PONAPI::Client::Request::RetrieveRelationships->new( @args );
     return $self->_send_ponapi_request( $request->request_params );
 }
 
 sub retrieve_by_relationship {
-    my ( $self, %args ) = @_;
-    my $request = PONAPI::Client::Request::RetrieveByRelationship->new( %args );
+    my ( $self, @args ) = @_;
+    my $request = PONAPI::Client::Request::RetrieveByRelationship->new( @args );
     return $self->_send_ponapi_request( $request->request_params );
 }
 
 sub update {
-    my ( $self, %args ) = @_;
-    my $request = PONAPI::Client::Request::Update->new( %args );
+    my ( $self, @args ) = @_;
+    my $request = PONAPI::Client::Request::Update->new( @args );
     return $self->_send_ponapi_request( $request->request_params );
 }
 
 sub update_relationships {
-    my ( $self, %args ) = @_;
-    my $request = PONAPI::Client::Request::UpdateRelationships->new( %args );
+    my ( $self, @args ) = @_;
+    my $request = PONAPI::Client::Request::UpdateRelationships->new( @args );
     return $self->_send_ponapi_request( $request->request_params );
 }
 
 sub delete : method {
-    my ( $self, %args ) = @_;
-    my $request = PONAPI::Client::Request::Delete->new( %args );
+    my ( $self, @args ) = @_;
+    my $request = PONAPI::Client::Request::Delete->new( @args );
     return $self->_send_ponapi_request( $request->request_params );
 }
 
 sub delete_relationships {
-    my ( $self, %args ) = @_;
-    my $request = PONAPI::Client::Request::DeleteRelationships->new( %args );
+    my ( $self, @args ) = @_;
+    my $request = PONAPI::Client::Request::DeleteRelationships->new( @args );
     return $self->_send_ponapi_request( $request->request_params );
 }
 
@@ -115,7 +115,17 @@ sub _send_ponapi_request {
         ],
     });
 
-    return decode_json( $res->{body} );
+    my ($content, $failed, $e);
+    if ( $res->{body} ) {
+        local $@;
+        eval  { $content = decode_json( $res->{body} ); 1; }
+        or do { ($failed, $e) = (1, $@);                   };
+    }
+    if ( $failed ) {
+        warn "Invalid JSON response in body. Body is <$res->{body}>, error: $e";
+    }
+
+    return $res->{status}, $content;
 }
 
 __PACKAGE__->meta->make_immutable;

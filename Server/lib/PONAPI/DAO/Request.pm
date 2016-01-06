@@ -142,7 +142,15 @@ sub response {
     $doc->add_self_link
         if $self->send_doc_self_link && !$doc->has_link('self');
 
-    return ( $doc->status, \@headers, $doc->build );
+    return (
+        $doc->status,
+        \@headers,
+        (
+            $doc->status != 204
+                ? $doc->build
+                : ()
+        ),
+    );
 }
 
 sub _bad_request {

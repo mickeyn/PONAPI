@@ -20,7 +20,7 @@ sub request_params {
         path   => $self->path,
         ( $method eq 'GET'
             ? ( query_string => $self->_build_query_string )
-            : ( $self->does('PONAPI::Client::Request::Role::HasData')
+            : ( $self->can('data')
                   ? ( body => encode_json( { data => $self->data } ) )
                   : ()
               )

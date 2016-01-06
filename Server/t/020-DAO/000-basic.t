@@ -2,8 +2,6 @@
 use strict;
 use warnings;
 
-use Storable qw[ dclone ];
-use Scalar::Util qw[ blessed ];
 use JSON::XS qw[ decode_json ];
 
 use Test::More;
@@ -41,7 +39,6 @@ subtest '... retrieve all' => sub {
     my @ret = $dao->retrieve_all( type => 'people', send_doc_self_link => 1 );
     my $doc = $ret[2];
 
-    ok(!blessed($doc), '... the document we got is not blessed');
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');
 
     ok(exists $doc->{'jsonapi'}, '... we have a `jsonapi` key');
@@ -182,7 +179,6 @@ subtest '... retrieve' => sub {
     );
     my $doc = $ret[2];
 
-    ok(!blessed($doc), '... the document we got is not blessed');
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');
 
     my $data = $doc->{data};
@@ -224,7 +220,6 @@ subtest '... retrieve relationships' => sub {
     );
     my $doc = $ret[2];
 
-    ok(!blessed($doc), '... the document we got is not blessed');
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');
 
     my $data = $doc->{data};
@@ -296,7 +291,6 @@ subtest '... retrieve by relationship' => sub {
     );
     my $doc = $ret[2];
 
-    ok(!blessed($doc), '... the document we got is not blessed');
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');
 
     my $data = $doc->{data};
@@ -320,7 +314,6 @@ subtest '... retrieve by relationship' => sub {
     );
     $doc = $ret[2];
 
-    ok(!blessed($doc), '... the document we got is not blessed');
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');
 
     $data = $doc->{data};
@@ -404,7 +397,6 @@ subtest '... update' => sub {
 
     my @new = $dao->retrieve( @TEST_ARGS_TYPE_ID );
 
-    ok(!blessed($doc), '... the document we got is not blessed');
     is(ref $doc, 'HASH', '... the document we got is a HASH ref');
 
     ok($doc->{meta}, "... (optional) meta member is present");
@@ -464,9 +456,10 @@ subtest '... update' => sub {
     delete $updated[2]->{data}{attributes}{updated};
     is_deeply(\@updated, \@orig, "... can clear relationships via update");
 
-    my $data_for_restore = dclone( $backup[2]->{data} );
-    $data_for_restore->{relationships}{$_} = delete $data_for_restore->{relationships}{$_}{data}
-        for keys %{ $data_for_restore->{relationships} };
+    my $data_for_restore = { %{ $backup[2]->{data} } };
+    my $relationships = delete $data_for_restore->{relationships};
+    $data_for_restore->{relationships}{$_} = $relationships->{$_}{data}
+        for keys %$relationships;
     $dao->update( @TEST_ARGS_TYPE_ID, data => $data_for_restore );
     @updated = $dao->retrieve(@TEST_ARGS_TYPE_ID);
 
@@ -617,14 +610,7 @@ subtest '... delete_relationships' => sub {
             ],
         );
         is($res2[0], 204, '... got the correct status code');
-        my $meta = $res2[2]->{meta};
-        is(ref $meta, 'HASH', '... `meta` is a hash-ref');
-        ok(exists $meta->{detail}, '... `meta` has a `detail` key');
-        is_deeply(
-            $meta->{detail},
-            'modified nothing for /articles/2/comments => [{"id":5,"type":"comments"}]',
-            '... got the correct message in `meta`'
-        );
+        ok(!$res2[2], '... and no body');
     };
 
 };
@@ -892,7 +878,7 @@ sub test_fields_response {
     $data = [ $data ] if ref $data ne 'ARRAY';
 
     foreach my $resource_orig ( @$included, @$data ) {
-        my $resource     = dclone $resource_orig;
+        my $resource     = { %$resource_orig };
         my ($type, $id) = @{$resource}{qw/type id/};
         my $has_fields = $fields->{$type};
         delete @{$resource->{$_}}{@$has_fields} for qw/attributes relationships/;
