@@ -1,5 +1,14 @@
 Revision history for PONAPI-Server
 
+0.001003     2016-Jan-06
+             * Set minimum version for Plack::Middleware::MethodOverride (0.15)
+             * Send Conten-Length header in response
+             * No body with a 204 response
+             * Fixed abstracts
+             * Reduced dependencies (Storable, Scalar::Util)
+             * Improved testing (multiple clients)
+             * Document updates
+
 0.001002     2015-Dec-17
              * Support Perl 5.10+ (was 5.14)
              * Reduced dependencies
