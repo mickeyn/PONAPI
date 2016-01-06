@@ -257,11 +257,15 @@ sub _response {
     my ( $self, $status, $headers, $content ) = @_;
     my $res = Plack::Response->new( $status || 200 );
 
-    $res->headers( $headers );
+    $res->headers($headers);
     $res->content_type( $self->{'ponapi.mediatype'} );
     $res->header( 'X-PONAPI-Server-Version' => $self->{'ponapi.spec_version'} )
         if $self->{'ponapi.send_version_header'};
-    $res->content( JSON::XS::encode_json $content ) if ref $content;
+    if ( ref $content ) {
+        my $enc_content = JSON::XS::encode_json $content;
+        $res->content($enc_content);
+        $res->content_length( length($enc_content) );
+    }
     $res->finalize;
 }
 
