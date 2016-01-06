@@ -306,9 +306,4 @@ hop over to L<PONAPI::Manual> for the next steps!
 For reporting bugs or submitting patches, please use the github
 bug tracker at L<https://github.com/mickeyn/PONAPI>.
 
-=head2 CONTRIBUTORS
-
-* Paolo Mazzoncini
-* Andrei Vereha
-
 =cut
