@@ -1,4 +1,4 @@
-# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
+# ABSTRACT: DAO request role - `data` methods
 package PONAPI::DAO::Request::Role::HasDataMethods;
 
 use Moose::Role;

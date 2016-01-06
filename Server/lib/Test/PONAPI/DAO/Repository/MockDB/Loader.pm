@@ -1,4 +1,4 @@
-# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
+# ABSTRACT: mock repository loader
 package Test::PONAPI::DAO::Repository::MockDB::Loader;
 
 use Moose;

@@ -1,4 +1,4 @@
-# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
+# ABSTRACT: document builder - null resource
 package PONAPI::Builder::Resource::Null;
 
 use Moose;

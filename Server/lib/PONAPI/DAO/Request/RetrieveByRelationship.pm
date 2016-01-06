@@ -1,4 +1,4 @@
-# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
+# ABSTRACT: DAO request - retrieve by relationship
 package PONAPI::DAO::Request::RetrieveByRelationship;
 
 use Moose;
