@@ -1,4 +1,4 @@
-# ABSTRACT: DAO repository role
+# ABSTRACT: Interface role for PONAPI::DAO repositories
 package PONAPI::DAO::Repository;
 
 use Moose::Role;
@@ -23,10 +23,6 @@ no Moose::Role; 1;
 
 __END__
 =encoding UTF-8
-
-=head1 NAME
-
-PONAPI::DAO::Repository -- Interface role for PONAPI::DAO repositories.
 
 =head1 SYNOPSIS
 

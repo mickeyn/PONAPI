@@ -1,4 +1,4 @@
-# ABSTRACT: DAO constants class
+# ABSTRACT: Constants used by PONAPI::DAO and PONAPI repositories
 package PONAPI::DAO::Constants;
 
 my $constants;
@@ -28,10 +28,6 @@ $PONAPI_UPDATE_RETURN_VALUES{+PONAPI_UPDATED_NOTHING}   = 1;
 
 __END__
 =encoding UTF-8
-
-=head1 NAME
-
-PONAPI::DAO::Constants - Constants used by PONAPI::DAO and PONAPI repositories
 
 =head1 SYNOPSIS
 

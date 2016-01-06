@@ -283,10 +283,6 @@ sub _error_response {
 __END__
 =encoding UTF-8
 
-=head1 NAME
-
-PONAPI::Server - A {json:api} server.
-
 =head1 SYNOPSIS
 
     # Run the server

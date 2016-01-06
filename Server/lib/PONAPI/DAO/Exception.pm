@@ -1,4 +1,4 @@
-# ABSTRACT: DAO exceptions class
+# ABSTRACT: Exceptions for PONAPI::Server
 package PONAPI::DAO::Exception;
 
 use Moose;
@@ -158,10 +158,6 @@ no Moose; 1;
 
 __END__
 =encoding UTF-8
-
-=head1 NAME
-
-PONAPI::DAO::Exception - Exceptions for PONAPI
 
 =head1 SYNOPSIS
 

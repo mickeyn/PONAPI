@@ -73,10 +73,6 @@ no Moose; 1;
 __END__
 =encoding UTF-8
 
-=head1 NAME
-
-PONAPI::DAO - Interface to a JSON API.
-
 =head1 SYNOPSIS
 
     use PONAPI::DAO;

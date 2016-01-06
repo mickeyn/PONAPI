@@ -1,12 +1,8 @@
-# ABSTRACT: Manual for PONAPI::Server
+# ABSTRACT: An introduction to using PONAPI::Server
 # PODNAME: PONAPI::Manual
 __END__
 
 =encoding UTF-8
-
-=head1 NAME
-
-PONAPI::Manual - An introduction to using PONAPI::Server
 
 =head1 DESCRIPTION
 
