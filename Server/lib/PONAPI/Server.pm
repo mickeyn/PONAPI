@@ -1,4 +1,4 @@
-# ABSTRACT: Web-Server class
+# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::Server;
 
 our $VERSION = '0.001002';
