@@ -100,32 +100,53 @@ sub delete_relationships {
 
 
 ### private methods
-
+use constant OLD_HIJK => $Hijk::VERSION lt '0.16';
 sub _send_ponapi_request {
     my $self = shift;
     my %args = @_;
 
-    my $res = Hijk::request({
-        %args,
-        host => $self->host,
-        port => $self->port,
-        head => [
-            'Content-Type' => 'application/vnd.api+json',
-            ( $self->send_version_header ? ( 'X-PONAPI-Client-Version' => '1.0' ) : () )
-        ],
-    });
-
-    my ($content, $failed, $e);
-    if ( $res->{body} ) {
+    my ($status, $content, $failed, $e);
+    ($status, $content) = do {
         local $@;
-        eval  { $content = decode_json( $res->{body} ); 1; }
-        or do { ($failed, $e) = (1, $@);                   };
-    }
-    if ( $failed ) {
-        warn "Invalid JSON response in body. Body is <$res->{body}>, error: $e";
-    }
+        eval {
+            my $res = Hijk::request({
+                %args,
+                host => $self->host,
+                port => $self->port,
+                head => [
+                    'Content-Type' => 'application/vnd.api+json',
+                    ( $self->send_version_header
+                        ? ( 'X-PONAPI-Client-Version' => '1.0' )
+                        : ()
+                    ),
+                ],
+                parse_chunked => 1,
+            });
+            $status  = $res->{status};
+ 
+            if ( OLD_HIJK ) {
+                if ( ($res->{head}{'Transfer-Encoding'}||'') eq 'chunked' ) {
+                    die "Got a chunked response from the server, but this version of Hijk can't handle those; please upgrade to at least Hijk 0.16";
+                }
+            }
+            $content = $res->{body} ? decode_json( $res->{body} ) : '';
+            1;
+        }
+        or do {
+            ($failed, $e) = (1, $@||'Unknown error'); 
+        };
 
-    return $res->{status}, $content;
+        if ( $failed ) {
+            $status ||= 400;
+            $content  = {
+                errors  => [ { detail => $e, status => $status } ],
+            };
+        }
+
+        ($status, $content);
+    };
+
+    return ($status, $content);
 }
 
 __PACKAGE__->meta->make_immutable;
