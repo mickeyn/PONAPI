@@ -4,8 +4,6 @@ package PONAPI::DAO::Exception;
 use Moose;
 use Moose::Util  qw/find_meta/;
 
-with 'StackTrace::Auto';
-
 sub throw {
   my $class_or_obj = shift;
   die ( blessed $class_or_obj ? $class_or_obj : $class_or_obj->new(@_) );
@@ -52,7 +50,7 @@ has json_api_version => (
 # Picked from Throwable::Error
 sub as_string {
     my $self = shift;
-    return $self->message . "\n\n" . $self->stack_trace->as_string;
+    return $self->message;
 }
 
 sub as_response {
@@ -192,10 +190,6 @@ error response returned to the user.
 =head2 message
 
 This attribute contains the exception message.
-
-=head2 stack_trace
-
-This contains the stack trace of the exception.
 
 =head2 as_string
 
