@@ -6,7 +6,7 @@ use warnings;
 use Test::More;
 use Test::Moose;
 
-use JSON::XS qw( encode_json );
+use JSON::XS qw( decode_json );
 
 BEGIN {
     use_ok('PONAPI::Client::Request::Create');
@@ -52,10 +52,11 @@ subtest '... testing request parameters' => sub {
     my $EXPECTED = +{
         method       => 'POST',
         path         => '/articles',
-        body         => encode_json({ data => $TEST_DATA{data} }),
+        body         => { data => $TEST_DATA{data} },
     };
 
     my $GOT = +{ $req->request_params };
+    $GOT->{body} = decode_json($GOT->{body});
 
     is_deeply( $GOT, $EXPECTED, 'checked request parametes' );
 
