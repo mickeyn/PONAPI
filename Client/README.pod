@@ -8,7 +8,7 @@ PONAPI::Client - PONAPI::Client - Client to a {JSON:API} service (http://jsonapi
 
 =head1 VERSION
 
-version 0.001000
+version 0.001001
 
 =head1 SYNOPSIS
 
