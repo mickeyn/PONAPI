@@ -1,5 +1,9 @@
 Revision history for PONAPI-Server
 
+0.001004     2016-Jan-07
+             * Set minimum version for File::Path (2.04)
+             * Set minimum version for Test::Simple (1.001014)
+
 0.001003     2016-Jan-06
              * Set minimum version for Plack::Middleware::MethodOverride (0.15)
              * Send Conten-Length header in response
