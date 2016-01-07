@@ -1,6 +1,8 @@
 # ABSTRACT: PONAPI::Client - Client to a {JSON:API} service (http://jsonapi.org/) v1.0
 package PONAPI::Client;
 
+our $VERSION = '0.001000';
+
 use Moose;
 
 use Hijk;
@@ -123,7 +125,7 @@ sub _send_ponapi_request {
                 parse_chunked => 1,
             });
             $status  = $res->{status};
- 
+
             if ( OLD_HIJK ) {
                 if ( ($res->{head}{'Transfer-Encoding'}||'') eq 'chunked' ) {
                     die "Got a chunked response from the server, but this version of Hijk can't handle those; please upgrade to at least Hijk 0.16";
@@ -133,7 +135,7 @@ sub _send_ponapi_request {
             1;
         }
         or do {
-            ($failed, $e) = (1, $@||'Unknown error'); 
+            ($failed, $e) = (1, $@||'Unknown error');
         };
 
         if ( $failed ) {
@@ -162,26 +164,26 @@ __END__
         host => $host,
         port => $port,
     );
-    
+
     $client->retrieve_all( type => $type );
-    
+
     $client->retrieve(
         type => $type,
         id   => $id,
     );
-    
+
     $client->retrieve_relationships(
         type     => $type,
         id       => $id,
         rel_type => $rel_type,
     );
-    
+
     $client->retrieve_by_relationship(
         type     => $type,
         id       => $id,
         rel_type => $rel_type,
     );
-    
+
     $client->create(
         type => $type,
         data => {
@@ -189,12 +191,12 @@ __END__
             relationships => { ... },
         },
     );
-    
+
     $client->delete(
         type => $type,
         id   => $id,
     );
-    
+
     $client->update(
         type => $type,
         id   => $id,
@@ -205,7 +207,7 @@ __END__
             relationships => { ... },
         }
     );
-    
+
     $client->delete_relationships(
         type => $type,
         id   => $id,
@@ -215,7 +217,7 @@ __END__
             ...
         ],
     );
-    
+
     $client->create_relationships(
         type => $type,
         id   => $id,
@@ -225,7 +227,7 @@ __END__
             ...
         ],
     );
-    
+
     $client->update_relationships(
         type => $type,
         id   => $id,
@@ -314,7 +316,7 @@ Do we want to explain how to create your own subclass of the client?
 
 =head2 new
 
-Creates a new C<PONAPI::Client> object.  Takes a couple of attributes: 
+Creates a new C<PONAPI::Client> object.  Takes a couple of attributes:
 
 =over 4
 
@@ -564,7 +566,7 @@ Deletes the resource.
 Update a resource's relationships.  Basically a shortcut to using C<update>.
 
 For one-to-one relationships, C<data> can be either a single hashref, or undef.
-For one-to-many relationships, C<data> can be an arrayref; an empty arrayref 
+For one-to-many relationships, C<data> can be an arrayref; an empty arrayref
 means 'clear the relationship'.
 
 =head2 create_relationships
