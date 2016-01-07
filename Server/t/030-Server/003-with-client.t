@@ -99,6 +99,7 @@ my $article_2 = {
 };
 
 my @common = ( type => articles => id => 2 );
+
 sub basic_retrieve_all_test {
     my ($status, $res, $expected_ids_in_order) = @_;
 
@@ -125,6 +126,7 @@ sub _get_a_new_author {
         }
     )->{data};
 }
+
 sub _get_a_new_comments {
     my ($client) = @_;
 
@@ -463,7 +465,7 @@ foreach my $implementation (
                 }
             }
         };
-        
+
     }; # '... $test_name' subtest
 }
 
@@ -561,7 +563,7 @@ package
 # we tread *very* lightly; failing any of these tests won't actually cause
 # the test suite to fail!
 # While we want these to be tested and passing, if everything else is
-# working, 
+# working,
 
 {
 package
@@ -646,4 +648,5 @@ EORANT
     }
 }
 }
+
 done_testing;
