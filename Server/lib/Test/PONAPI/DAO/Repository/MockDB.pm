@@ -107,7 +107,6 @@ sub retrieve_relationships {
 
     my $sort = $args{sort} || [];
     if ( @$sort ) {
-        # TODO move to the request:
         PONAPI::DAO::Exception->throw(
             message => "You can only sort by id in retrieve_relationships"
         ) if @$sort > 1 || $sort->[0] !~ /\A(-)?id\z/;
@@ -326,7 +325,6 @@ sub create_relationships {
 
     $dbh->commit;
     return $ret;
-    # TODO: add missing login
 }
 
 sub update {
@@ -355,8 +353,6 @@ sub update {
 sub _update {
     my ( $self, %args ) = @_;
     my ( $type, $id, $data ) = @args{qw< type id data >};
-
-    # TODO this needs to be part of $data's validation in Request.pm
     my ($attributes, $relationships) = map $_||{}, @{ $data }{qw/ attributes relationships /};
 
     my $return = PONAPI_UPDATED_NORMAL;
@@ -463,7 +459,6 @@ sub update_relationships {
     $dbh->commit;
 
     return $ret;
-    # TODO: add missing login
 }
 
 sub delete : method {
@@ -477,8 +472,6 @@ sub delete : method {
     );
 
     my $sth = $self->_db_execute( $stmt );
-
-    # TODO: Should this also clear relationships?
 
     return;
 }
@@ -555,7 +548,6 @@ sub _delete_relationships {
 
     $ret = PONAPI_UPDATED_NOTHING if !$rows_modified;
 
-    # TODO: add missing login
     return $ret;
 }
 
@@ -642,8 +634,6 @@ sub _add_resource_relationships {
 
     # Do not add sort or page here -- those were for the primary resource
     # *only*.
-    # TODO any way to make them happen here? Fetching a resource with a million
-    # relationships seems bad.
     my $rels = $self->_fetchall_relationships(
         type     => $type,
         id       => $rec->id,
@@ -685,8 +675,6 @@ sub _add_included {
     $filter->{id} = $ids;
 
     # Do NOT add sort -- sort here was for the *main* resource!
-    # TODO spec is vague regarding page here.  How do you paginate included
-    # resources?
     my $stmt = $self->tables->{$type}->select_stmt(
         type   => $type,
         filter => $filter,
@@ -793,7 +781,6 @@ sub _db_execute {
                 status    => 409,
             );
         }
-        # TODO better error messages for other codes
         elsif ( $err_id ) {
             PONAPI::DAO::Exception->throw(
                 message   => $errstr,
