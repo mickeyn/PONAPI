@@ -189,7 +189,48 @@ subtest '... include' => sub {
 
 };
 
-# TODO: sort
+subtest '... sort' => sub {
+
+    subtest '... sort with no values' => sub {
+
+        my @ret = $dao->retrieve_all( type => 'articles', sort => [] );
+        my $doc = $ret[2];
+
+        my $errors = $doc->{errors};
+        ok($errors, '... the document has an `errors` key');
+        is(ref $errors, 'ARRAY', "and it's an array-ref");
+        is(@$errors, 1, '... we have one error');
+        is_deeply(
+             $errors->[0],
+             {
+                 detail => "`sort` is missing values",
+                 status => 400
+             },
+             '... and it contains what we expected'
+         );
+    };
+
+    subtest '... sort on `id`' => sub {
+
+        my @ret = $dao->retrieve_all( type => 'articles', sort => [qw< -id >] );
+        my $doc = $ret[2];
+
+        my $data = $doc->{data};
+        ok($data, '... the document has an `data` key');
+        is(ref $data, 'ARRAY', '... `data` value is an array-ref ');
+
+        my @ids = map { $_->{id} } @$data;
+        is(@$data, 3, '... of exactly 3 elements');
+        is_deeply(
+            \@ids,
+            [ 3, 2, 1 ],
+            'and we have all the ids in the correct order'
+        )
+
+    };
+
+};
+
 # TODO: page
 
 done_testing;

@@ -116,8 +116,7 @@ sub retrieve_relationships {
 
         my $table_obj    = $self->tables->{$type};
         my $relation_obj = $table_obj->RELATIONS->{$rel_type};
-
-        my $id_column     = $relation_obj->REL_ID_COLUMN;
+        my $id_column    = $relation_obj->REL_ID_COLUMN;
 
         @$sort = ($desc ? '-' : '') . $id_column;
     }
