@@ -8,7 +8,7 @@ PONAPI::Server - PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/
 
 =head1 VERSION
 
-version 0.001004
+version 0.001005
 
 =head1 SYNOPSIS
 
@@ -22,7 +22,7 @@ version 0.001004
 
 =head1 DESCRIPTION
 
-PONAPI::Server is a small plack server that implements the
+C<PONAPI::Server> is a small plack server that implements the
 L<{json:api}|http://jsonapi.org/> specification.
 
 You'll have to set up a repository (to provide access to the data

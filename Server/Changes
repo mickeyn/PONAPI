@@ -1,5 +1,10 @@
 Revision history for PONAPI-Server
 
+0.001005     2016-Jan-08
+             * Improved testing (debugging code)
+             * Increased test coverage (sort/page parameters)
+             * Document updates
+
 0.001004     2016-Jan-07
              * Set minimum version for File::Path (2.04)
              * Set minimum version for Test::Simple (1.001014)
