@@ -294,7 +294,7 @@ __END__
 
 =head1 DESCRIPTION
 
-PONAPI::Server is a small plack server that implements the
+C<PONAPI::Server> is a small plack server that implements the
 L<{json:api}|http://jsonapi.org/> specification.
 
 You'll have to set up a repository (to provide access to the data

@@ -243,8 +243,8 @@ __END__
 
 =head1 DESCRIPTION
 
-C<PONAPI::Client> is a L<{JSON:API}|TODO> compliant client; it should be able
-to communicate with any API-compliant service.
+C<PONAPI::Client> is a L<{JSON:API}|http://jsonapi.org/> compliant client;
+it should be able to communicate with any API-compliant service.
 
 The client does a handful of checks required by the spec, then uses L<Hijk>
 to communicate with the service.
