@@ -23,6 +23,8 @@ if ( !$have_ponapi_client && !$have_http_tiny && !$have_curl ) {
     plan skip_all => 'Client cannot be loaded, not running these tests'
 }
 
+my $content_type = 'application/vnd.api+json';
+
 my $author_attributes = {
     name   => 'New!',
     age    => 11,
@@ -535,6 +537,7 @@ package
 package
     PONAPI::Client::HTTP::Tiny;
     use Moose;
+    use Data::Dumper;
     use JSON::XS qw/decode_json/;
 
     extends 'PONAPI::Client::Mock';
@@ -548,14 +551,31 @@ package
             $args{method} => $url,
             {
                 headers => {
-                    'Content-Type' => 'application/vnd.api+json',
+                    'Content-Type' => $content_type,
                 },
                 ( $args{body} ? (content => $args{body}) : ()),
             }
         );
 
         return $response->{status} unless $response->{content};
-        return $response->{status}, decode_json($response->{content});
+
+        ::is(
+            $response->{headers}{'content-type'},
+            $content_type,
+            "..got the expected content type",
+        ) or diag(Dumper($response));
+
+        my ($content, $failed, $e);
+        {
+            local $@;
+            eval  { $content = decode_json($response->{content}) }
+            or do { ($failed, $e) = (1, $@||'Unknown error')     };
+        }
+        if ( $failed ) {
+            ::diag("Failed to decode the response content: $@\n" . Dumper($response));
+        }
+
+        return $response->{status}, $content;
     }
 }
 
@@ -589,7 +609,7 @@ package
             '-s',
             '-X'  => $args{method},
             '-w'  => '\n%{http_code}',
-            '-H'  => "Content-Type: application/vnd.api+json",
+            '-H'  => "Content-Type: $content_type",
             $url,
             ($args{body} ? ('-d' => $args{body}) : ()),
         );
