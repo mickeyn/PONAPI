@@ -10,12 +10,6 @@ BEGIN {
     use_ok('PONAPI::Client::Request::RetrieveByRelationship');
 }
 
-=pod
-
-TODO:
-
-=cut
-
 my %TEST_DATA = (
     type     => 'articles',
     id       => 2,

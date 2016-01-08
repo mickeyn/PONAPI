@@ -897,8 +897,4 @@ sub test_fields_response {
 
 }
 
-# TODO
-#
-# No Content
-
 done_testing;

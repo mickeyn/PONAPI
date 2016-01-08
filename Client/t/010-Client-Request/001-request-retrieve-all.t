@@ -10,12 +10,6 @@ BEGIN {
     use_ok('PONAPI::Client::Request::RetrieveAll');
 }
 
-=pod
-
-TODO:
-
-=cut
-
 my %TEST_DATA = (
     type    => 'articles',
     fields  => { articles => [qw< title body >] },

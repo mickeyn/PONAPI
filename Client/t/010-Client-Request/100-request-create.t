@@ -12,12 +12,6 @@ BEGIN {
     use_ok('PONAPI::Client::Request::Create');
 }
 
-=pod
-
-TODO:
-
-=cut
-
 my %TEST_DATA = (
     type => 'articles',
     data => {
