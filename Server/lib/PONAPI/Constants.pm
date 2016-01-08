@@ -1,5 +1,5 @@
 # ABSTRACT: Constants used by PONAPI::DAO and PONAPI repositories
-package PONAPI::DAO::Constants;
+package PONAPI::Constants;
 
 my $constants;
 BEGIN {
@@ -31,7 +31,7 @@ __END__
 
 =head1 SYNOPSIS
 
-    use PONAPI::DAO::Constants;
+    use PONAPI::Constants;
     sub update {
         ...
 

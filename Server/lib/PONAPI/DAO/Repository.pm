@@ -82,7 +82,7 @@ C<data> will be an arrayref of resources.
 =head2 update
 
 Return value MUST be one of the C<PONAPI_UPDATE_*> constants provided by
-C<PONAPI::DAO::Constants>, like C<PONAPI_UPDATED_EXTENDED>.
+C<PONAPI::Constants>, like C<PONAPI_UPDATED_EXTENDED>.
 
 If the update operation updated more than what was requested (for example,
 an C<updated> column in the table, and that column is part of the resource),

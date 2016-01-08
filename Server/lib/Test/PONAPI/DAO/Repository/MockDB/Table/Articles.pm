@@ -54,7 +54,7 @@ sub BUILDARGS {
     return \%args;
 }
 
-use PONAPI::DAO::Constants;
+use PONAPI::Constants;
 override update_stmt => sub {
     my ($self, %args) = @_;
 

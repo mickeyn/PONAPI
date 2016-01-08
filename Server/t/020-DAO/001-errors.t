@@ -783,7 +783,7 @@ subtest '... illegal params' => sub {
         };
 
         {
-            use PONAPI::DAO::Constants;
+            use PONAPI::Constants;
             no warnings 'redefine';
             local *$glob = sub {
                 my ($self, %args) = @_;

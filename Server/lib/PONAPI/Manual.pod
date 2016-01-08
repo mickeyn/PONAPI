@@ -188,7 +188,7 @@ And finally, on perl:
     package My::Repository::Hooray;
     use Moose;
     with 'PONAPI::DAO::Repository';
-    use PONAPI::DAO::Constants;
+    use PONAPI::Constants;
     use PONAPI::DAO::Exception;
 
 That is the initial boilerplate for any repo.  The L<PONAPI::DAO::Repository>
@@ -931,7 +931,7 @@ Clear the one-to-many comments relationship:
     }
 
 B<C<update> has a strict return value!> It MUST return one
-of three constants imported by L<PONAPI::DAO::Constants>:
+of three constants imported by L<PONAPI::Constants>:
 
 =over 3
 

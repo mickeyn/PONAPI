@@ -3,7 +3,7 @@ package PONAPI::DAO::Request::Role::UpdateLike;
 
 use Moose::Role;
 
-use PONAPI::DAO::Constants;
+use PONAPI::Constants;
 use PONAPI::DAO::Exception;
 
 has respond_to_updates_with_200 => (
@@ -76,7 +76,7 @@ sub _get_resource_for_meta {
     return $link . " => " . $self->json->encode( $self->data );
 }
 
-no PONAPI::DAO::Constants;
+no PONAPI::Constants;
 no Moose::Role; 1;
 
 __END__

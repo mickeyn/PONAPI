@@ -16,7 +16,7 @@ use Test::PONAPI::DAO::Repository::MockDB::Table::Articles;
 use Test::PONAPI::DAO::Repository::MockDB::Table::People;
 use Test::PONAPI::DAO::Repository::MockDB::Table::Comments;
 
-use PONAPI::DAO::Constants;
+use PONAPI::Constants;
 use PONAPI::DAO::Exception;
 
 with 'PONAPI::DAO::Repository';
