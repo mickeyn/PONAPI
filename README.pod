@@ -9,8 +9,8 @@ PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org) v1.0
 =head1 DESCRIPTION
 
 L<Server|https://github.com/mickeyn/PONAPI/tree/master/Server> is a Perl
-implementation of the L<{json:api}|http://jsonapi.org> specification.
-it should be able to communicate with any API-communicate client.
+implementation of the L<{json:api}|http://jsonapi.org> specification;
+it should be able to communicate with any API-compliant client.
 
 L<Client|https://github.com/mickeyn/PONAPI/tree/master/Client> is a Perl
 implementation of a L<{JSON:API}|http://jsonapi.org> compliant client;
