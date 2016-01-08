@@ -4,7 +4,7 @@
 
 =head1 NAME
 
-PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org) v1.0
+PONAPI - Perl implementation of L<{json:api}|http://jsonapi.org> v1.0
 
 =head1 DESCRIPTION
 
@@ -13,7 +13,7 @@ implementation of the L<{json:api}|http://jsonapi.org> specification;
 it should be able to communicate with any API-compliant client.
 
 L<Client|https://github.com/mickeyn/PONAPI/tree/master/Client> is a Perl
-implementation of a L<{JSON:API}|http://jsonapi.org> compliant client;
+implementation of a L<{json:api}|http://jsonapi.org> compliant client;
 it should be able to communicate with any API-compliant service.
 
 =head1 AUTHORS
