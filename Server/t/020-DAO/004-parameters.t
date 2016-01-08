@@ -231,6 +231,79 @@ subtest '... sort' => sub {
 
 };
 
-# TODO: page
+subtest '... page' => sub {
+
+    subtest '... page with no values' => sub {
+
+        my @ret = $dao->retrieve_all( type => 'articles', page => {} );
+        my $doc = $ret[2];
+
+        my $errors = $doc->{errors};
+        ok($errors, '... the document has an `errors` key');
+        is(ref $errors, 'ARRAY', "and it's an array-ref");
+        is(@$errors, 1, '... we have one error');
+        is_deeply(
+             $errors->[0],
+             {
+                 detail => "`page` is missing values",
+                 status => 400
+             },
+             '... and it contains what we expected'
+         );
+    };
+
+    subtest '... page with limit == 2' => sub {
+
+        my @ret = $dao->retrieve_all( req_path => '/articles', type => 'articles', page => { limit => 2 } );
+        my $doc = $ret[2];
+
+        my $data = $doc->{data};
+        ok($data, '... the document has an `data` key');
+        is(ref $data, 'ARRAY', '... `data` value is an array-ref ');
+        is(@$data, 2, '... of exactly 2 elements');
+
+        my $links = $doc->{links};
+        ok($links, '... the document has an `links` key');
+        is(ref $links, 'HASH', '... `links` value is a hash-ref ');
+        is_deeply(
+            [ sort keys %$links ],
+            [qw< first next self >],
+            '... `links` has all expected keys'
+        );
+        ok(scalar(grep /^\/articles/, values %$links)==3, '... all links have the correct base');
+        ok(scalar(grep /page%5Blimit%5D=2/, values %$links)==3,  '... all links contain the correct `limit`');
+        ok($links->{first} =~ /page%5Boffset%5D=0/, '... `first` link points to offset=0');
+        ok($links->{next}  =~ /page%5Boffset%5D=2/, '... `next`  link points to offset=2');
+        ok($links->{self}  =~ /page%5Boffset%5D=0/, '... `self`  link points to offset=0');
+
+    };
+
+    subtest '... page with limit == 2, offset = 1' => sub {
+
+        my @ret = $dao->retrieve_all( req_path => '/articles', type => 'articles', page => { limit => 2, offset => 1 } );
+        my $doc = $ret[2];
+
+        my $data = $doc->{data};
+        ok($data, '... the document has an `data` key');
+        is(ref $data, 'ARRAY', '... `data` value is an array-ref ');
+        is(@$data, 2, '... of exactly 2 elements');
+
+        my $links = $doc->{links};
+        ok($links, '... the document has an `links` key');
+        is(ref $links, 'HASH', '... `links` value is a hash-ref ');
+        is_deeply(
+            [ sort keys %$links ],
+            [qw< first next self >],
+            '... `links` has all expected keys'
+        );
+        ok(scalar(grep /^\/articles/, values %$links)==3, '... all links have the correct base');
+        ok(scalar(grep /page%5Blimit%5D=2/, values %$links)==3,  '... all links contain the correct `limit`');
+        ok($links->{first} =~ /page%5Boffset%5D=0/, '... `first` link points to offset=0');
+        ok($links->{next}  =~ /page%5Boffset%5D=3/, '... `next`  link points to offset=3');
+        ok($links->{self}  =~ /page%5Boffset%5D=1/, '... `self`  link points to offset=1');
+
+    };
+
+};
 
 done_testing;
