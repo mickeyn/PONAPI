@@ -17,9 +17,9 @@ use PONAPI::Server::ConfigReader;
 use parent 'Plack::Component';
 
 use constant {
-    ERR_MISSING_CONTENT_TYPE => +{ __error__ => +[ 415, "{JSON:API} missing Content-Type header" ] },
-    ERR_WRONG_CONTENT_TYPE   => +{ __error__ => +[ 415, "{JSON:API} invalid Content-Type header" ] },
-    ERR_WRONG_HEADER_ACCEPT  => +{ __error__ => +[ 406, "{JSON:API} invalid Accept header" ] },
+    ERR_MISSING_CONTENT_TYPE => +{ __error__ => +[ 415, "{JSON:API} Missing Content-Type header" ] },
+    ERR_WRONG_CONTENT_TYPE   => +{ __error__ => +[ 415, "{JSON:API} Invalid Content-Type header" ] },
+    ERR_WRONG_HEADER_ACCEPT  => +{ __error__ => +[ 406, "{JSON:API} Invalid Accept header" ] },
     ERR_BAD_REQ              => +{ __error__ => +[ 400, "{JSON:API} Bad request" ] },
     ERR_BAD_REQ_PARAMS       => +{ __error__ => +[ 400, "{JSON:API} Bad request (unsupported parameters)" ] },
     ERR_SORT_NOT_ALLOWED     => +{ __error__ => +[ 400, "{JSON:API} Server-side sorting not allowed" ] },
