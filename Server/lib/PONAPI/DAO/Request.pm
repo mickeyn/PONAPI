@@ -24,6 +24,12 @@ has type => (
     required => 1,
 );
 
+has extensions => (
+    is      => 'ro',
+    isa     => 'HashRef',
+    default => sub { +{} },
+);
+
 has send_doc_self_link => (
     is      => 'ro',
     isa     => 'Bool',
