@@ -1,4 +1,4 @@
-# ABSTRACT: PONAPI::Client - Client to a {JSON:API} service (http://jsonapi.org/) v1.0
+# ABSTRACT: Client to a {JSON:API} service (http://jsonapi.org/) v1.0
 package PONAPI::Client;
 
 our $VERSION = '0.001001';
