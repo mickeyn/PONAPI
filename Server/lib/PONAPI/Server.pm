@@ -6,6 +6,7 @@ our $VERSION = '0.001005';
 use Plack::Request;
 use Plack::Response;
 use Hash::MultiValue;
+use HTTP::Headers::ActionPack;
 use Module::Runtime    ();
 use Return::MultiLevel ();
 use Path::Class::File  ();
@@ -17,8 +18,8 @@ use parent 'Plack::Component';
 
 use constant {
     ERR_MISSING_CONTENT_TYPE => +{ __error__ => +[ 415, "{JSON:API} missing Content-Type header" ] },
-    ERR_WRONG_CONTENT_TYPE   => +{ __error__ => +[ 415, "{JSON:API} Content-Type is not: 'application/vnd.api+json'" ] },
-    ERR_WRONG_HEADER_ACCEPT  => +{ __error__ => +[ 406, "{JSON:API} Accept has only modified json-api media-types" ] },
+    ERR_WRONG_CONTENT_TYPE   => +{ __error__ => +[ 415, "{JSON:API} invalid Content-Type header" ] },
+    ERR_WRONG_HEADER_ACCEPT  => +{ __error__ => +[ 406, "{JSON:API} invalid Accept header" ] },
     ERR_BAD_REQ              => +{ __error__ => +[ 400, "{JSON:API} Bad request" ] },
     ERR_BAD_REQ_PARAMS       => +{ __error__ => +[ 400, "{JSON:API} Bad request (unsupported parameters)" ] },
     ERR_SORT_NOT_ALLOWED     => +{ __error__ => +[ 400, "{JSON:API} Server-side sorting not allowed" ] },
@@ -41,7 +42,6 @@ sub prepare_app {
     my $default_media_type           = 'application/vnd.api+json';
     $self->{'ponapi.spec_version'} //= '1.0';
     $self->{'ponapi.mediatype'}    //= $default_media_type;
-    $self->{'ponapi.qr_mediatype'} //= qr<\Q$default_media_type\E>;
 
     $self->_load_dao();
 }
@@ -173,18 +173,24 @@ sub _ponapi_route_match {
 
 sub _ponapi_check_headers {
     my ( $self, $wr, $req ) = @_;
+
     my $headers = $self->_request_headers($req);
+    my $pack    = HTTP::Headers::ActionPack->new;
+    my $mt      = $self->{'ponapi.mediatype'};
 
     # check Content-Type
     my $content_type = $headers->get('Content-Type');
     $wr->(ERR_MISSING_CONTENT_TYPE) unless $content_type;
-    $wr->(ERR_WRONG_CONTENT_TYPE)   unless $content_type eq $self->{'ponapi.mediatype'};
+    $wr->(ERR_WRONG_CONTENT_TYPE)   unless $content_type eq $mt;
 
     # check Accept
-    my $qr = $self->{'ponapi.qr_mediatype'};
-    my @jsonapi_accept = grep { /$qr/ } split /,/ => $headers->get_all('Accept');
-    return unless @jsonapi_accept;
-    $wr->(ERR_WRONG_HEADER_ACCEPT) unless grep { /^$qr;?$/ } @jsonapi_accept;
+    my @jsonapi_accept =
+        map  { ( $_->[1]->subject eq $mt ) ? $_->[1] : () }
+        map  { $pack->create_header( 'Accept' => $_ )->iterable }
+        $headers->get_all('Accept');
+
+    $wr->(ERR_WRONG_HEADER_ACCEPT)
+        if @jsonapi_accept and !( grep { !keys %{ $_->params } } @jsonapi_accept );
 }
 
 sub _ponapi_query_params {

@@ -45,7 +45,6 @@ sub read_config {
     $self->_set_repository;
 
     $self->{'ponapi.mediatype'} = 'application/vnd.api+json';
-    $self->{'ponapi.qr_mediatype'} = qr{application/vnd\.api\+json};
 
     return %{$self};
 }
