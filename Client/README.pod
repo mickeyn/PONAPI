@@ -4,11 +4,11 @@
 
 =head1 NAME
 
-PONAPI::Client - PONAPI::Client - Client to a {JSON:API} service (http://jsonapi.org/) v1.0
+PONAPI::Client - Client to a {JSON:API} service (http://jsonapi.org/) v1.0
 
 =head1 VERSION
 
-version 0.001001
+version 0.002000
 
 =head1 SYNOPSIS
 
@@ -96,8 +96,8 @@ version 0.001001
 
 =head1 DESCRIPTION
 
-C<PONAPI::Client> is a L<{JSON:API}|TODO> compliant client; it should be able
-to communicate with any API-compliant service.
+C<PONAPI::Client> is a L<{JSON:API}|http://jsonapi.org/> compliant client;
+it should be able to communicate with any API-compliant service.
 
 The client does a handful of checks required by the spec, then uses L<Hijk>
 to communicate with the service.

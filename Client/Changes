@@ -1,7 +1,10 @@
 Revision history for PONAPI-Client
 
-0.001001     2014-Jan-07
+0.002000     2016-Jan-12
+             * First CPAN release
+
+0.001001     2016-Jan-07
              * Set minimum version for Test::Simple (1.001014)
 
-0.001000     2014-Jan-07
+0.001000     2016-Jan-07
              * The Little Bang!
