@@ -9,6 +9,7 @@ use HTTP::Headers::ActionPack;
 use Module::Runtime    ();
 use Return::MultiLevel ();
 use JSON::XS           ();
+use HTTP::Headers::ActionPack;
 
 use PONAPI::Server::ConfigReader;
 
@@ -18,6 +19,7 @@ use constant {
     ERR_MISSING_CONTENT_TYPE => +{ __error__ => +[ 415, "{JSON:API} Missing Content-Type header" ] },
     ERR_WRONG_CONTENT_TYPE   => +{ __error__ => +[ 415, "{JSON:API} Invalid Content-Type header" ] },
     ERR_WRONG_HEADER_ACCEPT  => +{ __error__ => +[ 406, "{JSON:API} Invalid Accept header" ] },
+    ERR_BAD_EXTENSION_REQ    => +{ __error__ => +[ 406, "{JSON:API} Request for non-supported extension" ] },
     ERR_BAD_REQ              => +{ __error__ => +[ 400, "{JSON:API} Bad request" ] },
     ERR_BAD_REQ_PARAMS       => +{ __error__ => +[ 400, "{JSON:API} Bad request (unsupported parameters)" ] },
     ERR_SORT_NOT_ALLOWED     => +{ __error__ => +[ 400, "{JSON:API} Server-side sorting not allowed" ] },
@@ -80,7 +82,7 @@ sub _ponapi_params {
     my ( $self, $wr, $req ) = @_;
 
     # THE HEADERS
-    $self->_ponapi_check_headers($wr, $req);
+    my @ponapi_extentions = $self->_ponapi_check_headers($wr, $req);
 
     # THE PATH --> route matching
     my @ponapi_route_params = $self->_ponapi_route_match($wr, $req);
@@ -98,6 +100,7 @@ sub _ponapi_params {
     my $doc_self_link = ($req->method eq 'GET') ? !!$self->{'ponapi.doc_auto_self_link'} : 0;
 
     my %params = (
+        @ponapi_extentions,
         @ponapi_route_params,
         @ponapi_query_params,
         @ponapi_data,
@@ -165,21 +168,37 @@ sub _ponapi_check_headers {
 
     my $pack = HTTP::Headers::ActionPack->new;
     my $mt   = $self->{'ponapi.mediatype'};
+    my %ext;
 
-    # check Content-Type
-    my $content_type = $req->headers->header('Content-Type');
-    $wr->(ERR_MISSING_CONTENT_TYPE) unless $content_type;
-    $wr->(ERR_WRONG_CONTENT_TYPE)   unless $content_type eq $mt;
-
-    # check Accept
+    # Accept
     if ( my $accept = $req->headers->header('Accept') ) {
         my @jsonapi_accept =
             map { ( $_->[1]->type eq $mt ) ? $_->[1] : () }
             $pack->create_header( 'Accept' => $accept )->iterable;
 
-        $wr->(ERR_WRONG_HEADER_ACCEPT)
-            if @jsonapi_accept and !( grep { $_->params_are_empty } @jsonapi_accept );
+        ### TODO: http://discuss.jsonapi.org/t/clarification-on-extensions-media-type-headers/296
+        for ( @jsonapi_accept ) {
+            $wr->(ERR_WRONG_HEADER_ACCEPT) if grep { $_ ne 'ext' } keys %{ $_->params };
+        }
+
+        $ext{$_} = 1 for map { split ',' => $_->params->{ext} } @jsonapi_accept;
     }
+
+    # Content-Type
+    my $content_type = $headers->get('Content-Type');
+    $wr->(ERR_MISSING_CONTENT_TYPE) unless $content_type;
+
+    my $pack_ct = $pack->create_header( 'Content-Type' => $content_type );
+    $wr->(ERR_WRONG_CONTENT_TYPE) unless $pack_ct->subject eq $self->{'ponapi.mediatype'};
+
+    my $params = $pack_ct->params;
+    my $ext    = delete $params->{ext};
+    $wr->(ERR_WRONG_CONTENT_TYPE) if keys %{$params};
+    $ext{$_} = 1 for split /,/ => $ext;
+
+    $wr->(ERR_BAD_EXTENSION_REQ) if grep { ! $self->{'ponapi.extensions.' . $_} } keys %ext;
+
+    return ( extensions => \%ext );
 }
 
 sub _ponapi_query_params {
@@ -252,7 +271,7 @@ sub _response {
     my $res = Plack::Response->new( $status || 200 );
 
     $res->headers($headers);
-    $res->content_type( $self->{'ponapi.mediatype'} );
+    $res->content_type( $self->{'ponapi.response.mediatype'} );
     $res->header( 'X-PONAPI-Server-Version' => $self->{'ponapi.spec_version'} )
         if $self->{'ponapi.send_version_header'};
     if ( ref $content ) {

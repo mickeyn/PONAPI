@@ -36,6 +36,9 @@ sub _build_conf {
 sub read_config {
     my $self = shift;
 
+    $self->{'ponapi.mediatype'}          = 'application/vnd.api+json';
+    $self->{'ponapi.response.mediatype'} = $self->{'ponapi.mediatype'};
+
     $self->_set_server_json_api_version;
 
     $self->_set_server_sorting;
@@ -43,8 +46,7 @@ sub read_config {
     $self->_set_server_self_link;
     $self->_set_server_relative_links;
     $self->_set_repository;
-
-    $self->{'ponapi.mediatype'} = 'application/vnd.api+json';
+    $self->_set_extensions;
 
     return %{$self};
 }
@@ -107,6 +109,24 @@ sub _set_repository {
     my $self = shift;
     $self->{'repository.class'} = $self->config->{repository}{class};
     $self->{'repository.args'}  = $self->config->{repository}{args};
+}
+
+sub _set_extensions {
+    my $self = shift;
+    return unless exists $self->config->{server}{extensions};
+
+    my @extensions;
+
+    $self->{'ponapi.extensions.bulk'} =
+        ( grep { $self->config->{server}{extensions}{bulk} eq $_ } qw< yes true 1 > ) ? 1 : 0;
+
+    push @extensions => 'bulk' if $self->{'ponapi.extensions.bulk'};
+
+    # supported extensions
+    if ( @extensions ) {
+        $self->{'ponapi.response.mediatype'} .=
+            '; supported-ext="' . ( join ',' => @extensions ) . '"';
+    }
 }
 
 __PACKAGE__->meta->make_immutable;
