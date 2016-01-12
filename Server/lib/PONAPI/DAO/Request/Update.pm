@@ -6,7 +6,7 @@ use Moose;
 extends 'PONAPI::DAO::Request';
 
 with 'PONAPI::DAO::Request::Role::UpdateLike',
-     'PONAPI::DAO::Request::Role::HasDataAttribute',
+     'PONAPI::DAO::Request::Role::HasData',
      'PONAPI::DAO::Request::Role::HasDataMethods',
      'PONAPI::DAO::Request::Role::HasID';
 

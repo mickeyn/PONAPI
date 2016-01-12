@@ -1,5 +1,5 @@
 # ABSTRACT: DAO request role - `data`
-package PONAPI::DAO::Request::Role::HasDataAttribute;
+package PONAPI::DAO::Request::Role::HasData;
 
 use Moose::Role;
 

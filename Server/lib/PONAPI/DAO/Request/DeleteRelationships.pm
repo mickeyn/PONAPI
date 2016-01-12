@@ -6,15 +6,10 @@ use Moose;
 extends 'PONAPI::DAO::Request';
 
 with 'PONAPI::DAO::Request::Role::UpdateLike',
+     'PONAPI::DAO::Request::Role::HasDataBulk',
      'PONAPI::DAO::Request::Role::HasDataMethods',
      'PONAPI::DAO::Request::Role::HasID',
      'PONAPI::DAO::Request::Role::HasRelationshipType';
-
-has data => (
-    is        => 'ro',
-    isa       => 'ArrayRef[HashRef]',
-    predicate => 'has_data',
-);
 
 sub check_data_type_match { 1 } # to avoid code duplications in HasDataMethods
 
