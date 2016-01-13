@@ -2,7 +2,9 @@
 package PONAPI::DAO::Exception;
 
 use Moose;
-use Moose::Util  qw/find_meta/;
+use Moose::Util qw/find_meta/;
+
+use JSON::XS;
 
 sub throw {
   my $class_or_obj = shift;
@@ -78,14 +80,11 @@ sub as_response {
 }
 
 sub new_from_exception {
-    my ( $class, $e, $dao ) = @_;
+    my ( $class, $e ) = @_;
 
-    if ( blessed($e) && $e->isa($class) ) {
-        $e->_set_json_api_version( $dao->version );
-        return $e;
-    }
+    return $e if blessed($e) && $e->isa($class);
 
-    my %args_for_new = $class->_handle_exception_obj($e, $dao);
+    my %args_for_new = $class->_handle_exception_obj($e);
 
     unless ( $args_for_new{status} and $args_for_new{message} ) {
         %args_for_new = (
@@ -95,14 +94,11 @@ sub new_from_exception {
         warn "$e";
     }
 
-    return $class->new(
-        %args_for_new,
-        json_api_version => $dao->version,
-    );
+    return $class->new(%args_for_new);
 }
 
 sub _handle_exception_obj {
-    my ( $self, $e, $dao ) = @_;
+    my ( $self, $e ) = @_;
     return unless blessed($e) or $e->isa('Moose::Exception');
 
     if ( $e->isa('Moose::Exception::AttributeIsRequired') ) {
@@ -115,7 +111,7 @@ sub _handle_exception_obj {
     ) {
         my $class      = find_meta( $e->class_name );
         my $attribute  = $class->get_attribute( $e->attribute_name );
-        my $value_nice = $dao->json->encode( $e->value );
+        my $value_nice = JSON::XS->new->allow_nonref->utf8->canonical->encode( $e->value );
 
         if ( !$attribute ) {
             my $attr = $e->attribute_name;
