@@ -21,3 +21,21 @@ sub check_name {
 1;
 
 __END__
+=encoding UTF-8
+
+=head1 SYNOPSIS
+
+    use PONAPI::Utils::Names 'check_name';
+    
+    check_name('a');    # Valid
+    check_name('a-');   # Invalid
+    check_name('-a');   # Invalid
+    check_name('a-b');  # Valid
+    check_name('a b');  # Valid
+
+
+=head1 DESCRIPTION
+
+This module implements the L<member name restrictions|http://jsonapi.org/format/#document-member-names>
+from the {json:api} specification; it can be used by repositories
+to implement strict member names, if desired.

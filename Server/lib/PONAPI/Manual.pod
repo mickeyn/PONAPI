@@ -258,9 +258,6 @@ Note that by the time the arguments reach the API methods,
 some amount of validation will have already happened, like
 if the requested relationships exists.
 
-=for TODO
-Need to make sure to document what sort of validation repos NEED to do, vs what was already done
-
 =head3 retrieve_all
 
     retrieve_all( type => $type, %optional_arguments )
@@ -879,6 +876,9 @@ C<$data> will be in this format:
         },
     }
 
+Note that repos B<must> add a resource to the document passed in,
+where the C<id> is the id of the created resource.
+
 Implementation example -- we won't handle a user-provided C<id>.
 
     sub create {
@@ -1157,7 +1157,6 @@ Sample implementation:
         foreach my $relationship ( @$data ) {
             my $data_type = $relationship->{type};
 
-            # This catches this case:
             if ( $data_type ne $key_type ) {
                 PONAPI::Exception->throw(
                     message          => "Data has type `$data_type`, but we were expecting `$key_type`",
@@ -1227,6 +1226,38 @@ Like C<update>, C<update_relationships> has a strict return value.
 
         return PONAPI_UPDATED_NORMAL;
     }
+
+=head2 What should the repository validate?
+
+While the DAO takes care of most validations, some things fall squarely on
+repositories:
+
+=over 4
+
+=item Valid member names
+
+L<The spec specifies certain restriction to member names|http://jsonapi.org/format/#document-member-names>.
+C<PONAPI::Server> doesn't implement these, but instead, provides
+a module that allows implementing them at the repository level,
+L<PONAPI::Utils::Names>.
+
+=item Type validation in (create|update|delete)_relationships
+
+This is one of the few cases when we need to manually validate
+that the data is correct, in order to catch cases like this:
+
+    {
+        rel_type => 'comments',
+        data => [
+            { type => comments => id => 5  }, # Good
+            { type => people   => id => 19 }, # Bad, why people?
+        ],
+    }
+
+The implementation examples above include these checks, and
+how to throw exceptions for them.
+
+=back
 
 =head2 Throwing exceptions
 
