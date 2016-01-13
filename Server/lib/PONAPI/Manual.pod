@@ -259,8 +259,7 @@ some amount of validation will have already happened, like
 if the requested relationships exists.
 
 =for TODO
-Need to make sure to document what sort of validation repos NEED to do,
-vs what was already done
+Need to make sure to document what sort of validation repos NEED to do, vs what was already done
 
 =head3 retrieve_all
 
@@ -274,7 +273,7 @@ Our starting point:
         my $document = $args{document};
 
         my $dbh   = $self->dbh;
-        my $table = $self->quote($type);
+        my $table = $dbh->quote($type);
         my $sth   = $dbh->prepare(qq{ SELECT * FROM $table });
 
         return unless $sth->execute;
@@ -580,7 +579,8 @@ will need to handle C<fields>, let's add a function to abstract that complexity 
 Now, we could do something like this in retrieve_all and _add_included:
 
     ...
-    my $table   = $self->quote($type);
+    my $dbh     = $self->dbh;
+    my $table   = $dbh->quote($type);
     my $columns = $self->_columns_for_select(%args);
 
     $columns    = join ', ', map $dbh->quote($_), @$columns;
@@ -848,7 +848,8 @@ Removes a single resource.
     sub delete {
         my ($self, %args) = @_;
 
-        my $table = $self->quote($type);
+        my $dbh   = $self->dbh;
+        my $table = $dbh->quote($type);
         my $sth   = $dbh->prepare(qq{ DELETE FROM $table WHERE id = ? });
 
         $sth->execute($args{id});
@@ -878,8 +879,57 @@ C<$data> will be in this format:
         },
     }
 
-=for TODO
-Code sample
+Implementation example -- we won't handle a user-provided C<id>.
+
+    sub create {
+        my ($self, %args) = @_;
+        my ($doc, $type, $data, $id) = @args{qw/document type data id/};
+    
+        if ( $id ) {
+            PONAPI::DAO::Exception->throw(
+                message          => "User-provided ids are not supported",
+                bad_request_data => 1,
+           );
+        }
+    
+        my $attributes    = $data->{attributes}    || {};
+        my $relationships = $data->{relationships} || {};
+    
+        my $dbh   = $self->dbh;
+        my $table = $dbh->quote($type);
+        my $sql   = "INSERT INTO $table ";
+        my @values;
+        if ( %$attributes ) {
+            my @quoted_columns = map $dbh->quote($_), keys %$attributes;
+            @values            = values %$attributes;
+    
+            $sql .= '('        . join(',', @quoted_columns)       . ')'
+                  . 'VALUES (' . join(',', '?' x @quoted_columns) . ')';
+        }
+        else {
+            $sql .= 'DEFAULT VALUES'; # assuming sqlite, will not work elsewhere
+        }
+    
+        my $sth = $dbh->prepare($sql);
+        $sth->execute(@values);
+    
+        # This is critical! We need to let the user know the inserted
+        # id
+        my $new_id = $self->dbh->last_insert_id("","","","");
+        $doc->add_resource( type => $type, id => $new_id );
+
+        # Finally, we defer creating relationships to another method
+        foreach my $rel_type ( keys %$relationships ) {
+            my $rel_data = $relationships->{$rel_type};
+            $self->update_relationships(
+                %args,
+                id       => $new_id,
+                rel_type => $rel_type,
+                data     => $rel_data,
+            );
+        }
+
+    }
 
 =head3 update
 
@@ -1084,9 +1134,49 @@ pointed by $type and $rel_type.
 
 Like C<update>, C<create_relationships> has a strict return value.
 
-=for TODO
-Code sample
+Sample implementation:
 
+    sub create_relationships {
+        my ( $self, %args ) = @_;
+        my ( $type, $id, $rel_type, $data ) = @args{qw<type id rel_type data>};
+
+        my $dbh               = $self->dbh;
+        my $table             = $dbh->quote($type);
+        my $relationship_info = $type_relationships->{$rel_type};
+        my $rel_table         = $relationship_info->{rel_table};
+        my $key_type          = $relationship_info->{type};
+        my $id_column         = $relationship_info->{id_column};
+        my $rel_id_column     = $relationship_info->{rel_id_column};
+
+        my $sql = 'INSERT INTO ' . $dbh->quote($rel_table) . ' '
+                . '('
+                    . join(',', map $dbh->quote($_), $id_column, $rel_id_column)
+                . ') VALUES (?, ?)';
+
+        my @all_values;
+        foreach my $relationship ( @$data ) {
+            my $data_type = $relationship->{type};
+
+            # This catches this case:
+            if ( $data_type ne $key_type ) {
+                PONAPI::DAO::Exception->throw(
+                    message          => "Data has type `$data_type`, but we were expecting `$key_type`",
+                    bad_request_data => 1,
+                );
+            }
+
+            my $insert = [ $id, $relationship->{id} ];
+
+            push @all_values, $insert;
+        }
+
+        my $sth = $dbh->prepare($sql);
+        foreach my $values ( @all_values ) {
+            $sth->execute(@$values);
+        }
+
+        return PONAPI_UPDATED_NORMAL;
+    }
 =head3 update_relationships
 
     update_relationships( type => $type, id => $id, rel_type => $rel_type, data => ... )
@@ -1107,7 +1197,7 @@ be either a hashref, or C<undef>; for a one-to-many, it'll be an arrayref.
 
 Like C<update>, C<update_relationships> has a strict return value.
 
-    sub _update_relationships {
+    sub update_relationships {
         my ($self, %args) = @_;
         my ( $type, $id, $rel_type, $data ) = @args{qw< type id rel_type data >};
 
@@ -1170,5 +1260,12 @@ This boils down to:
     sub create_relationships {}
     sub delete_relationships {}
     sub update_relationships {}
+
+=head2 What about bulk inserts?
+
+C<{json:api}> itself has no way to do bulk inserts or updates,
+but opens the possibility of these being implemented through extensions.
+
+However, C<PONAPI::Server> doesn't support extensions yet.
 
 =cut
