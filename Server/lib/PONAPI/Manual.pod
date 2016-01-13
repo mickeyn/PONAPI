@@ -884,17 +884,17 @@ Implementation example -- we won't handle a user-provided C<id>.
     sub create {
         my ($self, %args) = @_;
         my ($doc, $type, $data, $id) = @args{qw/document type data id/};
-    
+
         if ( $id ) {
             PONAPI::DAO::Exception->throw(
                 message          => "User-provided ids are not supported",
                 bad_request_data => 1,
            );
         }
-    
+
         my $attributes    = $data->{attributes}    || {};
         my $relationships = $data->{relationships} || {};
-    
+
         my $dbh   = $self->dbh;
         my $table = $dbh->quote($type);
         my $sql   = "INSERT INTO $table ";
@@ -902,17 +902,17 @@ Implementation example -- we won't handle a user-provided C<id>.
         if ( %$attributes ) {
             my @quoted_columns = map $dbh->quote($_), keys %$attributes;
             @values            = values %$attributes;
-    
+
             $sql .= '('        . join(',', @quoted_columns)       . ')'
                   . 'VALUES (' . join(',', '?' x @quoted_columns) . ')';
         }
         else {
             $sql .= 'DEFAULT VALUES'; # assuming sqlite, will not work elsewhere
         }
-    
+
         my $sth = $dbh->prepare($sql);
         $sth->execute(@values);
-    
+
         # This is critical! We need to let the user know the inserted
         # id
         my $new_id = $self->dbh->last_insert_id("","","","");
