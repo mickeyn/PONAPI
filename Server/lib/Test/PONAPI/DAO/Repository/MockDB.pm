@@ -19,7 +19,7 @@ use Test::PONAPI::DAO::Repository::MockDB::Table::Comments;
 use PONAPI::Constants;
 use PONAPI::Exception;
 
-with 'PONAPI::DAO::Repository';
+with 'PONAPI::Repository';
 
 has dbh => (
     is     => 'ro',

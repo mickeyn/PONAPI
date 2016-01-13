@@ -8,7 +8,7 @@ use PONAPI::Builder::Document;
 
 has repository => (
     is       => 'ro',
-    does     => 'PONAPI::DAO::Repository',
+    does     => 'PONAPI::Repository',
     required => 1,
 );
 

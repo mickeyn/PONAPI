@@ -140,7 +140,7 @@ look something like this:
       args:   []
 
 Where C<My::Repository::Yadda> is a class that consumes the
-C<PONAPI::DAO::Repository> role; args will be passed to the
+C<PONAPI::Repository> role; args will be passed to the
 repo when it is instantiated.
 
 To use PONAPI, we'll need a repo to communicate between the server and the
@@ -187,11 +187,11 @@ And finally, on perl:
     # First, some boilerplate...
     package My::Repository::Hooray;
     use Moose;
-    with 'PONAPI::DAO::Repository';
+    with 'PONAPI::Repository';
     use PONAPI::Constants;
     use PONAPI::Exception;
 
-That is the initial boilerplate for any repo.  The L<PONAPI::DAO::Repository>
+That is the initial boilerplate for any repo.  The L<PONAPI::Repository>
 role requires us to define several methods, which also require us to have
 some information regarding the data we are serving:
 

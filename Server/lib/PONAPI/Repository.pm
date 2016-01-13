@@ -1,5 +1,5 @@
 # ABSTRACT: Interface role for PONAPI::DAO repositories
-package PONAPI::DAO::Repository;
+package PONAPI::Repository;
 
 use Moose::Role;
 
@@ -28,7 +28,7 @@ __END__
 
     package My::PONAPI::Repository {
         use Moose;
-        with 'PONAPI::DAO::Repository';
+        with 'PONAPI::Repository';
 
         sub has_type { ... }
 
@@ -38,7 +38,7 @@ __END__
 =HEAD1 DESCRIPTION
 
 Clases implementing repositories for L<PONAPI::DAO> must consume
-the C<PONAPI::DAO::Repository> role; this ensures that the methods
+the C<PONAPI::Repository> role; this ensures that the methods
 required by the DAO to fullfil the implementation are all present.
 
 The arguments that each method can receive are expanded on in

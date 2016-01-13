@@ -16,7 +16,7 @@ use PONAPI::DAO::Request::DeleteRelationships;
 
 has repository => (
     is       => 'ro',
-    does     => 'PONAPI::DAO::Repository',
+    does     => 'PONAPI::Repository',
     required => 1,
 );
 
@@ -160,7 +160,7 @@ __END__
 =head1 DESCRIPTION
 
 Data Access Object for the JSON API.  This sits in between a server
-and a L<repository|"PONAPI::DAO::Repository">.
+and a L<repository|"PONAPI::Repository">.
 
 All public DAO methods will return a 3-item list of a status, headers,
 and the response body; this can then be fed directly to a PSGI application:
@@ -181,7 +181,7 @@ Create a new instance of PONAPI::DAO.
         repository => $repository,
     );
 
-Where C<$repository> implements the L<PONAPI::DAO::Repository> role.
+Where C<$repository> implements the L<PONAPI::Repository> role.
 
 As expanded below in L</"Return value of update operations">, the JSON API specification requires some
 update operations returning C<200 OK> to also do a C<retrieve> and include
