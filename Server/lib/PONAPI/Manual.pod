@@ -189,7 +189,7 @@ And finally, on perl:
     use Moose;
     with 'PONAPI::DAO::Repository';
     use PONAPI::Constants;
-    use PONAPI::DAO::Exception;
+    use PONAPI::Exception;
 
 That is the initial boilerplate for any repo.  The L<PONAPI::DAO::Repository>
 role requires us to define several methods, which also require us to have
@@ -886,7 +886,7 @@ Implementation example -- we won't handle a user-provided C<id>.
         my ($doc, $type, $data, $id) = @args{qw/document type data id/};
 
         if ( $id ) {
-            PONAPI::DAO::Exception->throw(
+            PONAPI::Exception->throw(
                 message          => "User-provided ids are not supported",
                 bad_request_data => 1,
            );
@@ -1100,7 +1100,7 @@ Like C<update>, C<delete_relationships> has a strict return value.
             #   ],
             # }
             if ( $data_type ne $key_type ) {
-                PONAPI::DAO::Exception->throw(
+                PONAPI::Exception->throw(
                     message          => "Data has type `$data_type`, but we were expecting `$key_type`",
                     bad_request_data => 1,
                 );
@@ -1159,7 +1159,7 @@ Sample implementation:
 
             # This catches this case:
             if ( $data_type ne $key_type ) {
-                PONAPI::DAO::Exception->throw(
+                PONAPI::Exception->throw(
                     message          => "Data has type `$data_type`, but we were expecting `$key_type`",
                     bad_request_data => 1,
                 );
@@ -1231,13 +1231,13 @@ Like C<update>, C<update_relationships> has a strict return value.
 =head2 Throwing exceptions
 
 It is recommended that you throw exceptions in the repo by using
-L<PONAPI::DAO::Exception>:
+L<PONAPI::Exception>:
 
-    PONAPI::DAO::Exception->throw(
+    PONAPI::Exception->throw(
         message => "Something has gone horribly wrong"
     );
 
-See the documentation of L<PONAPI::DAO::Exception> for more examples, including
+See the documentation of L<PONAPI::Exception> for more examples, including
 the different of more specific exceptions you can throw.
 
 =head2 Responding with a particular status

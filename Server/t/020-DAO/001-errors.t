@@ -840,7 +840,7 @@ subtest '... illegal params' => sub {
                 );
             }
 
-            # See that we catch people using PONAPI::DAO::Exception without
+            # See that we catch people using PONAPI::Exception without
             # an exception type
             my ($w, @ret) = ('');
             my $msg = "my great exception!";
@@ -848,7 +848,7 @@ subtest '... illegal params' => sub {
                 no warnings 'redefine';
                 local $SIG{__WARN__} = sub { $w .= shift };
                 local *$glob = sub {
-                    PONAPI::DAO::Exception->throw(message => $msg)
+                    PONAPI::Exception->throw(message => $msg)
                 };
                 $dao->$action(@$args);
             };

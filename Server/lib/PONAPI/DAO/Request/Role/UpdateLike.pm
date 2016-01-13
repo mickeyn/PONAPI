@@ -4,7 +4,7 @@ package PONAPI::DAO::Request::Role::UpdateLike;
 use Moose::Role;
 
 use PONAPI::Constants;
-use PONAPI::DAO::Exception;
+use PONAPI::Exception;
 
 has respond_to_updates_with_200 => (
     is  => 'ro',
@@ -24,7 +24,7 @@ has update_nothing_status => (
 sub _verify_update_response {
     my ( $self, $ret, @extra ) = @_;
 
-    PONAPI::DAO::Exception->throw(
+    PONAPI::Exception->throw(
         internal => 1,
         message  => "update-like operation returned an unexpected value"
     ) unless exists $PONAPI_UPDATE_RETURN_VALUES{$ret};

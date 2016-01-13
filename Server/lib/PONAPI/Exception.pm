@@ -1,5 +1,5 @@
 # ABSTRACT: Exceptions for PONAPI::Server
-package PONAPI::DAO::Exception;
+package PONAPI::Exception;
 
 use Moose;
 use Moose::Util qw/find_meta/;
@@ -155,20 +155,20 @@ __END__
 
 =head1 SYNOPSIS
 
-    use PONAPI::DAO::Exception;
-    PONAPI::DAO::Exception->throw( message => "Generic exception" );
-    PONAPI::DAO::Exception->throw(
+    use PONAPI::Exception;
+    PONAPI::Exception->throw( message => "Generic exception" );
+    PONAPI::Exception->throw(
         message => "Explanation for the sql error, maybe $DBI::errstr",
         sql     => 1,
     );
-    PONAPI::DAO::Exception->throw(
+    PONAPI::Exception->throw(
         message          => "Data had type `foo` but we wanted `bar`",
         bad_request_data => 1,
     );
 
 =head1 DESCRIPTION
 
-I<PONAPI::DAO::Exception> can be used by repositories to signal errors;
+I<PONAPI::Exception> can be used by repositories to signal errors;
 exceptions thrown this way will be caught by L<the DAO|PONAPI::DAO> and
 handled gracefully.
 

@@ -59,7 +59,7 @@ sub _action {
         1;
     } or do {
         my $e = $@ || 'Unknown error';
-        @ret = PONAPI::DAO::Exception
+        @ret = PONAPI::Exception
                     ->new_from_exception($e)
                     ->as_response;
     };

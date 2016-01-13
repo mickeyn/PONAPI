@@ -17,7 +17,7 @@ use Test::PONAPI::DAO::Repository::MockDB::Table::People;
 use Test::PONAPI::DAO::Repository::MockDB::Table::Comments;
 
 use PONAPI::Constants;
-use PONAPI::DAO::Exception;
+use PONAPI::Exception;
 
 with 'PONAPI::DAO::Repository';
 
@@ -107,7 +107,7 @@ sub retrieve_relationships {
 
     my $sort = $args{sort} || [];
     if ( @$sort ) {
-        PONAPI::DAO::Exception->throw(
+        PONAPI::Exception->throw(
             message => "You can only sort by id in retrieve_relationships"
         ) if @$sort > 1 || $sort->[0] !~ /\A(-)?id\z/;
 
@@ -256,7 +256,7 @@ sub _create_relationships {
         my $data_type = delete $relationship->{type};
 
         if ( $data_type ne $key_type ) {
-            PONAPI::DAO::Exception->throw(
+            PONAPI::Exception->throw(
                 message          => "Data has type `$data_type`, but we were expecting `$key_type`",
                 bad_request_data => 1,
             );
@@ -518,7 +518,7 @@ sub _delete_relationships {
         my $data_type = $resource->{type};
 
         if ( $data_type ne $key_type ) {
-            PONAPI::DAO::Exception->throw(
+            PONAPI::Exception->throw(
                 message          => "Data has type `$data_type`, but we were expecting `$key_type`",
                 bad_request_data => 1,
             );
@@ -612,13 +612,13 @@ sub _validate_page {
     my ($self, $page) = @_;
 
     exists $page->{limit}
-        or PONAPI::DAO::Exception->throw(message => "Limit missing for `page`");
+        or PONAPI::Exception->throw(message => "Limit missing for `page`");
 
     $page->{limit} =~ /\A[0-9]+\z/
-        or PONAPI::DAO::Exception->throw(message => "Bad limit value ($page->{limit}) in `page`");
+        or PONAPI::Exception->throw(message => "Bad limit value ($page->{limit}) in `page`");
 
     !exists $page->{offset} || ($page->{offset} =~ /\A[0-9]+\z/)
-        or PONAPI::DAO::Exception->throw(message => "Bad offset value in `page`");
+        or PONAPI::Exception->throw(message => "Bad offset value in `page`");
 
     $page->{offset} ||= 0;
 
@@ -775,20 +775,20 @@ sub _db_execute {
 
         my $message;
         if ( $sqlite_constraint_failed && $err_id && $err_id == $sqlite_constraint_failed ) {
-            PONAPI::DAO::Exception->throw(
+            PONAPI::Exception->throw(
                 message   => "Table constraint failed: $errstr",
                 sql_error => 1,
                 status    => 409,
             );
         }
         elsif ( $err_id ) {
-            PONAPI::DAO::Exception->throw(
+            PONAPI::Exception->throw(
                 message   => $errstr,
                 sql_error => 1,
             );
         }
         else {
-            PONAPI::DAO::Exception->throw(
+            PONAPI::Exception->throw(
                 message => "Non-SQL error while running query? $e"
             )
         }

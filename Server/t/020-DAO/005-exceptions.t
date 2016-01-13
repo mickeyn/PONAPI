@@ -5,7 +5,7 @@ use warnings;
 use Test::More;
 use JSON::XS;
 
-use PONAPI::DAO::Exception;
+use PONAPI::Exception;
 
 use PONAPI::DAO;
 use Test::PONAPI::DAO::Repository::MockDB;
@@ -19,7 +19,7 @@ subtest '... throwing a simple exception' => sub {
 
     {
         my $this_sub_throws_an_exception = sub {
-            PONAPI::DAO::Exception->throw(
+            PONAPI::Exception->throw(
                 message => "invalid param `X`",
                 bad_request_data => 1,
             );
@@ -33,7 +33,7 @@ subtest '... throwing a simple exception' => sub {
             $e = $@ || 'Unknown error';
         };
 
-        isa_ok($e, 'PONAPI::DAO::Exception');
+        isa_ok($e, 'PONAPI::Exception');
         is($e->status, 400, '... has the default 400 status');
         is($e->as_string, 'invalid param `X`', '... has the correct string output');
         is($e->json_api_version, '1.0', '... has the correct API version');
