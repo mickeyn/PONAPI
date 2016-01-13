@@ -98,9 +98,9 @@ sub update_stmt {
         )
     } or do {
         my $msg = "$@"||'Unknown error';
-        PONAPI::Exception->throw(
+        PONAPI::DAO::Exception->throw(
             sql_error => "Failed to compose an update with the given values",
-            internal => $msg,
+            internal  => $msg,
         );
     };
 
