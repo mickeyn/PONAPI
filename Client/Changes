@@ -1,5 +1,8 @@
 Revision history for PONAPI-Client
 
+0.002001     2016-Jan-14
+             * Updated dist.ini (AutoPrereqs)
+
 0.002000     2016-Jan-12
              * First CPAN release
 
