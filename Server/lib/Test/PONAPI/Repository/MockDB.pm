@@ -3,7 +3,6 @@ package Test::PONAPI::Repository::MockDB;
 
 use Moose;
 
-use DBI;
 use SQL::Composer;
 
 # We MUST use DBD::SQLite before ::Constants to get anything useful!
