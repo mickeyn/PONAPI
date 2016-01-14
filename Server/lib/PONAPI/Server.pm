@@ -5,7 +5,6 @@ our $VERSION = '0.002000';
 
 use Plack::Request;
 use Plack::Response;
-use Hash::MultiValue;
 use HTTP::Headers::ActionPack;
 use Module::Runtime    ();
 use Return::MultiLevel ();
@@ -75,15 +74,6 @@ sub _load_dao {
     $self->{'ponapi.DAO'} = PONAPI::DAO->new(
         repository => $repository,
         version    => $self->{'ponapi.spec_version'},
-    );
-}
-
-sub _request_headers {
-    my ( $self, $req ) = @_;
-
-    return Hash::MultiValue->from_mixed(
-        map { $_ => +[ split ', ' => scalar $req->headers->header($_) ] }
-        $req->headers->header_field_names
     );
 }
 
@@ -174,23 +164,23 @@ sub _ponapi_route_match {
 sub _ponapi_check_headers {
     my ( $self, $wr, $req ) = @_;
 
-    my $headers = $self->_request_headers($req);
-    my $pack    = HTTP::Headers::ActionPack->new;
-    my $mt      = $self->{'ponapi.mediatype'};
+    my $pack = HTTP::Headers::ActionPack->new;
+    my $mt   = $self->{'ponapi.mediatype'};
 
     # check Content-Type
-    my $content_type = $headers->get('Content-Type');
+    my $content_type = $req->headers->header('Content-Type');
     $wr->(ERR_MISSING_CONTENT_TYPE) unless $content_type;
     $wr->(ERR_WRONG_CONTENT_TYPE)   unless $content_type eq $mt;
 
     # check Accept
-    my @jsonapi_accept =
-        map  { ( $_->[1]->subject eq $mt ) ? $_->[1] : () }
-        map  { $pack->create_header( 'Accept' => $_ )->iterable }
-        $headers->get_all('Accept');
+    if ( my $accept = $req->headers->header('Accept') ) {
+        my @jsonapi_accept =
+            map  { ( $_->[1]->subject eq $mt ) ? $_->[1] : () }
+            $pack->create_header( 'Accept' => $accept )->iterable;
 
-    $wr->(ERR_WRONG_HEADER_ACCEPT)
-        if @jsonapi_accept and !( grep { !keys %{ $_->params } } @jsonapi_accept );
+        $wr->(ERR_WRONG_HEADER_ACCEPT)
+            if @jsonapi_accept and !( grep { !keys %{ $_->params } } @jsonapi_accept );
+    }
 }
 
 sub _ponapi_query_params {
