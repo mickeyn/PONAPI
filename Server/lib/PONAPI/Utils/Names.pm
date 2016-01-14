@@ -26,7 +26,7 @@ __END__
 =head1 SYNOPSIS
 
     use PONAPI::Utils::Names 'check_name';
-    
+
     check_name('a');    # Valid
     check_name('a-');   # Invalid
     check_name('-a');   # Invalid
