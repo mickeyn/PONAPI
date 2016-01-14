@@ -1,5 +1,8 @@
 Revision history for PONAPI-Server
 
+0.002001     2016-Jan-14
+             * Removed dependency (Hash::MultiValue)
+
 0.002000     2016-Jan-13
              * First CPAN release
 
