@@ -1,5 +1,8 @@
 Revision history for PONAPI-Server
 
+0.002004     2016-Jan-14
+             * Fix dist.ini (DBD::SQLite)
+
 0.002003     2016-Jan-14
              * Plack version >= 1.0029
              * Updated dist.ini (AutoPrereqs)
