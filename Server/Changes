@@ -1,5 +1,8 @@
 Revision history for PONAPI-Server
 
+0.002000     2016-Jan-13
+             * First CPAN release
+
 0.001006     2016-Jan-13
              * Removed DAO object dependency from exceptions
              * Moved Constants, Exception & Repository outside of DAO namespace
