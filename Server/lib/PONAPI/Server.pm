@@ -177,15 +177,14 @@ sub _ponapi_check_headers {
             $pack->create_header( 'Accept' => $accept )->iterable;
 
         ### TODO: http://discuss.jsonapi.org/t/clarification-on-extensions-media-type-headers/296
-        for ( @jsonapi_accept ) {
-            $wr->(ERR_WRONG_HEADER_ACCEPT) if grep { $_ ne 'ext' } keys %{ $_->params };
-        }
+        $wr->(ERR_WRONG_HEADER_ACCEPT)
+            if grep { $_ ne 'ext' } map { keys %{ $_->params } } @jsonapi_accept;
 
         $ext{$_} = 1 for map { split ',' => $_->params->{ext} } @jsonapi_accept;
     }
 
     # Content-Type
-    my $content_type = $headers->get('Content-Type');
+    my $content_type = $req->headers->header('Content-Type');
     $wr->(ERR_MISSING_CONTENT_TYPE) unless $content_type;
 
     my $pack_ct = $pack->create_header( 'Content-Type' => $content_type );
