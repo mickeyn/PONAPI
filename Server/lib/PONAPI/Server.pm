@@ -8,7 +8,6 @@ use Plack::Response;
 use HTTP::Headers::ActionPack;
 use Module::Runtime    ();
 use Return::MultiLevel ();
-use Path::Class::File  ();
 use JSON::XS           ();
 
 use PONAPI::Server::ConfigReader;
