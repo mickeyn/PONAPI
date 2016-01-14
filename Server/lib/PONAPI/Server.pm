@@ -175,11 +175,11 @@ sub _ponapi_check_headers {
     # check Accept
     if ( my $accept = $req->headers->header('Accept') ) {
         my @jsonapi_accept =
-            map  { ( $_->[1]->subject eq $mt ) ? $_->[1] : () }
+            map  { ( $_->[1]->type eq $mt ) ? $_->[1] : () }
             $pack->create_header( 'Accept' => $accept )->iterable;
 
         $wr->(ERR_WRONG_HEADER_ACCEPT)
-            if @jsonapi_accept and !( grep { !keys %{ $_->params } } @jsonapi_accept );
+            if @jsonapi_accept and !( grep { $_->params_are_empty } @jsonapi_accept );
     }
 }
 
