@@ -1,5 +1,9 @@
 Revision history for PONAPI-Server
 
+0.002002     2016-Jan-14
+             * Removed dependency (Path::Class::File)
+             * Updated dist.ini (AutoPrereqs)
+
 0.002001     2016-Jan-14
              * Removed dependency (Hash::MultiValue)
 
