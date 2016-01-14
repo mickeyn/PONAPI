@@ -13,10 +13,13 @@ requires 'retrieve_all';
 requires 'retrieve_relationships';
 requires 'retrieve_by_relationship';
 requires 'create';
+requires 'create_bulk';
 requires 'create_relationships';
 requires 'update';
+requires 'update_bulk';
 requires 'update_relationships';
 requires 'delete';
+requires 'delete_bulk';
 requires 'delete_relationships';
 
 no Moose::Role; 1;
@@ -89,9 +92,19 @@ instead.
 
 =head2 delete
 
-=head2 create_relationships
+=head2 create_bulk
 
-See L</update>.
+C<data> will be an arrayref of resources.
+
+=head2 update_bulk
+
+C<data> will be an arrayref of resources.
+
+=head2 delete_bulk
+
+C<data> will be an arrayref of resources.
+
+=head2 create_relationships
 
 C<data> will be an arrayref of resources.
 

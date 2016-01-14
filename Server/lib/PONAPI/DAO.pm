@@ -8,10 +8,13 @@ use PONAPI::DAO::Request::RetrieveAll;
 use PONAPI::DAO::Request::RetrieveRelationships;
 use PONAPI::DAO::Request::RetrieveByRelationship;
 use PONAPI::DAO::Request::Create;
+use PONAPI::DAO::Request::CreateBulk;
 use PONAPI::DAO::Request::CreateRelationships;
 use PONAPI::DAO::Request::Update;
+use PONAPI::DAO::Request::UpdateBulk;
 use PONAPI::DAO::Request::UpdateRelationships;
 use PONAPI::DAO::Request::Delete;
+use PONAPI::DAO::Request::DeleteBulk;
 use PONAPI::DAO::Request::DeleteRelationships;
 
 has repository => (
@@ -37,10 +40,13 @@ sub retrieve                 { shift->_action( 'PONAPI::DAO::Request::Retrieve' 
 sub retrieve_relationships   { shift->_action( 'PONAPI::DAO::Request::RetrieveRelationships'  , @_ ) }
 sub retrieve_by_relationship { shift->_action( 'PONAPI::DAO::Request::RetrieveByRelationship' , @_ ) }
 sub create                   { shift->_action( 'PONAPI::DAO::Request::Create'                 , @_ ) }
+sub create_bulk              { shift->_action( 'PONAPI::DAO::Request::CreateBulk'             , @_ ) }
 sub create_relationships     { shift->_action( 'PONAPI::DAO::Request::CreateRelationships'    , @_ ) }
 sub update                   { shift->_action( 'PONAPI::DAO::Request::Update'                 , @_ ) }
+sub update_bulk              { shift->_action( 'PONAPI::DAO::Request::UpdateBulk'             , @_ ) }
 sub update_relationships     { shift->_action( 'PONAPI::DAO::Request::UpdateRelationships'    , @_ ) }
 sub delete : method          { shift->_action( 'PONAPI::DAO::Request::Delete'                 , @_ ) }
+sub delete_bulk              { shift->_action( 'PONAPI::DAO::Request::DeleteBulk'             , @_ ) }
 sub delete_relationships     { shift->_action( 'PONAPI::DAO::Request::DeleteRelationships'    , @_ ) }
 
 sub _action {

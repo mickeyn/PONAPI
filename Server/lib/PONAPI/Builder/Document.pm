@@ -42,9 +42,16 @@ has req_path => (
 
 has is_collection => (
     is      => 'ro',
-    writer  => '_set_is_collection',
     isa     => 'Bool',
-    default => 0
+    default => 0,
+    writer  => '_set_is_collection',
+);
+
+has is_bulk => (
+    is      => 'ro',
+    isa     => 'Bool',
+    default => 0,
+    writer  => '_set_is_bulk',
 );
 
 has _included => (
@@ -89,6 +96,7 @@ has errors_builder => (
 sub _build_errors_builder { PONAPI::Builder::Errors->new( parent => $_[0] ) }
 
 sub convert_to_collection { $_[0]->_set_is_collection(1) }
+sub set_bulk              { $_[0]->_set_is_bulk(1) }
 
 sub has_errors {
     my $self = shift;
@@ -180,9 +188,8 @@ sub build {
             if ( $self->is_collection ) {
                 $result->{data} = [];
             }
-            else {
-                die "[PANIC] OH NOES, THIS SHOULD NEVER HAPPEN!!!!!"
-                    if ! $self->has_meta;
+            elsif ( !( $self->is_bulk or $self->has_meta ) ) {
+                die "[PANIC] OH NOES, THIS SHOULD NEVER HAPPEN!!!!!";
             }
         }
     }

@@ -201,6 +201,10 @@ sub create {
     return;
 }
 
+sub create_bulk {
+    # TODO:
+}
+
 sub _create {
     my ( $self, %args ) = @_;
     my ( $doc, $type, $data ) = @args{qw< document type data >};
@@ -349,6 +353,10 @@ sub update {
     return $ret;
 }
 
+sub update_bulk {
+    # TODO:
+}
+
 sub _update {
     my ( $self, %args ) = @_;
     my ( $type, $id, $data ) = @args{qw< type id data >};
@@ -473,6 +481,10 @@ sub delete : method {
     my $sth = $self->_db_execute( $stmt );
 
     return;
+}
+
+sub delete_bulk {
+    # TODO:
 }
 
 sub delete_relationships {

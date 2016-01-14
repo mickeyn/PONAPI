@@ -82,10 +82,10 @@ sub _ponapi_params {
     my ( $self, $wr, $req ) = @_;
 
     # THE HEADERS
-    my @ponapi_extentions = $self->_ponapi_check_headers($wr, $req);
+    my $extensions = $self->_ponapi_check_headers($wr, $req);
 
     # THE PATH --> route matching
-    my @ponapi_route_params = $self->_ponapi_route_match($wr, $req);
+    my @ponapi_route_params = $self->_ponapi_route_match($wr, $req, $extensions);
 
     # THE QUERY
     my @ponapi_query_params = $self->_ponapi_query_params($wr, $req);
@@ -100,10 +100,10 @@ sub _ponapi_params {
     my $doc_self_link = ($req->method eq 'GET') ? !!$self->{'ponapi.doc_auto_self_link'} : 0;
 
     my %params = (
-        @ponapi_extentions,
         @ponapi_route_params,
         @ponapi_query_params,
         @ponapi_data,
+        extensions                  => $extensions,
         req_base                    => $req_base,
         req_path                    => $req_path,
         respond_to_updates_with_200 => $update_200,
@@ -114,7 +114,7 @@ sub _ponapi_params {
 }
 
 sub _ponapi_route_match {
-    my ( $self, $wr, $req ) = @_;
+    my ( $self, $wr, $req, $ext ) = @_;
     my $method = $req->method;
 
     $wr->(ERR_BAD_REQ) unless grep { $_ eq $method } qw< GET POST PATCH DELETE >;
@@ -151,7 +151,10 @@ sub _ponapi_route_match {
     }
     else {
         $action = 'retrieve_all'             if $method eq 'GET';
-        $action = 'create'                   if $method eq 'POST';
+        $action = 'create'                   if $method eq 'POST' and !$ext->{bulk};
+        $action = 'create_bulk'              if $method eq 'POST'   and $ext->{bulk};
+        $action = 'update_bulk'              if $method eq 'PATCH'  and $ext->{bulk};
+        $action = 'delete_bulk'              if $method eq 'DELETE' and $ext->{bulk};
     }
 
     $wr->(ERR_NO_MATCHING_ROUTE) unless $action;
@@ -197,7 +200,7 @@ sub _ponapi_check_headers {
 
     $wr->(ERR_BAD_EXTENSION_REQ) if grep { ! $self->{'ponapi.extensions.' . $_} } keys %ext;
 
-    return ( extensions => \%ext );
+    return \%ext;
 }
 
 sub _ponapi_query_params {
