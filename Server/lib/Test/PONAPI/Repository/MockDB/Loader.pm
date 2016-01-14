@@ -1,5 +1,5 @@
 # ABSTRACT: mock repository loader
-package Test::PONAPI::DAO::Repository::MockDB::Loader;
+package Test::PONAPI::Repository::MockDB::Loader;
 
 use Moose;
 

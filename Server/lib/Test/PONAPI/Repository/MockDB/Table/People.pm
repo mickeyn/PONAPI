@@ -1,17 +1,17 @@
 # ABSTRACT: mock repository - table - People
-package Test::PONAPI::DAO::Repository::MockDB::Table::People;
+package Test::PONAPI::Repository::MockDB::Table::People;
 
 use Moose;
 
-extends 'Test::PONAPI::DAO::Repository::MockDB::Table';
-use Test::PONAPI::DAO::Repository::MockDB::Table::Relationships;
+extends 'Test::PONAPI::Repository::MockDB::Table';
+use Test::PONAPI::Repository::MockDB::Table::Relationships;
 
 sub BUILDARGS {
     my $class = shift;
     my %args = @_ == 1 ? %{ $_[0] } : @_;
 
     my $to_articles =
-        Test::PONAPI::DAO::Repository::MockDB::Table::Relationships->new(
+        Test::PONAPI::Repository::MockDB::Table::Relationships->new(
             TYPE          => 'articles',
             TABLE         => 'rel_articles_people',
             ID_COLUMN     => 'id_people',

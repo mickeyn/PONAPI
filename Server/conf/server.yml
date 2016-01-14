@@ -12,5 +12,5 @@ server:
   respond_to_updates_with_200: "false"  # successful updates will return 200's instead of 202's
 
 repository:
-  class:  "Test::PONAPI::DAO::Repository::MockDB"
+  class:  "Test::PONAPI::Repository::MockDB"
   args:   []

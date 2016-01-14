@@ -1,9 +1,9 @@
 # ABSTRACT: mock repository - table - Relationships
-package Test::PONAPI::DAO::Repository::MockDB::Table::Relationships;
+package Test::PONAPI::Repository::MockDB::Table::Relationships;
 
 use Moose;
 
-extends 'Test::PONAPI::DAO::Repository::MockDB::Table';
+extends 'Test::PONAPI::Repository::MockDB::Table';
 
 has REL_ID_COLUMN => (
     is       => 'ro',

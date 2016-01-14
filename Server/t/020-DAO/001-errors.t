@@ -7,10 +7,10 @@ use Test::More;
 use JSON::XS;
 
 use PONAPI::DAO;
-use Test::PONAPI::DAO::Repository::MockDB;
-use Test::PONAPI::DAO::Repository::MockDB::Loader;
+use Test::PONAPI::Repository::MockDB;
+use Test::PONAPI::Repository::MockDB::Loader;
 
-my $repository = Test::PONAPI::DAO::Repository::MockDB->new;
+my $repository = Test::PONAPI::Repository::MockDB->new;
 my $dao = PONAPI::DAO->new( version => '1.0', repository => $repository );
 
 
@@ -779,7 +779,7 @@ subtest '... illegal params' => sub {
 
         my $glob = do {
             no strict 'refs';
-            \*{"Test::PONAPI::DAO::Repository::MockDB::${action}"};
+            \*{"Test::PONAPI::Repository::MockDB::${action}"};
         };
 
         {

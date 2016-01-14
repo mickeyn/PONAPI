@@ -6,12 +6,12 @@ use Test::More;
 
 BEGIN {
     use_ok('PONAPI::DAO');
-    use_ok('Test::PONAPI::DAO::Repository::MockDB');
-    use_ok('Test::PONAPI::DAO::Repository::MockDB::Loader');
+    use_ok('Test::PONAPI::Repository::MockDB');
+    use_ok('Test::PONAPI::Repository::MockDB::Loader');
 }
 
-my $repository = Test::PONAPI::DAO::Repository::MockDB->new;
-isa_ok($repository, 'Test::PONAPI::DAO::Repository::MockDB');
+my $repository = Test::PONAPI::Repository::MockDB->new;
+isa_ok($repository, 'Test::PONAPI::Repository::MockDB');
 
 my $dao = PONAPI::DAO->new( version => '1.0', repository => $repository );
 isa_ok($dao, 'PONAPI::DAO');

@@ -21,7 +21,7 @@ application:
     # myapp.psgi
     use PONAPI::Server;
     PONAPI::Server->new(
-        'repository.class' => 'Test::PONAPI::DAO::Repository::MockDB',
+        'repository.class' => 'Test::PONAPI::Repository::MockDB',
     )->to_app;
 
 And later, on the command line, you can use any PSGI-compatible utility
@@ -48,7 +48,7 @@ the API:
     use Plack::Middleware::MethodOverride;
 
     my $app = PONAPI::Server->to_app(
-        'repository.class' => 'Test::PONAPI::DAO::Repository::MockDB',
+        'repository.class' => 'Test::PONAPI::Repository::MockDB',
     )
     Plack::Middleware::MethodOverride->wrap($app);
 
@@ -72,7 +72,7 @@ the current working directory.
       respond_to_updates_with_200: "false"  # successful updates will return 200's instead of 202's when true
 
     repository:
-      class:  "Test::PONAPI::DAO::Repository::MockDB"
+      class:  "Test::PONAPI::Repository::MockDB"
       args:   []
 
 Currently, only two sections of C<server.yml> are relevant to

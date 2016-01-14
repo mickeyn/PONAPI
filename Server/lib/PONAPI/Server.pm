@@ -291,7 +291,7 @@ __END__
 =head1 SYNOPSIS
 
     # Run the server
-    $ plackup -MPONAPI::Server -e 'PONAPI::Server->new("repository.class" => "Test::PONAPI::DAO::Repository::MockDB")->to_app'
+    $ plackup -MPONAPI::Server -e 'PONAPI::Server->new("repository.class" => "Test::PONAPI::Repository::MockDB")->to_app'
 
     $ perl -MPONAPI::Client -E 'say Dumper(PONAPI::Client->new->retrieve(type => "people", id => 88))'
 

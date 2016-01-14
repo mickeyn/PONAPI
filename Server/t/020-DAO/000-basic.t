@@ -8,12 +8,12 @@ use Test::More;
 
 BEGIN {
     use_ok('PONAPI::DAO');
-    use_ok('Test::PONAPI::DAO::Repository::MockDB');
-    use_ok('Test::PONAPI::DAO::Repository::MockDB::Loader');
+    use_ok('Test::PONAPI::Repository::MockDB');
+    use_ok('Test::PONAPI::Repository::MockDB::Loader');
 }
 
-my $repository = Test::PONAPI::DAO::Repository::MockDB->new;
-isa_ok($repository, 'Test::PONAPI::DAO::Repository::MockDB');
+my $repository = Test::PONAPI::Repository::MockDB->new;
+isa_ok($repository, 'Test::PONAPI::Repository::MockDB');
 
 ok($repository->has_type('people'),   '... we have the people type');
 ok($repository->has_type('articles'), '... we have the articles type');

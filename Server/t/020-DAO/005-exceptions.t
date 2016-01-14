@@ -8,10 +8,10 @@ use JSON::XS;
 use PONAPI::Exception;
 
 use PONAPI::DAO;
-use Test::PONAPI::DAO::Repository::MockDB;
-use Test::PONAPI::DAO::Repository::MockDB::Loader;
+use Test::PONAPI::Repository::MockDB;
+use Test::PONAPI::Repository::MockDB::Loader;
 
-my $repository = Test::PONAPI::DAO::Repository::MockDB->new;
+my $repository = Test::PONAPI::Repository::MockDB->new;
 my $dao = PONAPI::DAO->new( version => '1.0', repository => $repository );
 isa_ok($dao, 'PONAPI::DAO');
 

@@ -1,11 +1,11 @@
 # ABSTRACT: mock repository - table class
-package Test::PONAPI::DAO::Repository::MockDB::Table;
+package Test::PONAPI::Repository::MockDB::Table;
 
 use Moose;
 
 use SQL::Composer;
 
-use Test::PONAPI::DAO::Repository::MockDB::Table::Relationships;
+use Test::PONAPI::Repository::MockDB::Table::Relationships;
 
 has [qw/TYPE TABLE ID_COLUMN/] => (
     is       => 'ro',
@@ -21,7 +21,7 @@ has COLUMNS => (
 
 has RELATIONS => (
     is  => 'ro',
-    isa => 'HashRef[Test::PONAPI::DAO::Repository::MockDB::Table::Relationships]',
+    isa => 'HashRef[Test::PONAPI::Repository::MockDB::Table::Relationships]',
     default => sub { {} },
 );
 

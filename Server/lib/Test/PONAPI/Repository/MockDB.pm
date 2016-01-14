@@ -1,5 +1,5 @@
 # ABSTRACT: mock repository class
-package Test::PONAPI::DAO::Repository::MockDB;
+package Test::PONAPI::Repository::MockDB;
 
 use Moose;
 
@@ -10,11 +10,11 @@ use SQL::Composer;
 use DBD::SQLite;
 use DBD::SQLite::Constants qw/:result_codes/;
 
-use Test::PONAPI::DAO::Repository::MockDB::Loader;
+use Test::PONAPI::Repository::MockDB::Loader;
 
-use Test::PONAPI::DAO::Repository::MockDB::Table::Articles;
-use Test::PONAPI::DAO::Repository::MockDB::Table::People;
-use Test::PONAPI::DAO::Repository::MockDB::Table::Comments;
+use Test::PONAPI::Repository::MockDB::Table::Articles;
+use Test::PONAPI::Repository::MockDB::Table::People;
+use Test::PONAPI::Repository::MockDB::Table::Comments;
 
 use PONAPI::Constants;
 use PONAPI::Exception;
@@ -33,16 +33,16 @@ has tables => (
     lazy    => 1,
     default => sub {
         return +{
-            articles => Test::PONAPI::DAO::Repository::MockDB::Table::Articles->new,
-            people   => Test::PONAPI::DAO::Repository::MockDB::Table::People->new,
-            comments => Test::PONAPI::DAO::Repository::MockDB::Table::Comments->new,
+            articles => Test::PONAPI::Repository::MockDB::Table::Articles->new,
+            people   => Test::PONAPI::Repository::MockDB::Table::People->new,
+            comments => Test::PONAPI::Repository::MockDB::Table::Comments->new,
         }
     }
 );
 
 sub BUILD {
     my ($self, $params) = @_;
-    my $loader = Test::PONAPI::DAO::Repository::MockDB::Loader->new;
+    my $loader = Test::PONAPI::Repository::MockDB::Loader->new;
     $loader->load unless $params->{skip_data_load};
     $self->_set_dbh( $loader->dbh );
 }

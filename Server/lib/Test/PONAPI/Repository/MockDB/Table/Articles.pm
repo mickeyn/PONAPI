@@ -1,10 +1,10 @@
 # ABSTRACT: mock repository - table - Articles
-package Test::PONAPI::DAO::Repository::MockDB::Table::Articles;
+package Test::PONAPI::Repository::MockDB::Table::Articles;
 
 use Moose;
-use Test::PONAPI::DAO::Repository::MockDB::Table::Relationships;
+use Test::PONAPI::Repository::MockDB::Table::Relationships;
 
-extends 'Test::PONAPI::DAO::Repository::MockDB::Table';
+extends 'Test::PONAPI::Repository::MockDB::Table';
 
 use constant COLUMNS => [qw[
     id
@@ -21,7 +21,7 @@ sub BUILDARGS {
 
     # We could abstract these to their own objects, but no need currently
     my $to_comments =
-        Test::PONAPI::DAO::Repository::MockDB::Table::Relationships->new(
+        Test::PONAPI::Repository::MockDB::Table::Relationships->new(
             TYPE          => 'comments',
             TABLE         => 'rel_articles_comments',
             ID_COLUMN     => 'id_articles',
@@ -30,7 +30,7 @@ sub BUILDARGS {
             ONE_TO_ONE    => 0,
         );
     my $to_authors =
-        Test::PONAPI::DAO::Repository::MockDB::Table::Relationships->new(
+        Test::PONAPI::Repository::MockDB::Table::Relationships->new(
             TYPE          => 'people',
             TABLE         => 'rel_articles_people',
             ID_COLUMN     => 'id_articles',
