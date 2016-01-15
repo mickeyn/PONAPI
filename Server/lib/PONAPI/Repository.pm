@@ -75,10 +75,6 @@ that relationship is one-to-many.
 
 =head2 create
 
-C<data> will be an arrayref of resources.
-
-=head2 delete
-
 =head2 update
 
 Return value MUST be one of the C<PONAPI_UPDATE_*> constants provided by
@@ -91,6 +87,14 @@ resource did nothing, then it must return C<PONAPI_UPDATED_NOTHING>.
 In all other non-error situations, it must return C<PONAPI_UPDATED_NORMAL>
 instead.
 
+=head2 delete
+
+=head2 create_relationships
+
+See L</update>.
+
+C<data> will be an arrayref of resources.
+
 =head2 update_relationships
 
 See L</update>.
@@ -99,12 +103,6 @@ C<data> will be either undef, a hashref, or an arrayref, depending on
 what sort of relationship the request is trying to update.
 
 =head2 delete_relationships
-
-See L</update>.
-
-C<data> will be an arrayref of resources.
-
-=head2 create_relationships
 
 See L</update>.
 
