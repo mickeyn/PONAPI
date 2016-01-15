@@ -88,10 +88,7 @@ has errors_builder => (
 
 sub _build_errors_builder { PONAPI::Builder::Errors->new( parent => $_[0] ) }
 
-sub convert_to_collection {
-    my $self = $_[0];
-    $self->_set_is_collection(1);
-}
+sub convert_to_collection { $_[0]->_set_is_collection(1) }
 
 sub has_errors {
     my $self = shift;
@@ -101,12 +98,12 @@ sub has_errors {
 }
 
 sub has_resource {
-    my $self = $_[0];
+    my $self = shift;
     $self->has_resource_builders && $self->_num_resource_builders > 0;
 }
 
 sub has_resources {
-    my $self = $_[0];
+    my $self = shift;
     $self->has_resource_builders && $self->_num_resource_builders > 1;
 }
 
@@ -116,13 +113,13 @@ sub add_resource {
     die 'Cannot add more then one resource unless the Document is in collection mode'
         if $self->has_resource && !$self->is_collection;
 
-    my $builder = PONAPI::Builder::Resource->new( %args, parent => $_[0] );
+    my $builder = PONAPI::Builder::Resource->new( %args, parent => $self );
     $self->_add_resource_builder( $builder );
     return $builder;
 }
 
 sub add_null_resource {
-    my $self = $_[0];
+    my $self = shift;
 
     my $builder = PONAPI::Builder::Resource::Null->new( parent => $self );
     $self->_add_resource_builder( $builder );
