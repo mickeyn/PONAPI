@@ -3,6 +3,7 @@ package PONAPI::Utils::URI;
 
 use URI;
 use URI::QueryParam;
+use URI::Escape qw( uri_escape_utf8 );
 
 use parent qw< Exporter >;
 @EXPORT_OK = qw< to_uri >;
@@ -20,7 +21,7 @@ sub to_uri {
 
         if ( ref $d_v ne 'HASH' ) {
             $u->query_param( $d_k =>
-                             join ',' => ( ref $d_v eq 'ARRAY' ? @{$d_v} : $d_v ) );
+                             join ',' => map { uri_escape_utf8($_) } ( ref $d_v eq 'ARRAY' ? @{$d_v} : $d_v ) );
             next;
         }
 
@@ -32,7 +33,7 @@ sub to_uri {
                 unless !ref $v or ref $v eq 'ARRAY';
 
             $u->query_param( $d_k . '[' . $k . ']' =>
-                             join ',' => ( ref $v eq 'ARRAY' ? @{$v} : $v ) );
+                             join ',' => map { uri_escape_utf8($_) } ( ref $v eq 'ARRAY' ? @{$v} : $v ) );
         }
     }
 

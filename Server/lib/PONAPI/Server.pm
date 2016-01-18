@@ -9,6 +9,7 @@ use HTTP::Headers::ActionPack;
 use Module::Runtime    ();
 use Return::MultiLevel ();
 use JSON::XS           ();
+use URI::Escape        qw( uri_unescape );
 
 use PONAPI::Server::ConfigReader;
 
@@ -205,7 +206,7 @@ sub _ponapi_query_params {
             if $p eq 'sort' and !$self->{'ponapi.sort_allowed'};
 
         # values can be passed as CSV
-        my @values = map { split /,/ } $query_params->get_all($k);
+        my @values = map { uri_unescape( split /,/ ) } $query_params->get_all($k);
 
         # check we have values for a given key
         # (for 'fields' an empty list is valid)
