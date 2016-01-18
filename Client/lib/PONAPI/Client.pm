@@ -37,6 +37,12 @@ has send_version_header => (
     default => sub { 1 },
 );
 
+has send_escape_values_header => (
+    is      => 'ro',
+    isa     => 'Bool',
+    default => sub { 1 },
+);
+
 
 ### public methods
 
@@ -119,6 +125,10 @@ sub _send_ponapi_request {
                     'Content-Type' => 'application/vnd.api+json',
                     ( $self->send_version_header
                         ? ( 'X-PONAPI-Client-Version' => '1.0' )
+                        : ()
+                    ),
+                    ( $self->send_escape_values_header
+                        ? ( 'X-PONAPI-Escaped-Values' => '1' )
                         : ()
                     ),
                 ],

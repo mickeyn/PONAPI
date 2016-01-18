@@ -189,6 +189,8 @@ sub _ponapi_query_params {
     my %params;
     my $query_params = $req->query_parameters;
 
+    my $unesacpe_values = !!$req->headers->header('X-PONAPI-Escaped-Values');
+
     # loop over query parameters (unique keys)
     for my $k ( keys %{ $query_params } ) {
         my ( $p, $f ) = $k =~ /^ (\w+?) (?:\[(\w+)\])? $/x;
@@ -206,7 +208,8 @@ sub _ponapi_query_params {
             if $p eq 'sort' and !$self->{'ponapi.sort_allowed'};
 
         # values can be passed as CSV
-        my @values = map { uri_unescape( split /,/ ) } $query_params->get_all($k);
+        my @values = map { $unesacpe_values ? uri_unescape($_) : $_ }
+                     map { split /,/ } $query_params->get_all($k);
 
         # check we have values for a given key
         # (for 'fields' an empty list is valid)
