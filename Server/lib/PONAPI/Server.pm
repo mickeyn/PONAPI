@@ -11,6 +11,7 @@ use Return::MultiLevel ();
 use JSON::XS           ();
 
 use PONAPI::Server::ConfigReader;
+use PONAPI::Utils::Names qw( check_name );
 
 use parent 'Plack::Component';
 
@@ -19,6 +20,7 @@ use constant {
     ERR_WRONG_CONTENT_TYPE   => +{ __error__ => +[ 415, "{JSON:API} Invalid Content-Type header" ] },
     ERR_WRONG_HEADER_ACCEPT  => +{ __error__ => +[ 406, "{JSON:API} Invalid Accept header" ] },
     ERR_BAD_REQ              => +{ __error__ => +[ 400, "{JSON:API} Bad request" ] },
+    ERR_BAD_REQ_INVALID_NAME => +{ __error__ => +[ 400, "{JSON:API} Bad request (invalid member-name)" ] },
     ERR_BAD_REQ_PARAMS       => +{ __error__ => +[ 400, "{JSON:API} Bad request (unsupported parameters)" ] },
     ERR_SORT_NOT_ALLOWED     => +{ __error__ => +[ 400, "{JSON:API} Server-side sorting not allowed" ] },
     ERR_NO_MATCHING_ROUTE    => +{ __error__ => +[ 404, "{JSON:API} No matching route" ] },
@@ -241,10 +243,55 @@ sub _ponapi_data {
     my $body;
     eval { $body = JSON::XS::decode_json( $req->content ); 1 };
 
-    $wr->(ERR_BAD_REQ)
-        unless $body and ref $body eq 'HASH' and exists $body->{data};
+    $wr->(ERR_BAD_REQ) unless $body and ref $body eq 'HASH' and exists $body->{data};
 
-    return ( data => $body->{data} );
+    my $data = $body->{data};
+
+    $wr->(ERR_BAD_REQ) unless !defined $data or ref($data) =~ /^(?:ARRAY|HASH)$/;
+
+    $self->_validate_data_members( $wr, $data ) if defined $data;
+
+    return ( data => $data );
+}
+
+sub _validate_data_members {
+    my ( $self, $wr, $data ) = @_;
+
+    @recs = ref $data eq 'ARRAY' ? @{$data} : $data;
+
+    for my $r ( @recs ) {
+        return unless keys %{$r};
+
+        # `type`
+        $wr->(ERR_BAD_REQ) unless $r->{type};
+        $wr->(ERR_BAD_REQ_INVALID_NAME) unless check_name( $r->{type} );
+
+        # `attributes`
+        if ( $r->{attributes} ) {
+            $wr->(ERR_BAD_REQ) unless ref( $r->{attributes} ) eq 'HASH';
+            $wr->(ERR_BAD_REQ_INVALID_NAME)
+                if grep { !check_name($_) } keys %{ $r->{attributes} };
+        }
+
+        # `relationships`
+        if ( $r->{relationships} ) {
+            $wr->(ERR_BAD_REQ) unless ref( $r->{relationships} ) eq 'HASH';
+
+            for my $k ( keys %{ $r->{relationships} } ) {
+                $wr->(ERR_BAD_REQ_INVALID_NAME) unless check_name($k);
+
+                for ( keys %{ $r->{relationships}{$k} } ) {
+                    $wr->(ERR_BAD_REQ)
+                        if !ref( $r->{relationships}{$k}{$_} ) eq 'HASH'
+                           or !exists $r->{relationships}{$k}{$_}{type};
+
+                    $wr->(ERR_BAD_REQ_INVALID_NAME)
+                        if !check_name( $r->{relationships}{$k}{$_}{type} )
+                           or grep { !check_name($_) } keys %{ $r->{relationships}{$k}{$_} };
+                }
+            }
+        }
+    }
 }
 
 sub _response {

@@ -1237,9 +1237,12 @@ repositories:
 =item Valid member names
 
 L<The spec specifies certain restriction to member names|http://jsonapi.org/format/#document-member-names>.
-C<PONAPI::Server> doesn't implement these, but instead, provides
-a module that allows implementing them at the repository level,
-L<PONAPI::Utils::Names>.
+
+C<PONAPI::Server> only implements these for the data coming from
+the clients; for full spec compliance, repositories should
+also validate that whatever they add to the document passes
+those constraints.  The module L<PONAPI::Utils::Names> provides
+a function to validate if a given string is a valid member name.
 
 =item Type validation in (create|update|delete)_relationships
 

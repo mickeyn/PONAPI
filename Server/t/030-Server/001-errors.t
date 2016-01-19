@@ -199,7 +199,7 @@ subtest '... bad requests (POST)' => sub {
     }
 
     {
-        my $create_rel  = $app->request(
+        my $create_rel = $app->request(
             POST '/articles/2/relationships/authors', %CT,
             Content => encode_json({ data => { id => 5, type => 'people'} }),
         );
@@ -207,6 +207,112 @@ subtest '... bad requests (POST)' => sub {
             $create_rel,
             {
                 detail => 'Bad request data: Parameter `data` expected Collection[Resource], but got a {"id":5,"type":"people"}',
+                status => 400,
+            }
+        )
+    }
+
+    # data is not hash-ref/array-ref/undef.
+    {
+        my $create = $app->request(
+            POST '/comments', %CT,
+            Content => encode_json({ data => 1 }),
+        );
+        error_test(
+            $create,
+            {
+                detail => '{JSON:API} Bad request',
+                status => 400,
+            }
+        )
+    }
+
+    # invalid name for `type`
+    {
+        my $create = $app->request(
+            POST '/comments-', %CT,
+            Content => encode_json({ data => { type => 'comments-', attributes => { "title" => "XXX" } } }),
+        );
+        error_test(
+            $create,
+            {
+                detail => '{JSON:API} Bad request (invalid member-name)',
+                status => 400,
+            }
+        )
+    }
+
+    # `data.relationships` is not a hash
+    {
+        my $create = $app->request(
+            POST '/comments', %CT,
+            Content => encode_json({ data => { type => 'comments', attributes => { "title" => "XXX" }, relationships => 1 } }),
+        );
+        error_test(
+            $create,
+            {
+                detail => '{JSON:API} Bad request',
+                status => 400,
+            }
+        )
+    }
+
+    # invalid name for `data.relationships` key
+    {
+        my $create = $app->request(
+            POST '/comments', %CT,
+            Content => encode_json({ data => { type => 'comments', relationships => { "<invalid>" =>  { data => { type => 'articles', id => 1 } } } } }),
+        );
+        error_test(
+            $create,
+            {
+                detail => '{JSON:API} Bad request (invalid member-name)',
+                status => 400,
+            }
+        )
+    }
+
+    # invalid name for `data.relationships.type`
+    {
+        my $create = $app->request(
+            POST '/comments', %CT,
+            Content => encode_json({ data => { type => 'comments', relationships => { articles =>  { data => { type => 'articles-', id => 1 } } } } }),
+        );
+        error_test(
+            $create,
+            {
+                detail => '{JSON:API} Bad request (invalid member-name)',
+                status => 400,
+            }
+        )
+    }
+
+
+    # TODO: `data.attributes` is not a hash
+    {
+        my $create = $app->request(
+            POST '/comments', %CT,
+            Content => encode_json({ data => { type => 'comments', attributes => 1 } }),
+        );
+        error_test(
+            $create,
+            {
+                detail => '{JSON:API} Bad request',
+                status => 400,
+            }
+        )
+    }
+
+    # invalid `data.attributes` key
+    {
+        my $create = $app->request(
+            POST '/comments', %CT,
+            Content => encode_json({ data => { type => 'comments', attributes => { "title" => "XXX", "<invalid>" => "1" } } }),
+        );
+        error_test(
+            $create,
+            {
+                detail => '{JSON:API} Bad request (invalid member-name)',
                 status => 400,
             }
         )

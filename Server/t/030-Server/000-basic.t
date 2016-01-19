@@ -208,13 +208,13 @@ subtest '... mix' => sub {
 
     my $create_rel = $app->request(
         POST '/articles/2/relationships/comments', %CT,
-        Content => encode_json({ data => [{ id => 5555, type => 'comments'}] }),
+        Content => encode_json({ data => [{ id => 5555, type => 'comments' }] }),
     );
     test_successful_request($create_rel);
 
     my $delete_rel = $app->request(
         DELETE '/articles/2/relationships/comments', %CT,
-        Content => encode_json({ data => [{ id => 5555, type => 'comments'}] }),
+        Content => encode_json({ data => [{ id => 5555, type => 'comments' }] }),
     );
     test_successful_request($delete_rel);
 
