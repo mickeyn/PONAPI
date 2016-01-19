@@ -1,7 +1,7 @@
 # ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::Server;
 
-our $VERSION = '0.002004';
+our $VERSION = '0.002005';
 
 use Plack::Request;
 use Plack::Response;

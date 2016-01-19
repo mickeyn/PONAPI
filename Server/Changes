@@ -1,5 +1,11 @@
 Revision history for PONAPI-Server
 
+0.002005     2016-Jan-19
+             * Member-name checking for incoming requests
+             * Links to repository in dist.ini (Alexandr Ciornii)
+             * Increased testing coverage
+             * Document updates
+
 0.002004     2016-Jan-14
              * Fix dist.ini (DBD::SQLite)
 
