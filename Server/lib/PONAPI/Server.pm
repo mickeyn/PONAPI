@@ -245,10 +245,13 @@ sub _ponapi_data {
 
     $wr->(ERR_BAD_REQ) unless $body and ref $body eq 'HASH' and exists $body->{data};
 
-    $self->_validate_data_members( $wr, $body->{data} )
-        if ref( $body->{data} ) =~ /^(?:ARRAY|HASH)$/;
+    my $data = $body->{data};
 
-    return ( data => $body->{data} );
+    $wr->(ERR_BAD_REQ) unless !defined $data or ref($data) =~ /^(?:ARRAY|HASH)$/;
+
+    $self->_validate_data_members( $wr, $data ) if defined $data;
+
+    return ( data => $data );
 }
 
 sub _validate_data_members {
