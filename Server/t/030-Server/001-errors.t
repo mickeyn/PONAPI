@@ -199,7 +199,7 @@ subtest '... bad requests (POST)' => sub {
     }
 
     {
-        my $create_rel  = $app->request(
+        my $create_rel = $app->request(
             POST '/articles/2/relationships/authors', %CT,
             Content => encode_json({ data => { id => 5, type => 'people'} }),
         );
@@ -207,6 +207,20 @@ subtest '... bad requests (POST)' => sub {
             $create_rel,
             {
                 detail => 'Bad request data: Parameter `data` expected Collection[Resource], but got a {"id":5,"type":"people"}',
+                status => 400,
+            }
+        )
+    }
+
+    {
+        my $create_rel = $app->request(
+            POST '/comments', %CT,
+            Content => encode_json({ data => { type => 'comments', attributes => { "title" => "XXX", "<invalid>" => "1" } } }),
+        );
+        error_test(
+            $create_rel,
+            {
+                detail => '{JSON:API} Bad request (invalid member-name)',
                 status => 400,
             }
         )
