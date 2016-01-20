@@ -272,7 +272,4 @@ subtest '... basic server - config override' => sub {
 
 };
 
-# TODO test bad names, ala foo-bar, に, cómbo, ca$hmoney (which is valid sql...),
-# etc.
-
 done_testing;
