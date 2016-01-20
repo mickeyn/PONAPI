@@ -1,5 +1,10 @@
 Revision history for PONAPI-Client
 
+0.002002     2016-Jan-20
+             * Support extra escaping on URL values,
+               sends 'X-PONAPI-Escaped-Values: 1' (default)
+             * Links to repository in dist.ini (Alexandr Ciornii)
+
 0.002001     2016-Jan-14
              * Updated dist.ini (AutoPrereqs)
 
