@@ -108,4 +108,4 @@ See L</update>.
 
 C<data> will be an arrayref of resources.
 
-=end
+=cut
