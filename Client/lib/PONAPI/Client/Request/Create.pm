@@ -1,4 +1,4 @@
-# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
+# ABSTRACT: request - create
 package PONAPI::Client::Request::Create;
 
 use Moose;

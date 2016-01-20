@@ -1,4 +1,4 @@
-# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
+# ABSTRACT: request - role - has fields
 package PONAPI::Client::Request::Role::HasFields;
 
 use Moose::Role;

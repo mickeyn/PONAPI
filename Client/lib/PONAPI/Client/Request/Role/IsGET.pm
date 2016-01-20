@@ -1,4 +1,4 @@
-# ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
+# ABSTRACT: request - role - is GET
 package PONAPI::Client::Request::Role::IsGET;
 
 use Moose::Role;
