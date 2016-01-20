@@ -1,12 +1,15 @@
 # ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::Utils::URI;
 
+use strict;
+use warnings;
+
 use URI;
 use URI::QueryParam;
 use URI::Escape qw( uri_escape_utf8 );
 
 use parent qw< Exporter >;
-@EXPORT_OK = qw< to_uri >;
+our @EXPORT_OK = qw< to_uri >;
 
 sub to_uri {
     my ( $data ) = @_;
