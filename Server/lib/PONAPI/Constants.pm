@@ -1,6 +1,9 @@
 # ABSTRACT: Constants used by PONAPI::DAO and PONAPI repositories
 package PONAPI::Constants;
 
+use strict;
+use warnings;
+
 my $constants;
 BEGIN {
     $constants = {

@@ -208,4 +208,4 @@ Defaults to 1.0; only used in C<as_response>.
 HTTP Status code for the exception; in most cases you don't need to
 set this manually.
 
-=end
+=cut

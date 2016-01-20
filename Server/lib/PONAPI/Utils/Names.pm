@@ -1,8 +1,11 @@
 # ABSTRACT: Member names validation utility
 package PONAPI::Utils::Names;
 
+use strict;
+use warnings;
+
 use parent qw< Exporter >;
-@EXPORT_OK = qw< check_name >;
+our @EXPORT_OK = qw< check_name >;
 
 my $qr_edge = qr/[a-zA-Z0-9\P{ASCII}]/;
 my $qr_mid  = qr/[a-zA-Z0-9\P{ASCII}_\ -]/;

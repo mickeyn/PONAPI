@@ -35,7 +35,7 @@ __END__
         ...
     }
 
-=HEAD1 DESCRIPTION
+=head1 DESCRIPTION
 
 Clases implementing repositories for L<PONAPI::DAO> must consume
 the C<PONAPI::Repository> role; this ensures that the methods
@@ -47,7 +47,7 @@ with the exceptions of the C<has_*> methods, B<all> methods
 will receive a C<document> argument, which is always an instance of
 C<PONAPI::Builder::Document>, but not necessarily a B<new> instance.
 
-=HEAD1 REQUIRES
+=head1 REQUIRES
 
 =head2 $obj->has_type( $type )
 

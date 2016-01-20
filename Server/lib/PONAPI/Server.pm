@@ -1,6 +1,9 @@
 # ABSTRACT: PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/) v1.0
 package PONAPI::Server;
 
+use strict;
+use warnings;
+
 our $VERSION = '0.002005';
 
 use Plack::Request;
@@ -257,7 +260,7 @@ sub _ponapi_data {
 sub _validate_data_members {
     my ( $self, $wr, $data ) = @_;
 
-    @recs = ref $data eq 'ARRAY' ? @{$data} : $data;
+    my @recs = ref $data eq 'ARRAY' ? @{$data} : $data;
 
     for my $r ( @recs ) {
         return unless keys %{$r};

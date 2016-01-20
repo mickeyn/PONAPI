@@ -182,7 +182,7 @@ subtest '... basic server - successful requests' => sub {
 
 subtest '... mix' => sub {
 
-    my $app = Plack::Test->create( PONAPI::Server->to_app );
+    my $app = Plack::Test->create( PONAPI::Server->new->to_app );
 
     my $retrieve_all = $app->request( GET '/articles',   %CT );
     test_successful_request($retrieve_all);
