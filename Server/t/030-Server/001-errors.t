@@ -288,7 +288,7 @@ subtest '... bad requests (POST)' => sub {
     }
 
 
-    # TODO: `data.attributes` is not a hash
+    # `data.attributes` is not a hash
     {
         my $create = $app->request(
             POST '/comments', %CT,
