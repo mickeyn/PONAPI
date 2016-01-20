@@ -1,5 +1,12 @@
 Revision history for PONAPI-Server
 
+0.002006     2016-Jan-20
+             * Fixed Kwalitee errors
+             * Support extra url-decoding for values
+               with header 'X-PONAPI-Escaped-Values: 1'
+             * dist.ini updates
+             * Document updates
+
 0.002005     2016-Jan-19
              * Member-name checking for incoming requests
              * Links to repository in dist.ini (Alexandr Ciornii)
