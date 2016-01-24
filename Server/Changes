@@ -1,5 +1,9 @@
 Revision history for PONAPI-Server
 
+0.002007     2016-Jan-24
+             * Corrected content-negotiation rules.
+             * Fixed POD
+
 0.002006     2016-Jan-20
              * Fixed Kwalitee errors
              * Support extra url-decoding for values

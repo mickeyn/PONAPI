@@ -8,7 +8,7 @@ PONAPI::Server - PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/
 
 =head1 VERSION
 
-version 0.002006
+version 0.002007
 
 =head1 SYNOPSIS
 
