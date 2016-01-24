@@ -257,7 +257,7 @@ sub _ponapi_query_params {
 sub _ponapi_data {
     my ( $self, $wr, $req ) = @_;
 
-    return unless $req->content_length > 0;
+    return unless $req->content_length and $req->content_length > 0;
 
     $wr->(ERR_BAD_REQ) if $req->method eq 'GET';
 
