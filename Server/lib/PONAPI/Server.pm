@@ -20,6 +20,7 @@ use PONAPI::Utils::Names qw( check_name );
 use parent 'Plack::Component';
 
 use constant {
+    ERR_MISSING_MEDIA_TYPE   => +{ __error__ => +[ 415, "{JSON:API} No {json:api} Media-Type (Content-Type / Accept)" ] },
     ERR_MISSING_CONTENT_TYPE => +{ __error__ => +[ 415, "{JSON:API} Missing Content-Type header" ] },
     ERR_WRONG_CONTENT_TYPE   => +{ __error__ => +[ 415, "{JSON:API} Invalid Content-Type header" ] },
     ERR_WRONG_HEADER_ACCEPT  => +{ __error__ => +[ 406, "{JSON:API} Invalid Accept header" ] },
@@ -172,10 +173,17 @@ sub _ponapi_check_headers {
     my $pack = HTTP::Headers::ActionPack->new;
     my $mt   = $self->{'ponapi.mediatype'};
 
+    my $has_mediatype = 0;
+
     # check Content-Type
     my $content_type = $req->headers->header('Content-Type');
-    $wr->(ERR_MISSING_CONTENT_TYPE) unless $content_type;
-    $wr->(ERR_WRONG_CONTENT_TYPE)   unless $content_type eq $mt;
+    if ( $content_type ) {
+        $wr->(ERR_WRONG_CONTENT_TYPE) unless $content_type eq $mt;
+        $has_mediatype++;
+    }
+
+    $wr->(ERR_MISSING_CONTENT_TYPE)
+        if $req->content_length and !$content_type;
 
     # check Accept
     if ( my $accept = $req->headers->header('Accept') ) {
@@ -183,9 +191,15 @@ sub _ponapi_check_headers {
             map { ( $_->[1]->type eq $mt ) ? $_->[1] : () }
             $pack->create_header( 'Accept' => $accept )->iterable;
 
-        $wr->(ERR_WRONG_HEADER_ACCEPT)
-            if @jsonapi_accept and !( grep { $_->params_are_empty } @jsonapi_accept );
+        if ( @jsonapi_accept ) {
+            $wr->(ERR_WRONG_HEADER_ACCEPT)
+                unless grep { $_->params_are_empty } @jsonapi_accept;
+
+            $has_mediatype++;
+        }
     }
+
+    $wr->(ERR_MISSING_MEDIA_TYPE) unless $has_mediatype;
 }
 
 sub _ponapi_query_params {
