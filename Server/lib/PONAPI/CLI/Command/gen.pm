@@ -16,8 +16,8 @@ sub opt_spec {
         [ "dir=s",      "Server directory to be created" ],
         [ "repo=s",     "EXSISTING repository module to POINT to" ],
         [ "new_repo=s", "NEW repository module NAME to CREATE" ],
-        [ "conf=s",     "copy/generate server config file", { default => "" } ],
-        [ "startup=s",  "copy/generate server startup script", { default => "" } ],
+        [ "conf=s",     "copy server config file", { default => "" } ],
+        [ "startup=s",  "copy server startup script", { default => "" } ],
     );
 }
 
@@ -88,7 +88,7 @@ sub create_repo_module {
         unless $repo_file->openw();
 
     $repo_file->spew(<<"MODULE");
-package $name;
+package @{[ $self->{_new_repo} ]};
 
 use Moose;
 
