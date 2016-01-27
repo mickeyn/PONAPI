@@ -39,7 +39,9 @@ sub prepare_app {
     my %conf;
     local $@;
     eval {
-        %conf = PONAPI::Server::ConfigReader->new( dir => 'conf' )->read_config;
+        %conf = PONAPI::Server::ConfigReader->new(
+            dir => $self->{'ponapi.config_dir'} || 'conf'
+        )->read_config;
     };
     $self->{$_} //= $conf{$_} for keys %conf;
 
