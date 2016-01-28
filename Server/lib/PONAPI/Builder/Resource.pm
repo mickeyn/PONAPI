@@ -111,10 +111,13 @@ sub build {
     @field_filters = @{ $args{fields}{ $self->type } }
         if exists $args{fields} and exists $args{fields}{ $self->type };
 
-    $result->{attributes} = +{
-        map { my $v = $self->_get_attribute($_); $v ? ( $_ => $v ) : () }
-        ( @field_filters ? @field_filters : $self->_keys_attributes )
-    } if $self->has_attributes;
+    if ( $self->has_attributes ) {
+        my @attributes = @field_filters
+            ? grep { $self->has_attribute_for($_) } @field_filters
+            : $self->_keys_attributes;
+
+        $result->{attributes} = +{ map { $_ => $self->_get_attribute($_) } @attributes };
+    }
 
     $result->{relationships} = +{
         map { my $v = $self->_get_relationship($_); $v ? ( $_ => $v->build ) : () }
