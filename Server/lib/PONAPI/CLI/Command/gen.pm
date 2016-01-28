@@ -17,14 +17,14 @@ sub opt_spec {
         [ "repo=s",     "EXSISTING repository module to POINT to" ],
         [ "new_repo=s", "NEW repository module NAME to CREATE" ],
         [ "conf=s",     "copy server config file", { default => "" } ],
-        [ "startup=s",  "copy server startup script", { default => "" } ],
+        [ "psgi=s",     "copy server startup script", { default => "" } ],
     );
 }
 
 sub validate_args {
     my ( $self, $opt, $args ) = @_;
 
-    my ( $dir, $repo, $new_repo, $conf, $startup ) = @{$opt}{qw< dir repo new_repo conf startup >};
+    my ( $dir, $repo, $new_repo, $conf, $psgi ) = @{$opt}{qw< dir repo new_repo conf psgi >};
 
     $self->usage_error("'directory name' is required.\n")
         unless $dir;
@@ -38,8 +38,8 @@ sub validate_args {
     $self->{_conf_content} = file($conf)->slurp()
         if $conf;
 
-    $self->{_startup_content} = file($startup)->slurp()
-        if $startup;
+    $self->{_startup_content} = file($psgi)->slurp()
+        if $psgi;
 }
 
 sub execute {
