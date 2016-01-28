@@ -1,3 +1,4 @@
+# ABSTRACT: ponapi project generation command line utility
 package PONAPI::CLI::Command::gen;
 
 use PONAPI::CLI -command;

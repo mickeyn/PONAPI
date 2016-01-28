@@ -1,3 +1,4 @@
+# ABSTRACT: ponapi demo running command line utility
 package PONAPI::CLI::Command::demo;
 
 use PONAPI::CLI -command;

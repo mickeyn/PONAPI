@@ -1,3 +1,5 @@
 #!/usr/bin/env perl
+# ABSTRACT: ponapi utility
+# PODNAME: ponapi
 use PONAPI::CLI;
 PONAPI::CLI->run;
