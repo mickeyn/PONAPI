@@ -1,5 +1,9 @@
 Revision history for PONAPI-Server
 
+0.002008     2016-Jan-28
+             * Bug fix: allow zero-values in attributes
+             * Server can now take config dir constructor parameter
+
 0.002007     2016-Jan-24
              * Corrected content-negotiation rules.
              * Fixed POD
