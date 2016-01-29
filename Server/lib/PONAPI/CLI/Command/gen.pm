@@ -30,7 +30,7 @@ sub validate_args {
     $self->usage_error("'directory name' is required.\n")
         unless $dir;
 
-    $self->usage_error("one of new (-new_repo STR) or existing (-repo STR) is required.\n")
+    $self->usage_error("one of new (--new_repo STR) or existing (--repo STR) is required.\n")
         unless $repo xor $new_repo;
 
     $self->usage_error("$repo is an invalid module name\n")
