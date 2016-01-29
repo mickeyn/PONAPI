@@ -52,6 +52,28 @@ the API:
     )
     Plack::Middleware::MethodOverride->wrap($app);
 
+=head1 A QUICK DEMO
+
+The L<ponapi> utility comes with C<PONAPI::Server>; it can be be used
+to set up a basic PONAPI server environment:
+
+    $ ponapi gen --dir my_ponapi --new_repo My::PONAPI::Repo
+
+The environment will include a server configuration file, and the minimum
+boilerplate for a repository, and a .psgi script to start the server.
+
+L<ponapi> can also be used to start a test instance to toy around without
+having to write a repo of your own:
+
+    $ ponapi demo --server --port 5000
+    
+    # We can then query that server with the ponapi util...
+    $ ponapi demo --query
+    # ... or with PONAPI::Client
+    $ perl -MPONAPI::Client -E 'PONAPI::Client->new->retrieve_all(q<articles>)'
+
+The rest of this document will expand on the server configuration file
+(C<server.yaml>) and on how to create your own repository.
 
 =head1 SERVER CONFIGURATION
 
