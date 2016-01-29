@@ -93,6 +93,8 @@ package @{[ $self->{_new_repo} ]};
 
 use Moose;
 
+use PONAPI::Constants;
+use PONAPI::Exception;
 with 'PONAPI::Repository';
 
 __PACKAGE__->meta->make_immutable;
