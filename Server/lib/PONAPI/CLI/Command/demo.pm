@@ -13,12 +13,12 @@ use Plack::Runner;
 use Plack::Middleware::MethodOverride;
 use PONAPI::Server;
 
-sub abstract    { "Run a DEMO PONAPI::Server" }
+sub abstract    { "Run a DEMO PONAPI server" }
 sub description { "This tool will run a demo server with a mock DB" }
 
 sub opt_spec {
     return (
-        [ "port=i", "specify a port for the server (default=5000)" ],
+        [ "port=i", "Specify a port for the server (default=5000)" ],
     );
 }
 

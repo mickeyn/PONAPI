@@ -9,7 +9,7 @@ use warnings;
 use Path::Class;
 use Module::Runtime ();
 
-sub abstract    { "PONAPI::Server CLI tool" }
+sub abstract    { "Initialize a PONAPI server working environment" }
 sub description { "This tool will assist you in setting up a PONAPI server" }
 
 sub opt_spec {
@@ -17,8 +17,8 @@ sub opt_spec {
         [ "dir=s",      "Server directory to be created" ],
         [ "repo=s",     "EXSISTING repository module to POINT to" ],
         [ "new_repo=s", "NEW repository module NAME to CREATE" ],
-        [ "conf=s",     "copy server config file", { default => "" } ],
-        [ "psgi=s",     "copy server startup script", { default => "" } ],
+        [ "conf=s",     "Copy server config file", { default => "" } ],
+        [ "psgi=s",     "Copy server startup script", { default => "" } ],
     );
 }
 
