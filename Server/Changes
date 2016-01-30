@@ -1,5 +1,10 @@
 Revision history for PONAPI-Server
 
+0.002009     2016-Jan-29
+             * Added `ponapi` CLI utility
+             * dist.ini updates
+             * Document updates
+
 0.002008     2016-Jan-28
              * Bug fix: allow zero-values in attributes
              * Server can now take config dir constructor parameter
