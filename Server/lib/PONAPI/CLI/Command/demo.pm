@@ -80,7 +80,7 @@ sub run_query {
     require JSON::XS;
     require HTTP::Tiny;
 
-    my $url = 'http://localhost:' . $self->{port} . '/articles/2?include=comments,authors';
+    my $url = $self->random_url();
 
     my $res = HTTP::Tiny->new->get( $url, {
         headers => {
@@ -95,6 +95,61 @@ sub run_query {
 
     my $json = JSON::XS->new;
     print $json->pretty(1)->encode( $json->decode($res->{content}) );
+}
+
+sub random_url {
+    my $self = shift;
+
+    my %rels = (
+        articles => {
+            id      => [ 1, 2, 3 ],
+            include => [qw< comments authors >],
+            fields  => [qw< body title created updated status >],
+        },
+        comments => {
+            id      => [ 5, 12 ],
+            include => [qw< articles >],
+        },
+        people   => {
+            id      => [ 42, 88, 91 ],
+            include => [qw< articles >],
+            fields  => [qw< name age gender >],
+        },
+    );
+
+    my $type = ( keys %rels )[ rand( scalar keys %rels ) ];
+
+    my $id = "";
+    if ( rand(2) % 2 == 0 ) {
+        my $_id  = $rels{$type}{id}->[ int(rand(scalar @{ $rels{$type}{id} } )) ];
+        $id = "/$_id";
+    }
+
+    my $fields = "";
+    if ( int(rand(2)) % 2 == 0 ) {
+        my @fields  = map { int(rand(2)) % 2 ? $_ : () } @{ $rels{$type}{fields} };
+        $fields = "fields[$type]=" . ( join ',' => @fields )
+            if @fields;
+    }
+
+    my $include = "";
+    if ( int(rand(2)) % 2 == 0 ) {
+        my @_inc = @{ $rels{$type}{include} };
+        my @include = scalar @_inc > 1
+            ? map { int(rand(2)) % 2 ? $_ : () } @_inc
+            : @_inc;
+
+        $include = "include=" . ( join ',' => @include)
+            if @include;
+    }
+
+    my $query = ( $include || $fields ? "?" : "" );
+    my $sep   = ( $include && $fields ? "&" : "" );
+
+    my $url = 'http://localhost:' . $self->{port}
+            . "/$type" . $id . $query . $include . $sep . $fields;
+
+    return $url;
 }
 
 1;
