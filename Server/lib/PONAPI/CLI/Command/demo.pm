@@ -11,26 +11,26 @@ sub description { "This tool will run a demo server with a mock DB" }
 
 sub opt_spec {
     return (
-        [ "server|s", "Run a PONAPI demo server" ],
-        [ "query|q",  "Execute a query from the demo server" ],
-        [ "port=i",   "Specify a port for the server (default=5000)" ],
+        [ "s|server", "Run a PONAPI demo server" ],
+        [ "q|query",  "Execute a query from the demo server" ],
+        [ "p|port=i",   "Specify a port for the server (default=5000)" ],
     );
 }
 
 sub validate_args {
     my ( $self, $opt, $args ) = @_;
 
-    $self->usage_error("one of server (-s) or query (-q) is required.\n")
-        unless $opt->{server} xor $opt->{query};
+    $self->usage_error("(only) one of server (-s) or query (-q) is required.\n")
+        unless $opt->{s} xor $opt->{q};
 
-    $self->{port} = $opt->{port} || 5000;
+    $self->{port} = $opt->{port} || $opt->{p} || 5000;
 }
 
 sub execute {
     my ( $self, $opt, $args ) = @_;
 
-    $self->run_server() if $opt->{server};
-    $self->run_query()  if $opt->{query};
+    $self->run_server() if $opt->{s};
+    $self->run_query()  if $opt->{q};
 }
 
 sub run_server {
