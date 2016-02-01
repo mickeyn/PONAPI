@@ -14,45 +14,46 @@ sub description { "This tool will assist you in setting up a PONAPI server" }
 
 sub opt_spec {
     return (
-        [ "dir=s",      "Server directory to be created" ],
-        [ "repo=s",     "EXSISTING repository module to POINT to" ],
-        [ "new_repo=s", "NEW repository module NAME to CREATE" ],
-        [ "conf=s",     "Copy server config file", { default => "" } ],
-        [ "psgi=s",     "Copy server startup script", { default => "" } ],
+        [ "d|dir=s",      "Server directory to be created" ],
+        [ "r|repo=s",     "EXSISTING repository module to POINT to" ],
+        [ "n|new_repo=s", "NEW repository module NAME to CREATE" ],
+        [ "c|conf=s",     "Copy server config file", { default => "" } ],
+        [ "p|psgi=s",     "Copy server startup script", { default => "" } ],
     );
 }
 
 sub validate_args {
     my ( $self, $opt, $args ) = @_;
 
-    my ( $dir, $repo, $new_repo, $conf, $psgi ) = @{$opt}{qw< dir repo new_repo conf psgi >};
-
+    # check directory name
     $self->usage_error("'directory name' is required.\n")
-        unless $dir;
+        unless $self->{_dir} = $opt->{dir} || $opt->{d};
+
+    # check repo / new_repo
+    my $repo   = $self->{_repo}     = $opt->{repo}     || $opt->{r};
+    my $n_repo = $self->{_new_repo} = $opt->{new_repo} || $opt->{n};
+
+    $self->{_conf_repo} = $repo || $n_repo;
 
     $self->usage_error("one of new (--new_repo STR) or existing (--repo STR) is required.\n")
-        unless $repo xor $new_repo;
+        unless $repo xor $n_repo;
 
     $self->usage_error("$repo is an invalid module name\n")
         if $repo and ! Module::Runtime::use_module($repo);
 
-    $self->{_conf_content} = file($conf)->slurp()
-        if $conf;
+    # check conf
+    $self->{_conf_content} = file( $opt->{conf} )->slurp()
+        if $opt->{conf};
 
-    $self->{_startup_content} = file($psgi)->slurp()
-        if $psgi;
+    # check psgi
+    $self->{_startup_content} = file( $opt->{psgi} )->slurp()
+        if $opt->{psgi};
 }
 
 sub execute {
     my ( $self, $opt, $args ) = @_;
 
-    my ( $dir, $repo, $new_repo ) = @{$opt}{qw< dir repo new_repo >};
-
-    $self->{_dir}       = $dir;
-    $self->{_new_repo}  = $new_repo;
-    $self->{_conf_repo} = $repo || $new_repo;
-
-    $self->create_dir($dir);
+    $self->create_dir( $self->{_dir} ); # must pass as arg.
     $self->create_repo_module();
     $self->create_conf_file();
     $self->create_psgi_file();
