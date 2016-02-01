@@ -1,5 +1,9 @@
 Revision history for PONAPI-Server
 
+0.002010     2016-Feb-01
+             * Lowered the minimum Test::Simple version to 0.98
+             * Kwalitee tweaks
+
 0.002009     2016-Jan-29
              * Added `ponapi` CLI utility
              * dist.ini updates
