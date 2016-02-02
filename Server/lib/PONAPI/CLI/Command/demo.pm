@@ -20,7 +20,7 @@ sub opt_spec {
 sub validate_args {
     my ( $self, $opt, $args ) = @_;
 
-    $self->usage_error("(only) one of server (-s) or query (-q) is required.\n")
+    $self->usage_error("(only) one of server (-s) or query (-q [STR]) is required.\n")
         unless exists $opt->{s} xor exists $opt->{q};
 
     $self->{port} = $opt->{port} || $opt->{p} || 5000;
