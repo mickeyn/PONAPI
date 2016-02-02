@@ -126,10 +126,10 @@ sub random_url {
         },
     );
 
-    my $type = ( keys %rels )[ rand( scalar keys %rels ) ];
+    my $type = ( keys %rels )[ int(rand( scalar keys %rels )) ];
 
     my $id = "";
-    if ( rand(2) % 2 == 0 ) {
+    if ( int(rand(2)) % 2 == 0 ) {
         my $_id  = $rels{$type}{id}->[ int(rand(scalar @{ $rels{$type}{id} } )) ];
         $id = "/$_id";
     }
