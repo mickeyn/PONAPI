@@ -137,22 +137,23 @@ sub random_url {
         $id = "/$_id";
     }
 
-    my $fields = "";
-    if ( int(rand(2)) % 2 == 0 ) {
-        my @fields  = map { int(rand(2)) % 2 ? $_ : () } @{ $rels{$type}{fields} };
-        $fields = "fields[$type]=" . ( join ',' => @fields )
-            if @fields;
-    }
-
     my $include = "";
+    my @include;
     if ( int(rand(2)) % 2 == 0 ) {
         my @_inc = @{ $rels{$type}{include} };
-        my @include = scalar @_inc > 1
+        @include = scalar @_inc > 1
             ? map { int(rand(2)) % 2 ? $_ : () } @_inc
             : @_inc;
 
-        $include = "include=" . ( join ',' => @include)
+        $include = "include=" . ( join ',' => @include )
             if @include;
+    }
+
+    my $fields = "";
+    if ( int(rand(2)) % 2 == 0 ) {
+        my @fields  = map { int(rand(2)) % 2 ? $_ : () } @{ $rels{$type}{fields} };
+        $fields = "fields[$type]=" . ( join ',' => @fields, @include )
+            if @fields;
     }
 
     my $query = ( $include || $fields ? "?" : "" );
