@@ -68,9 +68,16 @@ having to write a repo of your own:
     $ ponapi demo --server --port 5000
     
     # We can then query that server with the ponapi util...
+    # Do a random query
     $ ponapi demo --query
+    # Or specify what you want
+    $ ponapi demo --query /articles/2
+    $ ponapi demo --query /articles/2/comments
+    $ ponapi demo --query /articles/2/relationships/comments
+    $ ponapi demo --query /people/88?include=articles
+
     # ... or with PONAPI::Client
-    $ perl -MPONAPI::Client -E 'PONAPI::Client->new->retrieve_all(q<articles>)'
+    $ perl -MPONAPI::Client -E 'PONAPI::Client->new->retrieve_all(type => q<articles>)'
 
 The rest of this document will expand on the server configuration file
 (C<server.yaml>) and on how to create your own repository.
