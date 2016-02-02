@@ -97,6 +97,9 @@ sub run_query {
         },
     });
 
+    die "Failed to connect to a local server (try 'ponapi demo -s' to start one)\n"
+        unless $res and ref($res) eq 'HASH' and $res->{status} < 500;
+
     print "\nGET $url\n\n";
     print $res->{protocol} . " " . $res->{status} . " " . $res->{reason} . "\n";
 
