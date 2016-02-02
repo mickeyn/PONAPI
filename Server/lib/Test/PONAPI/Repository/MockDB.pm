@@ -3,8 +3,6 @@ package Test::PONAPI::Repository::MockDB;
 
 use Moose;
 
-use SQL::Composer;
-
 # We MUST use DBD::SQLite before ::Constants to get anything useful!
 use DBD::SQLite;
 use DBD::SQLite::Constants qw/:result_codes/;
@@ -286,10 +284,10 @@ sub _create_relationships {
         if ( $failed ) {
             if ( $one_to_one && do { local $@; eval { $e->sql_error } } ) {
                 # Can't quite do ::Upsert
-                $stmt = SQL::Composer::Update->new(
+                $stmt = $relation_obj->update_stmt(
                     table  => $rel_table,
                     values => [ %$values ],
-                    where  => [ $id_column => $id ],
+                    where  => { $id_column => $id },
                     driver => 'sqlite',
                 );
                 $self->_db_execute( $stmt );
@@ -361,7 +359,7 @@ sub _update {
         # under the hood.  Case point: the updated column in Articles
         my ($stmt, $extra_return, $msg) = $table_obj->update_stmt(
             table  => $type,
-            id     => $id,
+            where  => { $table_obj->ID_COLUMN => $id },
             values => $attributes,
         );
 
@@ -757,8 +755,8 @@ sub _db_execute {
     {
         local $@;
         eval {
-            $sth = $self->dbh->prepare($stmt->to_sql);
-            $ret = $sth->execute($stmt->to_bind);
+            $sth = $self->dbh->prepare($stmt->{sql});
+            $ret = $sth->execute(@{ $stmt->{bind} || [] });
             # This should never happen, since the DB handle is
             # created with RaiseError.
             die $DBI::errstr if !$ret;

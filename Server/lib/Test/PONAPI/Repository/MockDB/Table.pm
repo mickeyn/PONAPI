@@ -3,8 +3,6 @@ package Test::PONAPI::Repository::MockDB::Table;
 
 use Moose;
 
-use SQL::Composer;
-
 use Test::PONAPI::Repository::MockDB::Table::Relationships;
 
 has [qw/TYPE TABLE ID_COLUMN/] => (
@@ -31,11 +29,24 @@ sub insert_stmt {
     my $table  = $args{table};
     my $values = $args{values};
 
-    my $stmt = SQL::Composer::Insert->new(
-        into   => $table,
-        values => [ %$values ],
-        driver => 'sqlite',
-    );
+    # NOTE: this is a bunch of bad practices rolled together.
+    # We're crafting our own SQL and not escaping the table/columns,
+    # as well as using sqlite-specific features.
+    # Ordinarily, you'd use DBIx::Class or at least SQL::Composer
+    # for this, but we got reports that packaging PONAPI::Server
+    # becomes hugely complex by adding either of those as dependencies.
+    # Since this is just for testing, let's forgo a couple of good practices
+    # and do it all manually.
+    my @keys   = keys %$values;
+    my @values = values %$values;
+    my $sql = "INSERT INTO $table " . (@keys
+        ? '(' . join( ",", @keys) . ') VALUES (' . join(',', ('?') x @keys) . ')'
+        : 'DEFAULT VALUES');
+
+    my $stmt = {
+        sql  => $sql,
+        bind => \@values,
+    };
 
     return $stmt;
 }
@@ -46,11 +57,13 @@ sub delete_stmt {
     my $table = $args{table};
     my $where = $args{where};
 
-    my $stmt = SQL::Composer::Delete->new(
-        from   => $table,
-        where  => [ %$where ],
-        driver => 'sqlite',
-    );
+    my @keys  = keys %$where;
+    my @values = values %$where;
+
+    my $sql = "DELETE FROM $table WHERE "
+            . join " AND ", map "$_=?", @keys;
+
+    my $stmt = { sql => $sql, bind => \@values };
 
     return $stmt;
 }
@@ -64,19 +77,32 @@ sub select_stmt {
     my %limit   = %{ $args{page} || {} };
     my $sort    = $args{sort} || [];
 
-    my %order_by = map {
+    my @order_by = map {
         my ($desc, $col) = /\A(-?)(.+)\z/s;
-        ( $col => ( $desc ? 'desc' : 'asc' ) );
+        join ' ', $col => uc( $desc ? 'desc' : 'asc' );
     } @$sort;
 
     my $columns = $self->_stmt_columns(\%args);
-    my $stmt = SQL::Composer::Select->new(
-        %limit,
-        from    => $type,
-        columns => $columns,
-        where   => [ %{ $filters } ],
-        (%order_by ? (order_by => [ %order_by ]) : ()),
-    );
+    my @values = map { ref($_) ? @$_ : $_ } values %$filters;
+    my $sql = join "\n",
+            'SELECT ' . join(',', @$columns),
+            'FROM '   . $type,
+            (%$filters
+                ? 'WHERE ' . join(' AND ', map {
+                    my $val = $filters->{$_};
+                    ref($val)
+                        ? "$_ IN (@{[ join ',', ('?') x @$val ]})"
+                        : "$_=?"
+                } keys %$filters)
+                : ''
+            ),
+            (@order_by ? 'ORDER BY ' . join(', ', @order_by) : ''),
+            (%limit    ? "LIMIT $limit{limit} OFFSET $limit{offset}" : '' );
+
+    my $stmt = {
+        sql  => $sql,
+        bind => \@values,
+    };
 
     return $stmt;
 }
@@ -87,21 +113,20 @@ sub update_stmt {
     my $id     = $args{id};
     my $table  = $args{table};
     my $values = $args{values} || {};
+    my $where  = $args{where};
 
-    local $@;
-    my $stmt = eval {
-        SQL::Composer::Update->new(
-            table  => $table,
-            values => [ %$values ],
-            where  => [ id => $id ],
-            driver => 'sqlite',
-        )
-    } or do {
-        my $msg = "$@"||'Unknown error';
-        PONAPI::Exception->throw(
-            sql_error => "Failed to compose an update with the given values",
-            internal  => $msg,
-        );
+    my @cols   = keys %$values;
+    my @values = values %$values;
+    push @values, values %$where;
+
+    my $sql = join "\n",
+            "UPDATE $table",
+            "SET "   . join(', ', map "$_=?", @cols),
+            "WHERE " . join( ' AND ', map "$_=?", keys %$where );
+
+    my $stmt = {
+        sql  => $sql,
+        bind => \@values,
     };
 
     return $stmt;

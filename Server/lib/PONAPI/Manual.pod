@@ -607,8 +607,7 @@ Now, we could do something like this in retrieve_all and _add_included:
     ...
 
 (At this point, you should be seriously looking into alternatives to
-composing your own SQL.  In the repository used for testing PONAPI::Server,
-we used L<SQL::Composer>.  The manual will continue rolling it's own SQL, but
+composing your own SQL.  The manual will continue rolling it's own SQL, but
 please don't do that.  For your sanity.)
 
 We'll also want to modify our _fetch_relationships to handle C<fields>
