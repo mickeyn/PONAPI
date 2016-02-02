@@ -1,5 +1,9 @@
 Revision history for PONAPI-Server
 
+0.002012     2016-Feb-02
+             * Fixed a bug in Server.pm's data validation
+             * Fixed pagination urls
+
 0.002011     2016-Feb-02
              * Removed dependency (SQL::Composer)
              * Fixed document relative self links (missing params)
