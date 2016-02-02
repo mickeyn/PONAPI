@@ -31,10 +31,15 @@ sub add_pagination_links {
 
     my $link = $self->req_path;
 
+    my $uri = URI->new($link);
+    my $path = $uri->path;
+
     $self->links_builder->add_links(
         map {
-            my $query = $self->_hash_to_uri_query( { page => $page_links{$_} } );
-            ( $_ => $link . '?' . $query )
+            my $query = $self->_hash_to_uri_query( {
+                page => $page_links{$_}
+            }, $uri );
+            ( $_ => $path . '?' . $query )
         }
         grep scalar keys %{ $page_links{$_} || {} },
         keys %page_links
@@ -42,8 +47,8 @@ sub add_pagination_links {
 }
 
 sub _hash_to_uri_query {
-    my ($self, $data) = @_;
-    my $u = URI->new("", "http");
+    my ($self, $data, $u) = @_;
+    $u ||= URI->new("", "http");
 
     for my $d_k ( sort keys %$data ) {
         my $d_v = $data->{$d_k};

@@ -185,10 +185,10 @@ foreach my $implementation (
             is_deeply(
                 $res_sorted_page->{links},
                 {
-                    'self'  => '/articles?page%5Blimit%5D=1&page%5Boffset%5D=1',
-                    'next'  => '/articles?page%5Blimit%5D=1&page%5Boffset%5D=2',
-                    'first' => '/articles?page%5Blimit%5D=1&page%5Boffset%5D=0',
-                    'prev'  => '/articles?page%5Blimit%5D=1&page%5Boffset%5D=0',
+                    'self'  => '/articles?page%5Blimit%5D=1&page%5Boffset%5D=1&sort=-id',
+                    'next'  => '/articles?page%5Blimit%5D=1&page%5Boffset%5D=2&sort=-id',
+                    'first' => '/articles?page%5Blimit%5D=1&page%5Boffset%5D=0&sort=-id',
+                    'prev'  => '/articles?page%5Blimit%5D=1&page%5Boffset%5D=0&sort=-id',
                 },
                 "... paging works (sort of)"
             ) or diag(Dumper($res_sorted_page));
