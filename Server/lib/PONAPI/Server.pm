@@ -102,7 +102,7 @@ sub _ponapi_params {
 
     # misc.
     my $req_base      = $self->{'ponapi.relative_links'} eq 'full' ? "".$req->base : '/';
-    my $req_path      = $self->{'ponapi.relative_links'} eq 'full' ? "".$req->uri : $req->path_info;
+    my $req_path      = $self->{'ponapi.relative_links'} eq 'full' ? "".$req->uri : $req->request_uri;
     my $update_200    = !!$self->{'ponapi.respond_to_updates_with_200'};
     my $doc_self_link = ($req->method eq 'GET') ? !!$self->{'ponapi.doc_auto_self_link'} : 0;
 
