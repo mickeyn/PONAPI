@@ -11,9 +11,9 @@ sub description { "This tool will run a demo server with a mock DB" }
 
 sub opt_spec {
     return (
-        [ "s|server", "Run a PONAPI demo server" ],
-        [ "q|query",  "Execute a query from the demo server" ],
-        [ "p|port=i",   "Specify a port for the server (default=5000)" ],
+        [ "s|server",  "Run a local PONAPI demo server" ],
+        [ "q|query:s", "Send a random/provided query to local server" ],
+        [ "p|port=i",  "Specify a port for the server (default=5000)" ],
     );
 }
 
@@ -21,16 +21,25 @@ sub validate_args {
     my ( $self, $opt, $args ) = @_;
 
     $self->usage_error("(only) one of server (-s) or query (-q) is required.\n")
-        unless $opt->{s} xor $opt->{q};
+        unless exists $opt->{s} xor exists $opt->{q};
 
     $self->{port} = $opt->{port} || $opt->{p} || 5000;
+
+    $self->{query_string} = "";
+
+    if ( exists $opt->{q} and $opt->{q} ) {
+        $opt->{q} =~ s|^/||;
+        $self->{query_string} =
+            ( $opt->{q} !~ /^http/ ? 'http://localhost:' . $self->{port} . '/' : '' )
+            . $opt->{q}
+    }
 }
 
 sub execute {
     my ( $self, $opt, $args ) = @_;
 
-    $self->run_server() if $opt->{s};
-    $self->run_query()  if $opt->{q};
+    $self->run_server() if exists $opt->{s};
+    $self->run_query()  if exists $opt->{q};
 }
 
 sub run_server {
@@ -80,7 +89,7 @@ sub run_query {
     require JSON::XS;
     require HTTP::Tiny;
 
-    my $url = $self->random_url();
+    my $url = $self->{query_string} || $self->random_url();
 
     my $res = HTTP::Tiny->new->get( $url, {
         headers => {
