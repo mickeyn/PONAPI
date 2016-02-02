@@ -286,31 +286,40 @@ sub _validate_data_members {
         return unless keys %{$r};
 
         # `type`
-        $wr->(ERR_BAD_REQ) unless $r->{type};
+        $wr->(ERR_BAD_REQ)              unless $r->{type};
         $wr->(ERR_BAD_REQ_INVALID_NAME) unless check_name( $r->{type} );
 
         # `attributes`
-        if ( $r->{attributes} ) {
+        if ( exists $r->{attributes} ) {
             $wr->(ERR_BAD_REQ) unless ref( $r->{attributes} ) eq 'HASH';
             $wr->(ERR_BAD_REQ_INVALID_NAME)
                 if grep { !check_name($_) } keys %{ $r->{attributes} };
         }
 
         # `relationships`
-        if ( $r->{relationships} ) {
+        if ( exists $r->{relationships} ) {
             $wr->(ERR_BAD_REQ) unless ref( $r->{relationships} ) eq 'HASH';
 
             for my $k ( keys %{ $r->{relationships} } ) {
                 $wr->(ERR_BAD_REQ_INVALID_NAME) unless check_name($k);
 
-                for ( keys %{ $r->{relationships}{$k} } ) {
+                my $rel  = $r->{relationships}{$k};
+                my @rels = ref($rel||'') eq 'ARRAY' ? @$rel : $rel;
+                foreach my $relationship ( @rels ) {
+                    next if !defined $relationship;
+                    # Some requests have relationships => { blah },
+                    # others have relationships => { data => { blah } }
+                    $relationship = $relationship->{data}
+                        if exists $relationship->{data};
+
                     $wr->(ERR_BAD_REQ)
-                        if !ref( $r->{relationships}{$k}{$_} ) eq 'HASH'
-                           or !exists $r->{relationships}{$k}{$_}{type};
+                            if ref( $relationship ) ne 'HASH';
+                    $wr->(ERR_BAD_REQ)
+                            if !exists $relationship->{type};
 
                     $wr->(ERR_BAD_REQ_INVALID_NAME)
-                        if !check_name( $r->{relationships}{$k}{$_}{type} )
-                           or grep { !check_name($_) } keys %{ $r->{relationships}{$k}{$_} };
+                        if !check_name( $relationship->{type} )
+                            or grep { !check_name($_) } keys %$relationship;
                 }
             }
         }

@@ -32,7 +32,7 @@ sub error_test {
     is( ref $errors, 'ARRAY', '... `errors` is an array-ref' );
 
     my ($err) = grep { $_->{detail} eq $expected->{detail} } @{ $errors };
-    is( $err->{detail}, $expected->{detail}, $desc );
+    is( $err->{detail}, $expected->{detail}, $desc ) or diag("Test failed: $desc");
     is( $err->{status},  $expected->{status}, '... and it has the expected error code' );
 }
 
@@ -208,7 +208,8 @@ subtest '... bad requests (POST)' => sub {
             {
                 detail => 'Bad request data: Parameter `data` expected Collection[Resource], but got a {"id":5,"type":"people"}',
                 status => 400,
-            }
+            },
+            "retrieve by relationships"
         )
     }
 
@@ -223,7 +224,8 @@ subtest '... bad requests (POST)' => sub {
             {
                 detail => '{JSON:API} Bad request',
                 status => 400,
-            }
+            },
+            "data => 1"
         )
     }
 
@@ -238,7 +240,8 @@ subtest '... bad requests (POST)' => sub {
             {
                 detail => '{JSON:API} Bad request (invalid member-name)',
                 status => 400,
-            }
+            },
+            "invalid type names"
         )
     }
 
@@ -276,14 +279,27 @@ subtest '... bad requests (POST)' => sub {
     {
         my $create = $app->request(
             POST '/comments', %CT,
-            Content => encode_json({ data => { type => 'comments', relationships => { articles =>  { data => { type => 'articles-', id => 1 } } } } }),
+            Content => encode_json({
+                data => {
+                    type => 'comments',
+                    relationships => {
+                        articles => {
+                            data => {
+                                type => 'articles-',
+                                id   => 1,
+                            },
+                        },
+                    },
+                },
+            }),
         );
         error_test(
             $create,
             {
                 detail => '{JSON:API} Bad request (invalid member-name)',
                 status => 400,
-            }
+            },
+            "invalid relationships"
         )
     }
 
@@ -314,7 +330,8 @@ subtest '... bad requests (POST)' => sub {
             {
                 detail => '{JSON:API} Bad request (invalid member-name)',
                 status => 400,
-            }
+            },
+            "invalid `data.attributes` key"
         )
     }
 
