@@ -1,3 +1,4 @@
+# ABSTRACT: ponapi CLI query runner
 package PONAPI::CLI::RunQuery;
 
 use strict;

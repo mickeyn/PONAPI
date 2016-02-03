@@ -1,3 +1,4 @@
+# ABSTRACT: ponapi CLI server runner
 package PONAPI::CLI::RunServer;
 
 use strict;
