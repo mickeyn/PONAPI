@@ -1,5 +1,8 @@
 package PONAPI::CLI::RunServer;
 
+use strict;
+use warnings;
+
 use Plack::Runner;
 use Plack::Middleware::MethodOverride;
 use PONAPI::Server;

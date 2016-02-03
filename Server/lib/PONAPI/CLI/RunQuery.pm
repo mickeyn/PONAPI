@@ -1,5 +1,8 @@
 package PONAPI::CLI::RunQuery;
 
+use strict;
+use warnings;
+
 use JSON::XS;
 use HTTP::Tiny;
 
