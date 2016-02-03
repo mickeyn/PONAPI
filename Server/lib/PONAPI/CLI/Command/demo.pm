@@ -129,40 +129,36 @@ sub random_url {
         },
     );
 
-    my $type = ( keys %rels )[ int(rand( scalar keys %rels )) ];
+    my $type = ( keys %rels )[ _rand(\%rels) ];
 
-    my $id = "";
-    if ( int(rand(2)) % 2 == 0 ) {
-        my $_id  = $rels{$type}{id}->[ int(rand(scalar @{ $rels{$type}{id} } )) ];
-        $id = "/$_id";
-    }
+    my $id = _rand(2) ? '/' . $rels{$type}{id}->[ _rand( $rels{$type}{id} ) ] : "";
 
-    my $include = "";
-    my @include;
-    if ( int(rand(2)) % 2 == 0 ) {
-        my @_inc = @{ $rels{$type}{include} };
-        @include = scalar @_inc > 1
-            ? map { int(rand(2)) % 2 ? $_ : () } @_inc
-            : @_inc;
+    my @type_inc = @{ $rels{$type}{include} };
+    my @include  = _rand(2)
+        ? ( scalar @type_inc > 1 ? map { _rand(2) ? $_ : () } @type_inc : @type_inc )
+        : ();
 
-        $include = "include=" . ( join ',' => @include )
-            if @include;
-    }
+    my $include = @include ? "include=" . ( join ',' => @include ) : "";
 
-    my $fields = "";
-    if ( int(rand(2)) % 2 == 0 ) {
-        my @fields  = map { int(rand(2)) % 2 ? $_ : () } @{ $rels{$type}{fields} };
-        $fields = "fields[$type]=" . ( join ',' => @fields, @include )
-            if @fields;
-    }
+    my @fields = _rand(2) ? map { _rand(2) ? $_ : () } @{ $rels{$type}{fields} } : ();
+    my $fields = @fields  ? "fields[$type]=" . ( join ',' => @fields, @include ) : "";
 
-    my $query = ( $include || $fields ? "?" : "" );
-    my $sep   = ( $include && $fields ? "&" : "" );
+    my $is_query = ( $include || $fields ? "?" : "" );
 
     my $url = 'http://localhost:' . $self->{port}
-            . "/$type" . $id . $query . $include . $sep . $fields;
+            . "/$type" . $id . $is_query . join( '&' => grep { $_ } $include, $fields );
 
     return $url;
+}
+
+sub _rand {
+    my $s =
+        @_ > 1                ? scalar( @_ )            :
+        ref($_[0]) eq 'HASH'  ? scalar( keys %{$_[0]} ) :
+        ref($_[0]) eq 'ARRAY' ? scalar( @{$_[0]} )      :
+        $_[0];
+
+    return int(rand($s));
 }
 
 1;
