@@ -69,7 +69,7 @@ sub call {
 
     my $action = delete $ponapi_params->{action};
     my ( $status, $headers, $res ) = $self->{'ponapi.DAO'}->$action($ponapi_params);
-    return $self->_response( $status, $headers, $res );
+    return $self->_response( $status, $headers, $res, $req->method eq 'HEAD' );
 }
 
 
@@ -86,6 +86,12 @@ sub _load_dao {
         repository => $repository,
         version    => $self->{'ponapi.spec_version'},
     );
+}
+
+sub _is_get_like {
+    my $req = shift;
+    return 1 if $req->method =~ /^(?:GET|HEAD)$/;
+    return;
 }
 
 sub _ponapi_params {
@@ -107,7 +113,7 @@ sub _ponapi_params {
     my $req_base      = $self->{'ponapi.relative_links'} eq 'full' ? "".$req->base : '/';
     my $req_path      = $self->{'ponapi.relative_links'} eq 'full' ? "".$req->uri : $req->request_uri;
     my $update_200    = !!$self->{'ponapi.respond_to_updates_with_200'};
-    my $doc_self_link = ($req->method eq 'GET') ? !!$self->{'ponapi.doc_auto_self_link'} : 0;
+    my $doc_self_link = _is_get_like($req) ? !!$self->{'ponapi.doc_auto_self_link'} : 0;
 
     my %params = (
         @ponapi_route_params,
@@ -126,7 +132,7 @@ sub _ponapi_route_match {
     my ( $self, $wr, $req ) = @_;
     my $method = $req->method;
 
-    $wr->(ERR_BAD_REQ) unless grep { $_ eq $method } qw< GET POST PATCH DELETE OPTIONS >;
+    $wr->(ERR_BAD_REQ) unless grep { $_ eq $method } qw< GET POST PATCH DELETE HEAD OPTIONS >;
 
     my ( $type, $id, $relationships, $rel_type ) = split '/' => substr($req->path_info,1);
 
@@ -150,21 +156,21 @@ sub _ponapi_route_match {
     my $action;
     if ( defined $id ) {
         $action = 'create_relationships'     if $method eq 'POST'   and $relationships  and $def_rel_type;
-        $action = 'retrieve'                 if $method eq 'GET'    and !$relationships and !$def_rel_type;
-        $action = 'retrieve_by_relationship' if $method eq 'GET'    and !$relationships and $def_rel_type;
-        $action = 'retrieve_relationships'   if $method eq 'GET'    and $relationships  and $def_rel_type;
+        $action = 'retrieve'                 if _is_get_like($req)  and !$relationships and !$def_rel_type;
+        $action = 'retrieve_by_relationship' if _is_get_like($req)  and !$relationships and $def_rel_type;
+        $action = 'retrieve_relationships'   if _is_get_like($req)  and $relationships  and $def_rel_type;
         $action = 'update'                   if $method eq 'PATCH'  and !$relationships and !$def_rel_type;
         $action = 'update_relationships'     if $method eq 'PATCH'  and $relationships  and $def_rel_type;
         $action = 'delete'                   if $method eq 'DELETE' and !$relationships and !$def_rel_type;
         $action = 'delete_relationships'     if $method eq 'DELETE' and $relationships  and $def_rel_type;
     }
     else {
-        $action = 'retrieve_all'             if $method eq 'GET';
+        $action = 'retrieve_all'             if _is_get_like($req);
         $action = 'create'                   if $method eq 'POST';
     }
 
     if ( $method eq 'OPTIONS' ) {
-        my @options = ( 'GET' );
+        my @options = (qw< GET HEAD > );
         if ( defined $id ) {
             push @options => (qw< PATCH DELETE >) unless $def_rel_type;
         }
@@ -277,7 +283,7 @@ sub _ponapi_data {
 
     return unless $req->content_length and $req->content_length > 0;
 
-    $wr->(ERR_BAD_REQ) if $req->method eq 'GET';
+    $wr->(ERR_BAD_REQ) if _is_get_like($req);
 
     my $body;
     eval { $body = JSON::XS::decode_json( $req->content ); 1 };
@@ -343,7 +349,7 @@ sub _validate_data_members {
 }
 
 sub _response {
-    my ( $self, $status, $headers, $content ) = @_;
+    my ( $self, $status, $headers, $content, $is_head ) = @_;
     my $res = Plack::Response->new( $status || 200 );
 
     $res->headers($headers);
@@ -352,8 +358,8 @@ sub _response {
         if $self->{'ponapi.send_version_header'};
     if ( ref $content ) {
         my $enc_content = JSON::XS::encode_json $content;
-        $res->content($enc_content);
         $res->content_length( length($enc_content) );
+        $res->content($enc_content) unless $is_head;
     }
     $res->finalize;
 }
