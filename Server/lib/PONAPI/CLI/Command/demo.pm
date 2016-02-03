@@ -60,7 +60,7 @@ sub run_server {
     $conf->spew(<<"DEFAULT_CONF");
 server:
   spec_version: "1.0"
-  sort_allowed: "false"
+  sort_allowed: "true"
   send_version_header: "true"
   send_document_self_link: "true"
   links_type: "relative"
@@ -143,10 +143,14 @@ sub random_url {
     my @fields = _rand(2) ? map { _rand(2) ? $_ : () } @{ $rels{$type}{fields} } : ();
     my $fields = @fields  ? "fields[$type]=" . ( join ',' => @fields, @include ) : "";
 
-    my $is_query = ( $include || $fields ? "?" : "" );
+    my $sort = ( !$id and _rand(2) )
+        ? "sort=" . ( _rand(2) ? '-' : () ) . ( 'id', @fields )[ _rand(@fields+1) ]
+        : "";
+
+    my $is_query = ( $include || $fields || $sort ? "?" : "" );
 
     my $url = 'http://localhost:' . $self->{port}
-            . "/$type" . $id . $is_query . join( '&' => grep { $_ } $include, $fields );
+            . "/$type" . $id . $is_query . join( '&' => grep { $_ } $include, $fields, $sort );
 
     return $url;
 }
