@@ -61,6 +61,9 @@ sub call {
         $self->_ponapi_params( shift, $req )
     };
 
+    return $self->_options_response( $ponapi_params->{__options__} )
+        if $ponapi_params->{__options__};
+
     return $self->_error_response( $ponapi_params->{__error__} )
         if $ponapi_params->{__error__};
 
@@ -123,7 +126,7 @@ sub _ponapi_route_match {
     my ( $self, $wr, $req ) = @_;
     my $method = $req->method;
 
-    $wr->(ERR_BAD_REQ) unless grep { $_ eq $method } qw< GET POST PATCH DELETE >;
+    $wr->(ERR_BAD_REQ) unless grep { $_ eq $method } qw< GET POST PATCH DELETE OPTIONS >;
 
     my ( $type, $id, $relationships, $rel_type ) = split '/' => substr($req->path_info,1);
 
@@ -160,6 +163,17 @@ sub _ponapi_route_match {
         $action = 'create'                   if $method eq 'POST';
     }
 
+    if ( $method eq 'OPTIONS' ) {
+        my @options = ( 'GET' );
+        if ( defined $id ) {
+            push @options => (qw< PATCH DELETE >) unless $def_rel_type;
+        }
+        else {
+            push @options => 'POST';
+        }
+        $wr->( +{ __options__ => \@options } );
+    }
+
     $wr->(ERR_NO_MATCHING_ROUTE) unless $action;
 
     # return ( action, type, id?, rel_type? )
@@ -171,6 +185,8 @@ sub _ponapi_route_match {
 
 sub _ponapi_check_headers {
     my ( $self, $wr, $req ) = @_;
+
+    return if $req->method eq 'OPTIONS';
 
     my $pack = HTTP::Headers::ActionPack->new;
     my $mt   = $self->{'ponapi.mediatype'};
@@ -340,6 +356,11 @@ sub _response {
         $res->content_length( length($enc_content) );
     }
     $res->finalize;
+}
+
+sub _options_response {
+    my ( $self, $options ) = @_;
+    return +[ 200, [ Allow => join( ', ' => @{$options} ) ], [] ];
 }
 
 sub _error_response {
