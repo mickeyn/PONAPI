@@ -482,7 +482,7 @@ as needed:
 We can also set this when creating the client; if done this way,
 all requests generated from this client will include the base:
 
-    my $new_client = PONAPI::Client->retrieve(
+    my $new_client = PONAPI::Client->new(
         uri_base => '/v1',
         ...
     );
