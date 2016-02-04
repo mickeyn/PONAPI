@@ -94,6 +94,15 @@ version 0.002003
         ],
     );
 
+    # If the endpoint uses an uncommon url format:
+    $client->retrieve(
+        type => 'foo',
+        id   => 43,
+        # Will generate a request to
+        # host:port/type_foo_id_43
+        uri_template => "type_{type}_id_{id}",
+    );
+
 =head1 DESCRIPTION
 
 C<PONAPI::Client> is a L<{JSON:API}|http://jsonapi.org/> compliant client;
@@ -432,6 +441,83 @@ Adds to the specified one-to-many relationship.
    delete_relationships( type => $type, id => $id, rel_type => $rel_type, data => [{ ... }] )
 
 Deletes from the specified one-to-many relationship.
+
+=head1 Endpoint URI format
+
+By default, C<PONAPI::Client> assumes urls on the endpoint are in this format:
+
+    retrieve_all:               /$type
+    retrieve:                   /$type/$id
+    retrieve_by_relationships:  /$type/$id/$rel_type
+    retrieve_relationships:     /$type/$id/relationships/$rel_type
+    
+    create:                     /$type or /$type/$id
+    delete:                     /$type/$id
+    update:                     /$type/$id
+    
+    update_relationships:       /$type/$id/relationships/$rel_type
+    create_relationships:       /$type/$id/relationships/$rel_type
+    delete_relationships:       /$type/$id/relationships/$rel_type
+    
+    # Will generate a request to /foo/99
+    $client->retrieve(
+        type => 'foo',
+        id   => 99,
+    );
+
+However, if another format is needed, two approaches are possible:
+
+=head2 URI paths have a common prefix
+
+If all the endpoint urls have a common prefix, ala C</v1/articles>
+instead of simply C</articles>, then you can just set C<uri_base>
+as needed:
+
+    $client->retrieve(
+        type     => 'foo',
+        id       => 99,
+        uri_base => '/v1'
+    );
+
+We can also set this when creating the client; if done this way,
+all requests generated from this client will include the base:
+
+    my $new_client = PONAPI::Client->retrieve(
+        uri_base => '/v1',
+        ...
+    );
+    
+    # This will generate a request to /v1/foo/99
+    $new_client->retrieve(
+        type => 'foo',
+        id   => 99,
+    );
+
+=head2 Completely different uris
+
+If the endpoint's expected formats are wildly different, you can specify
+C<uri_template> with your request:
+
+    # Will generate a request to id_here_99_and_type_there/foo
+    $client->retrieve(
+        type => 'foo',
+        id   => 99,
+        uri_template => 'id_here_{id}_and_type_there/{type}'
+    );
+
+These placeholders are recognized:
+
+=over 4
+
+=item * type
+
+=item * id
+
+=item * rel_type
+
+=back
+
+This can only be done on a per-request basis.
 
 =head1 AUTHORS
 
