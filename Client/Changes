@@ -1,5 +1,9 @@
 Revision history for PONAPI-Client
 
+0.002004     2016-Feb-05
+             * Fixed dist.ini dependencies
+               (URI::Template needs to be installed)
+
 0.002004     2016-Feb-04
              * Support uri_base parameter
                (client object constructor or requests methods)
