@@ -70,4 +70,37 @@ subtest '... testing request path base' => sub {
 
 };
 
+subtest '... testing request path templating' => sub {
+    foreach my $template (
+        '/a/test/of/uri/template/path/with/id/{id}/and/type/{type}',
+        '{rel_type}/a//path/with/id/{id}/and/type/{type}',
+        "_woah_what_is_{type}_key_{id}_doing_here_",
+        "-{type}-{id}-"
+    )
+    {
+        my $req = PONAPI::Client::Request::Retrieve->new(
+            %TEST_DATA,
+            uri_template => $template,
+        );
+
+        (my $expected_path = $template) =~ s/
+            \{
+                ( [^}]+ )
+            \}
+        /
+            my $meth = $1;
+            eval { $req->$meth } || ""
+        /egx;
+        my $EXPECTED = {
+            method => 'GET',
+            path => $expected_path,
+            query_string =>
+              'fields%5Barticles%5D=title%2Cbody&include=comments%2Cauthor',
+        };
+
+        my $GOT = +{ $req->request_params };
+        is_deeply( $GOT, $EXPECTED, 'checked request parametes' );
+    }
+};
+
 done_testing;

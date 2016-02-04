@@ -13,9 +13,15 @@ with 'PONAPI::Client::Request',
      'PONAPI::Client::Request::Role::HasInclude',
      'PONAPI::Client::Request::Role::HasPage';
 
+has uri_template => (
+    is      => 'ro',
+    isa     => 'Str',
+    default => sub { '/{type}/{id}/{rel_type}' },
+);
+
 sub path   {
     my $self = shift;
-    return '/' . $self->type . '/' . $self->id . '/' . $self->rel_type;
+    return +{ type => $self->type, id => $self->id, rel_type => $self->rel_type };
 }
 
 __PACKAGE__->meta->make_immutable;

@@ -10,12 +10,8 @@ with 'PONAPI::Client::Request',
      'PONAPI::Client::Request::Role::HasFields',
      'PONAPI::Client::Request::Role::HasFilter',
      'PONAPI::Client::Request::Role::HasInclude',
-     'PONAPI::Client::Request::Role::HasPage';
-
-sub path   {
-    my $self = shift;
-    return '/' . $self->type . '/' . $self->id;
-}
+     'PONAPI::Client::Request::Role::HasPage',
+     'PONAPI::Client::Request::Role::HasUriSingle';
 
 __PACKAGE__->meta->make_immutable;
 no Moose; 1;
