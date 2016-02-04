@@ -65,7 +65,7 @@ sub random_url {
     my $fields = @fields  ? "fields[$type]=" . ( join ',' => @fields, @include ) : "";
 
     my $sort = ( !$id and _rand(2) )
-        ? "sort=" . ( _rand(2) ? '-' : () ) . ( 'id', @fields )[ _rand(@fields+1) ]
+        ? "sort=" . ( _rand(2) ? '-' : '' ) . ( 'id', @fields )[ _rand(@fields+1) ]
         : "";
 
     my $is_query = ( $include || $fields || $sort ? "?" : "" );
