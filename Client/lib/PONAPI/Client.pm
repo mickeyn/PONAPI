@@ -43,72 +43,85 @@ has send_escape_values_header => (
     default => sub { 1 },
 );
 
+has 'uri_base' => (
+    is      => 'ro',
+    isa     => 'Maybe[Str]',
+    default => sub { '' },
+);
+
 
 ### public methods
 
 sub create {
-    my ( $self, @args ) = @_;
-    my $request = PONAPI::Client::Request::Create->new( @args );
+    my ($self)  = @_;
+    my $request = PONAPI::Client::Request::Create->new( _args(@_) );
     return $self->_send_ponapi_request( $request->request_params );
 }
 
 sub create_relationships {
-    my ( $self, @args ) = @_;
-    my $request = PONAPI::Client::Request::CreateRelationships->new( @args );
+    my ($self)  = @_;
+    my $request = PONAPI::Client::Request::CreateRelationships->new( _args(@_) );
     return $self->_send_ponapi_request( $request->request_params );
 }
 
 sub retrieve_all {
-    my ( $self, @args ) = @_;
-    my $request = PONAPI::Client::Request::RetrieveAll->new( @args );
+    my ($self)  = @_;
+    my $request = PONAPI::Client::Request::RetrieveAll->new( _args(@_) );
     return $self->_send_ponapi_request( $request->request_params );
 }
 
 sub retrieve {
-    my ( $self, @args ) = @_;
-    my $request = PONAPI::Client::Request::Retrieve->new( @args );
+    my ($self)  = @_;
+    my $request = PONAPI::Client::Request::Retrieve->new( _args(@_) );
     return $self->_send_ponapi_request( $request->request_params );
 }
 
 sub retrieve_relationships {
-    my ( $self, @args ) = @_;
-    my $request = PONAPI::Client::Request::RetrieveRelationships->new( @args );
+    my ($self)  = @_;
+    my $request = PONAPI::Client::Request::RetrieveRelationships->new( _args(@_) );
     return $self->_send_ponapi_request( $request->request_params );
 }
 
 sub retrieve_by_relationship {
-    my ( $self, @args ) = @_;
-    my $request = PONAPI::Client::Request::RetrieveByRelationship->new( @args );
+    my ($self)  = @_;
+    my $request = PONAPI::Client::Request::RetrieveByRelationship->new( _args(@_) );
     return $self->_send_ponapi_request( $request->request_params );
 }
 
 sub update {
-    my ( $self, @args ) = @_;
-    my $request = PONAPI::Client::Request::Update->new( @args );
+    my ($self)  = @_;
+    my $request = PONAPI::Client::Request::Update->new( _args(@_) );
     return $self->_send_ponapi_request( $request->request_params );
 }
 
 sub update_relationships {
-    my ( $self, @args ) = @_;
-    my $request = PONAPI::Client::Request::UpdateRelationships->new( @args );
+    my ($self)  = @_;
+    my $request = PONAPI::Client::Request::UpdateRelationships->new( _args(@_) );
     return $self->_send_ponapi_request( $request->request_params );
 }
 
 sub delete : method {
-    my ( $self, @args ) = @_;
-    my $request = PONAPI::Client::Request::Delete->new( @args );
+    my ($self)  = @_;
+    my $request = PONAPI::Client::Request::Delete->new( _args(@_) );
     return $self->_send_ponapi_request( $request->request_params );
 }
 
 sub delete_relationships {
-    my ( $self, @args ) = @_;
-    my $request = PONAPI::Client::Request::DeleteRelationships->new( @args );
+    my ($self)  = @_;
+    my $request = PONAPI::Client::Request::DeleteRelationships->new( _args(@_) );
     return $self->_send_ponapi_request( $request->request_params );
 }
 
 
 ### private methods
+
 use constant OLD_HIJK => $Hijk::VERSION lt '0.16';
+
+sub _args {
+    my $self = shift;
+    return ( @_, uri_base => $self->uri_base )
+}
+
 sub _send_ponapi_request {
     my $self = shift;
     my %args = @_;
