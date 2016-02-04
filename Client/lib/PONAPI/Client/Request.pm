@@ -35,7 +35,7 @@ sub request_params {
 
     return (
         method => $method,
-        path   => $self->uri_base . $self->path,
+        path   => $self->uri_base . $path,
         ( $method eq 'GET'
             ? ( query_string => $self->_build_query_string )
             : ( $self->can('data')
