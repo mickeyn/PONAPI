@@ -1,9 +1,15 @@
 Revision history for PONAPI-Client
 
+0.002004     2016-Feb-04
+             * Support uri_base parameter
+               (client object constructor or requests methods)
+             * Support uri_template in requests methods
+             * Updated document
+
 0.002003     2016-Feb-02
-            * Fixed abstracts
-            * Fixed the main pod file to work with dzil properly
-            * Dumped down the Test::Simple dependency to 0.98 
+             * Fixed abstracts
+             * Fixed the main pod file to work with dzil properly
+             * Dumped down the Test::Simple dependency to 0.98
 
 0.002002     2016-Jan-20
              * Support extra escaping on URL values,

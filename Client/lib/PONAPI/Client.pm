@@ -1,7 +1,7 @@
 # ABSTRACT: Client to a {JSON:API} service (http://jsonapi.org/) v1.0
 package PONAPI::Client;
 
-our $VERSION = '0.002003';
+our $VERSION = '0.002004';
 
 use Moose;
 
@@ -622,15 +622,15 @@ By default, C<PONAPI::Client> assumes urls on the endpoint are in this format:
     retrieve:                   /$type/$id
     retrieve_by_relationships:  /$type/$id/$rel_type
     retrieve_relationships:     /$type/$id/relationships/$rel_type
-    
+
     create:                     /$type or /$type/$id
     delete:                     /$type/$id
     update:                     /$type/$id
-    
+
     update_relationships:       /$type/$id/relationships/$rel_type
     create_relationships:       /$type/$id/relationships/$rel_type
     delete_relationships:       /$type/$id/relationships/$rel_type
-    
+
     # Will generate a request to /foo/99
     $client->retrieve(
         type => 'foo',
@@ -658,7 +658,7 @@ all requests generated from this client will include the base:
         uri_base => '/v1',
         ...
     );
-    
+
     # This will generate a request to /v1/foo/99
     $new_client->retrieve(
         type => 'foo',
