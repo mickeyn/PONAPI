@@ -10,6 +10,20 @@ use PONAPI::Utils::URI qw< to_uri >;
 requires 'method';
 requires 'path';
 
+has 'uri_base' => (
+    is      => 'ro',
+    isa     => 'Maybe[Str]',
+    default => sub { '' },
+);
+
+sub BUILDARGS {
+    my $class = shift;
+    my %args = @_ == 1 ? %{ $_[0] } : @_;
+    $args{uri_base} =~ s|/$||
+        if exists $args{uri_base} and defined $args{uri_base};
+    return \%args;
+}
+
 sub request_params {
     my $self = shift;
 
@@ -17,7 +31,7 @@ sub request_params {
 
     return (
         method => $method,
-        path   => $self->path,
+        path   => $self->uri_base . $self->path,
         ( $method eq 'GET'
             ? ( query_string => $self->_build_query_string )
             : ( $self->can('data')

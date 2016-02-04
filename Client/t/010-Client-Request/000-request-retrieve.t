@@ -51,4 +51,23 @@ subtest '... testing request parameters' => sub {
 
 };
 
+subtest '... testing request path base' => sub {
+
+    my $req = PONAPI::Client::Request::Retrieve->new(
+        %TEST_DATA,
+        uri_base => '/myAPI/v3/',
+    );
+
+    my $EXPECTED = +{
+        method       => 'GET',
+        path         => '/myAPI/v3/articles/2',
+        query_string => 'fields%5Barticles%5D=title%2Cbody&include=comments%2Cauthor',
+    };
+
+    my $GOT = +{ $req->request_params };
+
+    is_deeply( $GOT, $EXPECTED, 'checked request parametes' );
+
+};
+
 done_testing;
