@@ -3,6 +3,7 @@ package PONAPI::Client::Request;
 
 use Moose::Role;
 
+use URI::Template;
 use JSON::XS qw< encode_json >;
 
 use PONAPI::Utils::URI qw< to_uri >;
@@ -28,6 +29,9 @@ sub request_params {
     my $self = shift;
 
     my $method = $self->method;
+
+    my $template = URI::Template->new( $self->uri_template );
+    my $path     = $template->process( %{ $self->path } )->path;
 
     return (
         method => $method,
