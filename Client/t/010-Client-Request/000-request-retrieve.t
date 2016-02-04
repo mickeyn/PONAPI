@@ -70,4 +70,23 @@ subtest '... testing request path base' => sub {
 
 };
 
+subtest '... testing request path templating' => sub {
+
+    my $req = PONAPI::Client::Request::Retrieve->new(
+        %TEST_DATA,
+        uri_template => '/a/test/of/uri/template/path/with/id/{id}/and/type/{type}'
+    );
+
+    my $EXPECTED = +{
+        method       => 'GET',
+        path         => '/a/test/of/uri/template/path/with/id/2/and/type/articles',
+        query_string => 'fields%5Barticles%5D=title%2Cbody&include=comments%2Cauthor',
+    };
+
+    my $GOT = +{ $req->request_params };
+
+    is_deeply( $GOT, $EXPECTED, 'checked request parametes' );
+
+};
+
 done_testing;
