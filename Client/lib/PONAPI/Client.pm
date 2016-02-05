@@ -137,7 +137,7 @@ sub _send_ponapi_request {
     ($status, $content) = do {
         local $@;
         eval {
-            my $res = $self->http_request({
+            my $res = $self->_http_request({
                 %args,
                 host => $self->host,
                 port => $self->port,
