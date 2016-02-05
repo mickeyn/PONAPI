@@ -68,6 +68,10 @@ Launches a demo instance of L<PONAPI::Server>.
 
 Launches a query against the demo server, and shows the result.
 
+=item --json|-j
+
+JSON-only output mode (better for JSON parsing tools).
+
 =item --port=$i
 
 Specifies which port should be used, either to bind the server or to

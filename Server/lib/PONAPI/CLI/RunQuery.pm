@@ -8,7 +8,7 @@ use JSON::XS;
 use HTTP::Tiny;
 
 sub run {
-    my ( $port, $query_string ) = @_;
+    my ( $port, $query_string, $only_json ) = @_;
 
     my $url = $query_string || random_url( $port );
 
@@ -21,10 +21,12 @@ sub run {
     die "Failed to connect to a local server (try 'ponapi demo -s' to start one)\n"
         unless $res and ref($res) eq 'HASH' and $res->{status} < 500;
 
-    print "\nGET $url\n\n";
-    print $res->{protocol} . " " . $res->{status} . " " . $res->{reason} . "\n";
+    unless ( $only_json ) {
+        print "\nGET $url\n\n";
+        print $res->{protocol} . " " . $res->{status} . " " . $res->{reason} . "\n";
 
-    print "Content-Type: " . $res->{headers}{'content-type'} . "\n\n";
+        print "Content-Type: " . $res->{headers}{'content-type'} . "\n\n";
+    }
 
     my $json = JSON::XS->new;
     print $json->pretty(1)->encode( $json->decode($res->{content}) );

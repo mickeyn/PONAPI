@@ -14,6 +14,7 @@ sub opt_spec {
         [ "s|server",  "Run a local PONAPI demo server" ],
         [ "q|query:s", "Send a random/provided query to local server" ],
         [ "p|port=i",  "Specify a port for the server (default=5000)" ],
+        [ "j|json",    "JSON-only output" ],
     );
 }
 
@@ -31,8 +32,13 @@ sub validate_args {
         $opt->{q} =~ s|^/||;
         $self->{query_string} =
             ( $opt->{q} !~ /^http/ ? 'http://localhost:' . $self->{port} . '/' : '' )
-            . $opt->{q}
+            . $opt->{q};
+
     }
+
+    $self->{only_json} = !!( $opt->{json} || $opt->{j} );
+    $self->usage_error("JSON-only works just in Query mode")
+        if $self->{only_json} and !exists $opt->{q};
 }
 
 sub execute {
@@ -51,7 +57,7 @@ sub run_server {
 sub run_query {
     my $self = shift;
     require PONAPI::CLI::RunQuery;
-    PONAPI::CLI::RunQuery::run( $self->{port}, $self->{query_string} );
+    PONAPI::CLI::RunQuery::run( $self->{port}, $self->{query_string}, $self->{only_json} );
 }
 
 1;

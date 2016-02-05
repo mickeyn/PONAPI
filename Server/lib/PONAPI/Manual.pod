@@ -66,10 +66,12 @@ L<ponapi> can also be used to start a test instance to toy around without
 having to write a repo of your own:
 
     $ ponapi demo --server --port 5000
-    
+
     # We can then query that server with the ponapi util...
     # Do a random query
     $ ponapi demo --query
+    # output JSON data only
+    $ ponapi demo --query --json
     # Or specify what you want
     $ ponapi demo --query /articles/2
     $ ponapi demo --query /articles/2/comments
