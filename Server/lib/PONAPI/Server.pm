@@ -292,7 +292,7 @@ sub _ponapi_data {
 
     my $data = $body->{data};
 
-    $wr->(ERR_BAD_REQ) unless !defined $data or ref($data) =~ /^(?:ARRAY|HASH)$/;
+    $wr->(ERR_BAD_REQ) if defined $data and ref($data) !~ /^(?:ARRAY|HASH)$/;
 
     $self->_validate_data_members( $wr, $data ) if defined $data;
 
@@ -328,16 +328,14 @@ sub _validate_data_members {
                 my $rel  = $r->{relationships}{$k};
                 my @rels = ref($rel||'') eq 'ARRAY' ? @$rel : $rel;
                 foreach my $relationship ( @rels ) {
-                    next if !defined $relationship;
+                    next unless defined $relationship;
                     # Some requests have relationships => { blah },
                     # others have relationships => { data => { blah } }
                     $relationship = $relationship->{data}
                         if exists $relationship->{data};
 
-                    $wr->(ERR_BAD_REQ)
-                            if ref( $relationship ) ne 'HASH';
-                    $wr->(ERR_BAD_REQ)
-                            if !exists $relationship->{type};
+                    $wr->(ERR_BAD_REQ) unless ref( $relationship ) eq 'HASH';
+                    $wr->(ERR_BAD_REQ) unless exists $relationship->{type};
 
                     $wr->(ERR_BAD_REQ_INVALID_NAME)
                         if !check_name( $relationship->{type} )
@@ -353,14 +351,16 @@ sub _response {
     my $res = Plack::Response->new( $status || 200 );
 
     $res->headers($headers);
-    $res->content_type( $self->{'ponapi.mediatype'} );
     $res->header( 'X-PONAPI-Server-Version' => $self->{'ponapi.spec_version'} )
         if $self->{'ponapi.send_version_header'};
+
     if ( ref $content ) {
         my $enc_content = JSON::XS::encode_json $content;
         $res->content_length( length($enc_content) );
+        $res->content_type( $self->{'ponapi.mediatype'} );
         $res->content($enc_content) unless $is_head;
     }
+
     $res->finalize;
 }
 
