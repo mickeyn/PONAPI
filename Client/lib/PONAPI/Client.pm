@@ -124,6 +124,11 @@ sub _args {
     return %args;
 }
 
+sub _http_request {
+    $_[1]->{parse_chunked} = 1;
+    return Hijk::request($_[1]);
+}
+
 sub _send_ponapi_request {
     my $self = shift;
     my %args = @_;
@@ -132,7 +137,7 @@ sub _send_ponapi_request {
     ($status, $content) = do {
         local $@;
         eval {
-            my $res = Hijk::request({
+            my $res = $self->http_request({
                 %args,
                 host => $self->host,
                 port => $self->port,
@@ -147,7 +152,6 @@ sub _send_ponapi_request {
                         : ()
                     ),
                 ],
-                parse_chunked => 1,
             });
             $status  = $res->{status};
 
