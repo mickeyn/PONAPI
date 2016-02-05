@@ -18,8 +18,7 @@ has 'uri_base' => (
 );
 
 sub BUILDARGS {
-    my $class = shift;
-    my %args = @_ == 1 ? %{ $_[0] } : @_;
+    my ( $class, %args ) = @_;
     $args{uri_base} =~ s|/$||
         if exists $args{uri_base} and defined $args{uri_base};
     return \%args;

@@ -119,7 +119,9 @@ use constant OLD_HIJK => $Hijk::VERSION lt '0.16';
 
 sub _args {
     my $self = shift;
-    return ( @_, uri_base => $self->uri_base )
+    my %args = @_ == 1 ? %{ $_[0] } : @_;
+    $args{uri_base} = $self->uri_base;
+    return %args;
 }
 
 sub _send_ponapi_request {
