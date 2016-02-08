@@ -73,7 +73,7 @@ subtest '... testing request path base' => sub {
 subtest '... testing request path templating' => sub {
     foreach my $template (
         '/a/test/of/uri/template/path/with/id/{id}/and/type/{type}',
-        '{rel_type}/a//path/with/id/{id}/and/type/{type}',
+        '{}/a//path/with/id/{id}/and/type/{type}',
         "_woah_what_is_{type}_key_{id}_doing_here_",
         "-{type}-{id}-"
     )

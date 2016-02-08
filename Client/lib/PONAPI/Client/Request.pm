@@ -3,7 +3,6 @@ package PONAPI::Client::Request;
 
 use Moose::Role;
 
-use URI::Template;
 use JSON::XS qw< encode_json >;
 
 use PONAPI::Utils::URI qw< to_uri >;
@@ -29,8 +28,19 @@ sub request_params {
 
     my $method = $self->method;
 
-    my $template = URI::Template->new( $self->uri_template );
-    my $path     = $template->process( %{ $self->path } )->path;
+    my $template  = $self->uri_template;
+    my $path_args = $self->path;
+    (my $path     = $template) =~ s/
+        \{
+            ( [^}]+ )
+        \}
+    /
+        my $placeholder = $1;
+        if ( !exists $path_args->{$placeholder} ) {
+            die "uri_template($template) has placeholder $placeholder, but that is not one of the request params for this class";
+        }
+        $path_args->{$placeholder}
+    /xeg;
 
     return (
         method => $method,
