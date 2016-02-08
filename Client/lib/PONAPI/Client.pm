@@ -133,6 +133,11 @@ sub _send_ponapi_request {
     my $self = shift;
     my %args = @_;
 
+    my @mt_header = (
+        ( exists $args{data} ? 'Content-Type' : 'Accept' ),
+        'application/vnd.api+json'
+    );
+
     my ($status, $content, $failed, $e);
     ($status, $content) = do {
         local $@;
@@ -142,7 +147,7 @@ sub _send_ponapi_request {
                 host => $self->host,
                 port => $self->port,
                 head => [
-                    'Content-Type' => 'application/vnd.api+json',
+                    @mt_header,
                     ( $self->send_version_header
                         ? ( 'X-PONAPI-Client-Version' => '1.0' )
                         : ()
