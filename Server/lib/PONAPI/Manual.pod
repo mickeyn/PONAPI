@@ -33,7 +33,7 @@ Any L<{json:api}|http://jsonapi.org/> compliant client can then access your appl
 
     $ perl -MPONAPI::Client -MData::Dumper -E 'say Dumper(PONAPI::Client->new->retrieve(type => "people", id => 88))'
 
-    $ curl -X GET -H "Content-Type: application/vnd.api+json" 'http://0:5000/people/88
+    $ curl -X GET -H "Accept: application/vnd.api+json" 'http://0:5000/people/88
 
 That'll give you the default options, with the default repository; for a real
 world scenario, you'll have to get your hands dirty.
