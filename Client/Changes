@@ -1,5 +1,10 @@
 Revision history for PONAPI-Client
 
+0.002007     2016-Feb-09
+             * Removed dependency (URI::Template)
+             * Client to send Accept instead of Content-Type
+               on bodyless requests
+
 0.002006     2016-Feb-05
              * Bug fix (arguments handling)
 
