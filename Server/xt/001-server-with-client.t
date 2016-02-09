@@ -23,7 +23,7 @@ if ( !$have_ponapi_client && !$have_http_tiny && !$have_curl ) {
     plan skip_all => 'Client cannot be loaded, not running these tests'
 }
 
-my $content_type = 'application/vnd.api+json';
+my $media_type = 'application/vnd.api+json';
 
 my $author_attributes = {
     name   => 'New!',
@@ -472,201 +472,219 @@ foreach my $implementation (
 }
 
 BEGIN {
-{
-package
-    PONAPI::Client::Mock;
-    use Moose;
-    with 'PONAPI::Builder::Role::HasPagination';
+    {
+        package PONAPI::Client::Mock;
 
-    has port => (
-        is => 'ro',
-    );
-    has json => (
-        is => 'ro',
-        default => sub { JSON::XS->new->allow_nonref->utf8->canonical },
-    );
+        use Moose;
 
-    my %action_to_http_method = (
-        create               => 'POST',
-        create_relationships => 'POST',
+        with 'PONAPI::Builder::Role::HasPagination';
 
-        update               => 'PATCH',
-        update_relationships => 'PATCH',
-
-        delete               => 'DELETE',
-        delete_relationships => 'DELETE',
-    );
-
-    sub AUTOLOAD {
-        our $AUTOLOAD;
-        my $self = shift;
-        my %args = @_ == 1 ? %{ $_[0] } : @_;
-
-        my $autoloading_method = (split /::/, $AUTOLOAD)[-1];
-        my $method   = $action_to_http_method{$autoloading_method} || 'GET';
-
-        my $type     = delete $args{type};
-        my $id       = delete $args{id};
-        my $rel_type = delete $args{rel_type};
-        my $body;
-        if ( exists $args{data} ) {
-            my $data = delete $args{data};
-            if ( ref($data) eq 'HASH' ) {
-                $data->{type} //= $type;
-                $data->{id}   //= $id if defined $id;
-            }
-            $body = $self->json->encode({data => $data});
-        }
-        my $relationships = $autoloading_method =~ /relationships\z/i
-                          ? 'relationships'
-                          : undef;
-
-        my $path = join '/', grep defined,
-                   '', $type, $id, ($id ? ($relationships, $rel_type) : ());
-        my $query_string = $self->_hash_to_uri_query(\%args);
-        return $self->_send_ponapi_request(
-            %args,
-            path         => $path,
-            query_string => $query_string,
-            body         => $body,
-            method       => $method,
+        has port => (
+            is => 'ro',
         );
+
+        has json => (
+            is => 'ro',
+            default => sub { JSON::XS->new->allow_nonref->utf8->canonical },
+        );
+
+        my %action_to_http_method = (
+            create               => 'POST',
+            create_relationships => 'POST',
+
+            update               => 'PATCH',
+            update_relationships => 'PATCH',
+
+            delete               => 'DELETE',
+            delete_relationships => 'DELETE',
+        );
+
+        sub AUTOLOAD {
+            our $AUTOLOAD;
+            my $self = shift;
+            my %args = @_ == 1 ? %{ $_[0] } : @_;
+
+            my $autoloading_method = (split /::/, $AUTOLOAD)[-1];
+            my $method   = $action_to_http_method{$autoloading_method} || 'GET';
+
+            my $type     = delete $args{type};
+            my $id       = delete $args{id};
+            my $rel_type = delete $args{rel_type};
+
+            my $body;
+
+            if ( exists $args{data} ) {
+                my $data = delete $args{data};
+                if ( ref($data) eq 'HASH' ) {
+                    $data->{type} //= $type;
+                    $data->{id}   //= $id if defined $id;
+                }
+                $body = $self->json->encode( { data => $data } );
+            }
+
+            my $relationships = $autoloading_method =~ /relationships\z/i
+                ? 'relationships'
+                : undef;
+
+            my $path = join '/', grep defined,
+                '', $type, $id, ( $id ? ($relationships, $rel_type) : () );
+
+            my $query_string = $self->_hash_to_uri_query(\%args);
+
+            return $self->_send_ponapi_request(
+                %args,
+                path         => $path,
+                query_string => $query_string,
+                body         => $body,
+                method       => $method,
+            );
+        }
     }
-}
-{
-package
-    PONAPI::Client::HTTP::Tiny;
-    use Moose;
-    use Data::Dumper;
-    use JSON::XS qw/decode_json/;
 
-    extends 'PONAPI::Client::Mock';
+    {
+        package PONAPI::Client::HTTP::Tiny;
 
-    sub _send_ponapi_request {
-        my ($self, %args) = @_;
+        use Moose;
 
-        my $url = 'http://127.0.0.1:' . $self->port . $args{path};
-        $url   .= "?$args{query_string}" if $args{query_string};
-        my $response = HTTP::Tiny->new()->request(
-            $args{method} => $url,
+        use Data::Dumper;
+        use JSON::XS qw/decode_json/;
+
+        extends 'PONAPI::Client::Mock';
+
+        sub _send_ponapi_request {
+            my ($self, %args) = @_;
+
+            my $url = 'http://127.0.0.1:' . $self->port . $args{path};
+            $url   .= "?$args{query_string}" if $args{query_string};
+
+            my $mt_key = $args{body} ? 'Content-Type' : 'Accept';
+
+            my $response = HTTP::Tiny->new()->request(
+                $args{method} => $url,
+                {
+                    headers => { $mt_key => $media_type },
+                    ( $args{body} ? (content => $args{body}) : () ),
+                }
+            );
+
+            return $response->{status} unless $response->{content};
+
+            ::is(
+                $response->{headers}{'content-type'},
+                $media_type,
+                "..got the expected media type",
+            ) or diag(Dumper($response));
+
+            my ($content, $failed, $e);
             {
-                headers => {
-                    'Content-Type' => $content_type,
-                },
-                ( $args{body} ? (content => $args{body}) : ()),
+                local $@;
+                eval  { $content = decode_json($response->{content}) }
+                    or do { ($failed, $e) = (1, $@||'Unknown error')     };
             }
-        );
 
-        return $response->{status} unless $response->{content};
+            if ( $failed ) {
+                ::diag("Failed to decode the response content: $@\n" . Dumper($response));
+            }
 
-        ::is(
-            $response->{headers}{'content-type'},
-            $content_type,
-            "..got the expected content type",
-        ) or diag(Dumper($response));
-
-        my ($content, $failed, $e);
-        {
-            local $@;
-            eval  { $content = decode_json($response->{content}) }
-            or do { ($failed, $e) = (1, $@||'Unknown error')     };
+            return $response->{status}, $content;
         }
-        if ( $failed ) {
-            ::diag("Failed to decode the response content: $@\n" . Dumper($response));
+    }
+
+    # Since cURL testing can be affected by all sort of unplanned things,
+    # we tread *very* lightly; failing any of these tests won't actually cause
+    # the test suite to fail!
+    # While we want these to be tested and passing, if everything else is
+    # working,
+
+    {
+        package PONAPI::Client::cURL;
+
+        use Moose;
+
+        use JSON::XS qw/decode_json/;
+        use IPC::Cmd qw/can_run run/;
+
+        extends 'PONAPI::Client::Mock';
+
+        sub BUILD {
+            bless Test::More->builder, "Test::Builder::ButReallyLaxAboutFailing";
         }
 
-        return $response->{status}, $content;
-    }
-}
+        sub _send_ponapi_request {
+            my ($self, %args) = @_;
 
-# Since cURL testing can be affected by all sort of unplanned things,
-# we tread *very* lightly; failing any of these tests won't actually cause
-# the test suite to fail!
-# While we want these to be tested and passing, if everything else is
-# working,
+            my $url = 'http://127.0.0.1:' . $self->port . $args{path};
+            $url   .= "?$args{query_string}" if $args{query_string};
 
-{
-package
-    PONAPI::Client::cURL;
-    use Moose;
-    use JSON::XS qw/decode_json/;
-    use IPC::Cmd qw/can_run run/;
+            my $mt_key = $args{body} ? 'Content-Type' : 'Accept';
 
-    extends 'PONAPI::Client::Mock';
+            my $curl_path = can_run('curl');
 
-    sub BUILD {
-        bless Test::More->builder, "Test::Builder::ButReallyLaxAboutFailing";
-    }
-    sub _send_ponapi_request {
-        my ($self, %args) = @_;
+            my @cmd = (
+                $curl_path,
+                '-s',
+                '-X'  => $args{method},
+                '-w'  => '\n%{http_code}',
+                '-H'  => "$mt_key: $media_type",
+                $url,
+                ($args{body} ? ('-d' => $args{body}) : ()),
+            );
 
-        my $url = 'http://127.0.0.1:' . $self->port . $args{path};
-        $url   .= "?$args{query_string}" if $args{query_string};
+            my ( $success, $error, $full_buf, $stdout_buf, $stderr_buf ) = run(
+                command => \@cmd, timeout => 5
+            );
 
-        my $curl_path = can_run('curl');
-        my @cmd = (
-            $curl_path,
-            '-s',
-            '-X'  => $args{method},
-            '-w'  => '\n%{http_code}',
-            '-H'  => "Content-Type: $content_type",
-            $url,
-            ($args{body} ? ('-d' => $args{body}) : ()),
-        );
-        my ( $success, $error, $full_buf, $stdout_buf, $stderr_buf ) = run(
-            command => \@cmd, timeout => 5
-        );
+            my ($content, $status) = ($stdout_buf->[0] || '') =~ /(.*)\n([0-9]+)\z/s;
 
-        my ($content, $status) = ($stdout_buf->[0] || '')
-                                        =~ /(.*)\n([0-9]+)\z/s;
+            return $status, ($success && $content) ? decode_json($content) : undef;
+        }
 
-        return $status, ($success && $content) ? decode_json($content) : undef;
+        sub DEMOLISH {
+            bless Test::More->builder, 'Test::Builder';
+        }
     }
 
-    sub DEMOLISH {
-        bless Test::More->builder, 'Test::Builder';
-    }
-}
+    {
+        package Test::Builder::ButReallyLaxAboutFailing;
 
-{
-my $no_good;
-package
-    Test::Builder::ButReallyLaxAboutFailing;
-    our @ISA = 'Test::Builder';
+        our @ISA = 'Test::Builder';
 
-    sub _enough_messing_around {
-        my ($self) = @_;
-        if ( !$self->is_passing ) {
+        my $no_good;
 
-            $self->diag(<<'EORANT');
+        sub _enough_messing_around {
+            my ($self) = @_;
+
+            if ( !$self->is_passing ) {
+                $self->diag(<<'EORANT');
 Tsk. Something failed in the cURL test. Nothing else was failing
 up to this point, so it's likely harmless.  We're just going to
 pretend that that test passed and skip the rest of the cURL bit.
 EORANT
 
-            $self->is_passing(1);
-            $self->{Curr_Test} = 0;
-            $no_good = 1;
-            $self->plan(skip_all => "Skipping the rest of the cURL tests");
+                $self->is_passing(1);
+                $self->{Curr_Test} = 0;
+                $no_good = 1;
+                $self->plan(skip_all => "Skipping the rest of the cURL tests");
+            }
+        }
+
+        sub subtest {
+            my $self = shift;
+            return if $no_good;
+            return $self->SUPER::subtest(@_);
+        }
+
+        foreach my $function ( qw/ok is like is_deeply/ ) {
+            my $glob = do { no strict 'refs'; \*{ $function } };
+            *$glob = sub {
+                my $self   = shift;
+                my $method = "SUPER::$function";
+                my $ret    = $self->$method(@_);
+                $self->_enough_messing_around;
+                return $ret;
+            };
         }
     }
-    sub subtest {
-        my $self = shift;
-        return if $no_good;
-        return $self->SUPER::subtest(@_);
-    }
-
-    foreach my $function ( qw/ok is like is_deeply/ ) {
-        my $glob = do { no strict 'refs'; \*{ $function } };
-        *$glob = sub {
-            my $self   = shift;
-            my $method = "SUPER::$function";
-            my $ret    = $self->$method(@_);
-            $self->_enough_messing_around;
-            return $ret;
-        };
-    }
-}
 }
 
 done_testing;

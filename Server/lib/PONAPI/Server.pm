@@ -194,23 +194,24 @@ sub _ponapi_check_headers {
 
     return if $req->method eq 'OPTIONS';
 
-    my $pack = HTTP::Headers::ActionPack->new;
-    my $mt   = $self->{'ponapi.mediatype'};
+    my $mt = $self->{'ponapi.mediatype'};
 
     my $has_mediatype = 0;
 
     # check Content-Type
-    my $content_type = $req->headers->header('Content-Type');
-    if ( $content_type ) {
-        $wr->(ERR_WRONG_CONTENT_TYPE) unless $content_type eq $mt;
-        $has_mediatype++;
+    if ( $req->content_length ) {
+        if ( my $content_type = $req->headers->header('Content-Type') ) {
+            $wr->(ERR_WRONG_CONTENT_TYPE) unless $content_type eq $mt;
+            $has_mediatype++;
+        } else {
+            $wr->(ERR_MISSING_CONTENT_TYPE)
+        }
     }
-
-    $wr->(ERR_MISSING_CONTENT_TYPE)
-        if $req->content_length and !$content_type;
 
     # check Accept
     if ( my $accept = $req->headers->header('Accept') ) {
+        my $pack = HTTP::Headers::ActionPack->new;
+
         my @jsonapi_accept =
             map { ( $_->[1]->type eq $mt ) ? $_->[1] : () }
             $pack->create_header( 'Accept' => $accept )->iterable;

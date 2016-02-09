@@ -16,13 +16,12 @@ BEGIN {
 }
 
 my $JSONAPI_MEDIATYPE = 'application/vnd.api+json';
-my @TEST_HEADERS      = ( 'Content-Type' => $JSONAPI_MEDIATYPE, 'X-HTTP-Method-Override' => 'GET' );
 
 sub test_response_headers {
     my $resp = shift;
 
     my $h = $resp->headers;
-    is( $h->header('Content-Type')||'', $JSONAPI_MEDIATYPE, "... has the right content-type" );
+    is( $h->header('Content-Type')||'', $JSONAPI_MEDIATYPE, "... has the right media-type" );
     is( $h->header('X-PONAPI-Server-Version')||'', '1.0', "... and gives us the custom X-PONAPI-Server-Version header" );
 }
 
@@ -31,7 +30,11 @@ subtest '... method override (middleware not loaded)' => sub {
     my $app = Plack::Test->create( PONAPI::Server->new()->to_app );
 
     {
-        my $res = $app->request( POST '/articles/1?include=authors', @TEST_HEADERS );
+        my $res = $app->request(
+            POST '/articles/1?include=authors',
+            'X-HTTP-Method-Override' => 'GET',
+            'Accept' => $JSONAPI_MEDIATYPE,
+        );
         is( $res->code, 404, 'Not Found (as expected)' );
         test_response_headers($res);
     }
@@ -45,8 +48,11 @@ subtest '... method override (middleware loaded)' => sub {
     );
 
     {
-        my $res = $app->request( POST '/articles/1?include=authors', @TEST_HEADERS );
-
+        my $res = $app->request(
+            POST '/articles/1?include=authors',
+            'X-HTTP-Method-Override' => 'GET',
+            'Accept' => $JSONAPI_MEDIATYPE,
+        );
         ok( $res->is_success, 'Successful request' );
         test_response_headers($res);
 

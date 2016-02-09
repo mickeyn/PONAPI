@@ -15,7 +15,8 @@ BEGIN {
 my $BAD_REQUEST_MSG = "{JSON:API} Bad request";
 my $NO_MATCH_MSG    = "{JSON:API} No matching route";
 
-my %CT = ( 'Content-Type' => 'application/vnd.api+json' );
+my %CT     = ( 'Content-Type' => 'application/vnd.api+json' );
+my %Accept = ( 'Accept'       => 'application/vnd.api+json' );
 
 sub error_test {
     my ($res, $expected, $desc) = @_;
@@ -43,12 +44,12 @@ my $app = Plack::Test->create( PONAPI::Server->new()->to_app );
 subtest '... include errors' => sub {
 
     {
-        my $res = $app->request( GET '/articles/2?include=comments', %CT );
+        my $res = $app->request( GET '/articles/2?include=comments', %Accept );
         is( $res->code, 200, 'existing relationships are OK' );
     }
 
     {
-        my $res = $app->request( GET '/articles/1/relationships/0', %CT );
+        my $res = $app->request( GET '/articles/1/relationships/0', %Accept );
         error_test(
             $res,
             {
@@ -59,7 +60,7 @@ subtest '... include errors' => sub {
     }
 
     {
-        my $res = $app->request( GET '/articles/1/relationships//', %CT );
+        my $res = $app->request( GET '/articles/1/relationships//', %Accept );
         is($res->code, 400, "... error empty-string relationship");
         is(
             (decode_json($res->content)||{})->{errors}[0]{detail},
@@ -69,13 +70,13 @@ subtest '... include errors' => sub {
     }
 
     {
-        my $res = $app->request( GET '/articles/2?include=asdasd,comments.not_there', %CT );
+        my $res = $app->request( GET '/articles/2?include=asdasd,comments.not_there', %Accept );
         # expecting 400 becuase we have multiple 4xx errors
         is( $res->code, 400, 'non-existing relationships are not found' );
     }
 
     {
-        my $res = $app->request( GET '/articles/1?fields[articles]=nope', %CT );
+        my $res = $app->request( GET '/articles/1?fields[articles]=nope', %Accept );
         error_test(
             $res,
             {
@@ -88,7 +89,7 @@ subtest '... include errors' => sub {
 
     {
         # Note the nope
-        my $res = $app->request( GET '/articles/1?include=nope', %CT );
+        my $res = $app->request( GET '/articles/1?include=nope', %Accept );
         error_test(
             $res,
             {
@@ -99,7 +100,7 @@ subtest '... include errors' => sub {
         );
 
 
-        $res = $app->request( GET '/articles/1?include=authors&fields[NOPE]=nope', %CT );
+        $res = $app->request( GET '/articles/1?include=authors&fields[NOPE]=nope', %Accept );
         error_test(
             $res,
             {
@@ -110,7 +111,7 @@ subtest '... include errors' => sub {
         );
 
         # Note the 'nope'
-        $res = $app->request( GET '/articles/1?include=authors&fields[people]=nope', %CT );
+        $res = $app->request( GET '/articles/1?include=authors&fields[people]=nope', %Accept );
         error_test(
             $res,
             {
@@ -126,7 +127,7 @@ subtest '... include errors' => sub {
 subtest '... bad requests (GET)' => sub {
 
     {
-        my $res = $app->request( GET "/_articles", %CT );
+        my $res = $app->request( GET "/_articles", %Accept );
         error_test(
             $res,
             {
@@ -148,7 +149,7 @@ subtest '... bad requests (GET)' => sub {
             'page=page',
             'filter=filter',
     ) {
-        my $res = $app->request( GET "/articles/1?$req", %CT );
+        my $res = $app->request( GET "/articles/1?$req", %Accept );
         error_test(
             $res,
             {
@@ -167,10 +168,22 @@ subtest '... bad requests (POST)' => sub {
         error_test(
             $res,
             {
+                detail => '{JSON:API} No {json:api} Media-Type (Content-Type / Accept)',
+                status => 415,
+            },
+            "... POST with no body (wo/Accept header)",
+        );
+    }
+
+    {
+        my $res = $app->request( POST "/articles", %CT, %Accept );
+        error_test(
+            $res,
+            {
                 detail => 'request body is missing `data`',
                 status => 400,
             },
-            "... POST with no body",
+            "... POST with no body (w/Accept header)",
         );
     }
 
@@ -187,7 +200,7 @@ subtest '... bad requests (POST)' => sub {
     }
 
     {
-        my $res = $app->request( POST "/articles/relationships/", %CT, Content => {} );
+        my $res = $app->request( POST "/articles/relationships/", %CT, Content => { 'x' => 'y' } );
         error_test(
             $res,
             {

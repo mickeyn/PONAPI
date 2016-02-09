@@ -134,7 +134,7 @@ sub _send_ponapi_request {
     my %args = @_;
 
     my @mt_header = (
-        ( exists $args{data} ? 'Content-Type' : 'Accept' ),
+        ( $args{body} ? 'Content-Type' : 'Accept' ),
         'application/vnd.api+json'
     );
 
