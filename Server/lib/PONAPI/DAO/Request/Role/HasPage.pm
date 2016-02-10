@@ -13,7 +13,9 @@ has page => (
 );
 
 sub _validate_page {
-    my $self = shift;
+    my ( $self, $args ) = @_;
+
+    return unless defined $args->{page};
 
     $self->has_page
         or $self->_bad_request( "`page` is missing values" );

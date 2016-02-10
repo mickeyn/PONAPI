@@ -14,11 +14,14 @@ has include => (
 );
 
 sub _validate_include {
-    my $self = shift;
-    my $type = $self->type;
+    my ( $self, $args ) = @_;
+
+    return unless defined $args->{include};
 
     return $self->_bad_request( "`include` is missing values" )
         unless $self->has_include >= 1;
+
+    my $type = $self->type;
 
     for ( @{ $self->include } ) {
         $self->repository->has_relationship( $type, $_ )

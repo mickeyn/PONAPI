@@ -14,7 +14,9 @@ has fields => (
 );
 
 sub _validate_fields {
-    my $self = shift;
+    my ( $self, $args ) = @_;
+
+    return unless defined $args->{fields};
     return unless $self->has_fields;
 
     my $fields = $self->fields;
