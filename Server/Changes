@@ -1,5 +1,15 @@
 Revision history for PONAPI-Server
 
+0.002014     2016-Feb-11
+             * Corrected content-negotiation logic
+             * Corrected header setting logic
+             * Reduced # of calls to `does` (performance++)
+             * Removed dependency (Return::MultiLevel)
+             * Demo server: added signal catcher to allow
+               graceful shutdown and cleanup of temp-files
+             * Demo query: added JSON-only mode for output
+             * Code improvements + warnings fixed
+
 0.002013     2016-Feb-03
              * Added support for HEAD and OPTIONS
              * Added 'sort' params to demo queries
