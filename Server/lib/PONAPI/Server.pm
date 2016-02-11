@@ -10,7 +10,6 @@ use Plack::Request;
 use Plack::Response;
 use HTTP::Headers::ActionPack;
 use Module::Runtime    ();
-use Return::MultiLevel ();
 use JSON::XS           ();
 use URI::Escape        qw( uri_unescape );
 
@@ -57,8 +56,12 @@ sub call {
     my ( $self, $env ) = @_;
     my $req = Plack::Request->new($env);
 
-    my $ponapi_params = Return::MultiLevel::with_return {
-        $self->_ponapi_params( shift, $req )
+    my $ponapi_params;
+    eval {
+        $ponapi_params = $self->_ponapi_params( $req );
+        1;
+    } or do {
+        $ponapi_params = $@;
     };
 
     return $self->_options_response( $ponapi_params->{__options__} )
@@ -95,19 +98,19 @@ sub _is_get_like {
 }
 
 sub _ponapi_params {
-    my ( $self, $wr, $req ) = @_;
+    my ( $self, $req ) = @_;
 
     # THE HEADERS
-    $self->_ponapi_check_headers($wr, $req);
+    $self->_ponapi_check_headers($req);
 
     # THE PATH --> route matching
-    my @ponapi_route_params = $self->_ponapi_route_match($wr, $req);
+    my @ponapi_route_params = $self->_ponapi_route_match($req);
 
     # THE QUERY
-    my @ponapi_query_params = $self->_ponapi_query_params($wr, $req);
+    my @ponapi_query_params = $self->_ponapi_query_params($req);
 
     # THE BODY CONTENT
-    my @ponapi_data = $self->_ponapi_data($wr, $req);
+    my @ponapi_data = $self->_ponapi_data($req);
 
     # misc.
     my $req_base      = $self->{'ponapi.relative_links'} eq 'full' ? "".$req->base : '/';
@@ -129,19 +132,19 @@ sub _ponapi_params {
 }
 
 sub _ponapi_route_match {
-    my ( $self, $wr, $req ) = @_;
+    my ( $self, $req ) = @_;
     my $method = $req->method;
 
-    $wr->(ERR_BAD_REQ) unless grep { $_ eq $method } qw< GET POST PATCH DELETE HEAD OPTIONS >;
+    die(ERR_BAD_REQ) unless grep { $_ eq $method } qw< GET POST PATCH DELETE HEAD OPTIONS >;
 
     my ( $type, $id, $relationships, $rel_type ) = split '/' => substr($req->path_info,1);
 
     # validate `type`
-    $wr->(ERR_BAD_REQ) unless defined $type and $type =~ /$qr_member_name_prefix/ ;
+    die(ERR_BAD_REQ) unless defined $type and $type =~ /$qr_member_name_prefix/ ;
 
     # validate `rel_type`
     if ( defined $rel_type ) {
-        $wr->(ERR_BAD_REQ) if $relationships ne 'relationships';
+        die(ERR_BAD_REQ) if $relationships ne 'relationships';
     }
     elsif ( $relationships ) {
         $rel_type = $relationships;
@@ -150,7 +153,7 @@ sub _ponapi_route_match {
 
     my $def_rel_type = defined $rel_type;
 
-    $wr->(ERR_BAD_REQ) if $def_rel_type and $rel_type !~ /$qr_member_name_prefix/;
+    die(ERR_BAD_REQ) if $def_rel_type and $rel_type !~ /$qr_member_name_prefix/;
 
     # set `action`
     my $action;
@@ -177,10 +180,10 @@ sub _ponapi_route_match {
         else {
             push @options => 'POST';
         }
-        $wr->( +{ __options__ => \@options } );
+        die( +{ __options__ => \@options } );
     }
 
-    $wr->(ERR_NO_MATCHING_ROUTE) unless $action;
+    die(ERR_NO_MATCHING_ROUTE) unless $action;
 
     # return ( action, type, id?, rel_type? )
     my @ret = ( action => $action, type => $type );
@@ -190,7 +193,7 @@ sub _ponapi_route_match {
 }
 
 sub _ponapi_check_headers {
-    my ( $self, $wr, $req ) = @_;
+    my ( $self, $req ) = @_;
 
     return if $req->method eq 'OPTIONS';
 
@@ -201,10 +204,10 @@ sub _ponapi_check_headers {
     # check Content-Type
     if ( $req->content_length ) {
         if ( my $content_type = $req->headers->header('Content-Type') ) {
-            $wr->(ERR_WRONG_CONTENT_TYPE) unless $content_type eq $mt;
+            die(ERR_WRONG_CONTENT_TYPE) unless $content_type eq $mt;
             $has_mediatype++;
         } else {
-            $wr->(ERR_MISSING_CONTENT_TYPE)
+            die(ERR_MISSING_CONTENT_TYPE)
         }
     }
 
@@ -217,18 +220,18 @@ sub _ponapi_check_headers {
             $pack->create_header( 'Accept' => $accept )->iterable;
 
         if ( @jsonapi_accept ) {
-            $wr->(ERR_WRONG_HEADER_ACCEPT)
+            die(ERR_WRONG_HEADER_ACCEPT)
                 unless grep { $_->params_are_empty } @jsonapi_accept;
 
             $has_mediatype++;
         }
     }
 
-    $wr->(ERR_MISSING_MEDIA_TYPE) unless $has_mediatype;
+    die(ERR_MISSING_MEDIA_TYPE) unless $has_mediatype;
 }
 
 sub _ponapi_query_params {
-    my ( $self, $wr, $req ) = @_;
+    my ( $self, $req ) = @_;
 
     my %params;
     my $query_params = $req->query_parameters;
@@ -240,15 +243,15 @@ sub _ponapi_query_params {
         my ( $p, $f ) = $k =~ /^ (\w+?) (?:\[(\w+)\])? $/x;
 
         # valid parameter names
-        $wr->(ERR_BAD_REQ_PARAMS)
+        die(ERR_BAD_REQ_PARAMS)
             unless grep { $p eq $_ } qw< fields filter page include sort >;
 
         # "complex" parameters have the correct structre
-        $wr->(ERR_BAD_REQ)
+        die(ERR_BAD_REQ)
             if !defined $f and grep { $p eq $_ } qw< page fields filter >;
 
         # 'sort' requested but not supported
-        $wr->(ERR_SORT_NOT_ALLOWED)
+        die(ERR_SORT_NOT_ALLOWED)
             if $p eq 'sort' and !$self->{'ponapi.sort_allowed'};
 
         # values can be passed as CSV
@@ -257,7 +260,7 @@ sub _ponapi_query_params {
 
         # check we have values for a given key
         # (for 'fields' an empty list is valid)
-        $wr->(ERR_BAD_REQ)
+        die(ERR_BAD_REQ)
             if $p ne 'fields' and exists $query_params->{$k} and !@values;
 
         # values passed on in array-ref
@@ -280,28 +283,28 @@ sub _ponapi_query_params {
 }
 
 sub _ponapi_data {
-    my ( $self, $wr, $req ) = @_;
+    my ( $self, $req ) = @_;
 
     return unless $req->content_length and $req->content_length > 0;
 
-    $wr->(ERR_BAD_REQ) if _is_get_like($req);
+    die(ERR_BAD_REQ) if _is_get_like($req);
 
     my $body;
     eval { $body = JSON::XS::decode_json( $req->content ); 1 };
 
-    $wr->(ERR_BAD_REQ) unless $body and ref $body eq 'HASH' and exists $body->{data};
+    die(ERR_BAD_REQ) unless $body and ref $body eq 'HASH' and exists $body->{data};
 
     my $data = $body->{data};
 
-    $wr->(ERR_BAD_REQ) if defined $data and ref($data) !~ /^(?:ARRAY|HASH)$/;
+    die(ERR_BAD_REQ) if defined $data and ref($data) !~ /^(?:ARRAY|HASH)$/;
 
-    $self->_validate_data_members( $wr, $data ) if defined $data;
+    $self->_validate_data_members($data) if defined $data;
 
     return ( data => $data );
 }
 
 sub _validate_data_members {
-    my ( $self, $wr, $data ) = @_;
+    my ( $self, $data ) = @_;
 
     my @recs = ref $data eq 'ARRAY' ? @{$data} : $data;
 
@@ -309,22 +312,22 @@ sub _validate_data_members {
         return unless keys %{$r};
 
         # `type`
-        $wr->(ERR_BAD_REQ)              unless $r->{type};
-        $wr->(ERR_BAD_REQ_INVALID_NAME) unless check_name( $r->{type} );
+        die(ERR_BAD_REQ)              unless $r->{type};
+        die(ERR_BAD_REQ_INVALID_NAME) unless check_name( $r->{type} );
 
         # `attributes`
         if ( exists $r->{attributes} ) {
-            $wr->(ERR_BAD_REQ) unless ref( $r->{attributes} ) eq 'HASH';
-            $wr->(ERR_BAD_REQ_INVALID_NAME)
+            die(ERR_BAD_REQ) unless ref( $r->{attributes} ) eq 'HASH';
+            die(ERR_BAD_REQ_INVALID_NAME)
                 if grep { !check_name($_) } keys %{ $r->{attributes} };
         }
 
         # `relationships`
         if ( exists $r->{relationships} ) {
-            $wr->(ERR_BAD_REQ) unless ref( $r->{relationships} ) eq 'HASH';
+            die(ERR_BAD_REQ) unless ref( $r->{relationships} ) eq 'HASH';
 
             for my $k ( keys %{ $r->{relationships} } ) {
-                $wr->(ERR_BAD_REQ_INVALID_NAME) unless check_name($k);
+                die(ERR_BAD_REQ_INVALID_NAME) unless check_name($k);
 
                 my $rel  = $r->{relationships}{$k};
                 my @rels = ref($rel||'') eq 'ARRAY' ? @$rel : $rel;
@@ -335,10 +338,10 @@ sub _validate_data_members {
                     $relationship = $relationship->{data}
                         if exists $relationship->{data};
 
-                    $wr->(ERR_BAD_REQ) unless ref( $relationship ) eq 'HASH';
-                    $wr->(ERR_BAD_REQ) unless exists $relationship->{type};
+                    die(ERR_BAD_REQ) unless
+                        ref($relationship) eq 'HASH' and exists $relationship->{type};
 
-                    $wr->(ERR_BAD_REQ_INVALID_NAME)
+                    die(ERR_BAD_REQ_INVALID_NAME)
                         if !check_name( $relationship->{type} )
                             or grep { !check_name($_) } keys %$relationship;
                 }
