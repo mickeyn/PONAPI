@@ -11,6 +11,14 @@ use PONAPI::Server;
 use File::Temp  qw( tempdir );
 use Path::Class qw( file );
 
+use POSIX ();
+
+$SIG{INT} = sub {
+    print "demo server shutting down...\n";
+    $SIG{INT} = sub { POSIX::_exit(0) };
+    exit 0;
+};
+
 sub run {
     my $port = shift;
 
