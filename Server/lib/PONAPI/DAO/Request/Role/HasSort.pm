@@ -14,7 +14,9 @@ has sort => (
 );
 
 sub _validate_sort {
-    my $self = shift;
+    my ( $self, $args ) = @_;
+
+    return unless defined $args->{sort};
 
     $self->has_sort
         or $self->_bad_request( "`sort` is missing values" );

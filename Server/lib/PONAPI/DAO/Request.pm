@@ -59,6 +59,50 @@ sub BUILDARGS {
     return \%args;
 }
 
+# These validation methods will be overwritten in the appropriate roles.
+# They cover the case where an attribute is NOT expected.
+sub _validate_id {
+    my ( $self, $args ) = @_;
+    return unless defined $args->{id};
+    $self->_bad_request( "`id` is not allowed for this request" )
+}
+
+sub _validate_rel_type {
+    my ( $self, $args ) = @_;
+    return unless defined $args->{rel_type};
+    $self->_bad_request( "`relationship type` is not allowed for this request" );
+}
+
+sub _validate_include {
+    my ( $self, $args ) = @_;
+    return unless defined $args->{include};
+    $self->_bad_request( "`include` is not allowed for this request" );
+}
+
+sub _validate_fields {
+    my ( $self, $args ) = @_;
+    return unless defined $args->{fields};
+    $self->_bad_request( "`fields` is not allowed for this request" );
+}
+
+sub _validate_filter {
+    my ( $self, $args ) = @_;
+    return unless defined $args->{filter};
+    $self->_bad_request( "`filter` is not allowed for this request" );
+}
+
+sub _validate_sort {
+    my ( $self, $args ) = @_;
+    return unless defined $args->{sort};
+    $self->_bad_request( "`sort` is not allowed for this request" );
+}
+
+sub _validate_page {
+    my ( $self, $args ) = @_;
+    return unless defined $args->{page};
+    $self->_bad_request( "`page` is not allowed for this request" );
+}
+
 sub BUILD {
     my ( $self, $args ) = @_;
 
@@ -67,59 +111,13 @@ sub BUILD {
     return $self->_bad_request( "Type `$type` doesn't exist.", 404 )
         unless $self->repository->has_type( $type );
 
-    # validate `id` parameter
-    if ( $self->does('PONAPI::DAO::Request::Role::HasID') ) {
-        $self->_bad_request( "`id` is missing for this request" )
-            unless $self->has_id;
-    }
-    elsif ( defined $args->{id} ) {
-        $self->_bad_request( "`id` is not allowed for this request" );
-    }
-
-    # validate `rel_type` parameter
-    if ( $self->does('PONAPI::DAO::Request::Role::HasRelationshipType') ) {
-        defined $args->{rel_type}
-            ? $self->_validate_rel_type
-            : $self->_bad_request( "`relationship type` is missing for this request" );
-    }
-    elsif ( defined $args->{rel_type} ) {
-        $self->_bad_request( "`relationship type` is not allowed for this request" );
-    }
-
-    # validate `include` parameter
-    if ( defined $args->{include} ) {
-        $self->does('PONAPI::DAO::Request::Role::HasInclude')
-            ? $self->_validate_include
-            : $self->_bad_request( "`include` is not allowed for this request" );
-    }
-
-    # validate `fields` parameter
-    if ( defined $args->{fields} ) {
-        $self->does('PONAPI::DAO::Request::Role::HasFields')
-            ? $self->_validate_fields
-            : $self->_bad_request( "`fields` is not allowed for this request" );
-    }
-
-    # validate `filter` parameter
-    if ( defined $args->{filter} ) {
-        $self->does('PONAPI::DAO::Request::Role::HasFilter')
-            ? $self->_validate_filter
-            : $self->_bad_request( "`filter` is not allowed for this request" );
-    }
-
-    # validate `sort` parameter
-    if ( defined $args->{sort} ) {
-        $self->does('PONAPI::DAO::Request::Role::HasSort')
-            ? $self->_validate_sort
-            : $self->_bad_request( "`sort` is not allowed for this request" );
-    }
-
-    # validate `page` parameter
-    if ( defined $args->{page} ) {
-        $self->does('PONAPI::DAO::Request::Role::HasPage')
-            ? $self->_validate_page
-            : $self->_bad_request( "`page` is not allowed for this request" );
-    }
+    $self->_validate_id($args);
+    $self->_validate_rel_type($args);
+    $self->_validate_include($args);
+    $self->_validate_fields($args);
+    $self->_validate_filter($args);
+    $self->_validate_sort($args);
+    $self->_validate_page($args);
 
     # validate `data`
     if ( exists $args->{data} ) {

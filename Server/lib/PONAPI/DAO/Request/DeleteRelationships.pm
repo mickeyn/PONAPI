@@ -27,15 +27,19 @@ sub execute {
 }
 
 sub _validate_rel_type {
-    my $self     = shift;
+    my ( $self, $args ) = @_;
+
+    return $self->_bad_request( "`relationship type` is missing for this request" )
+        unless $self->has_rel_type;
+
     my $type     = $self->type;
     my $rel_type = $self->rel_type;
 
-    super(@_);
+    return $self->_bad_request( "Types `$type` and `$rel_type` are not related", 404 )
+        unless $self->repository->has_relationship( $type, $rel_type );
 
-    if ( !$self->repository->has_one_to_many_relationship( $type, $rel_type ) ) {
-        $self->_bad_request( "Types `$type` and `$rel_type` are one-to-one" );
-    }
+    return $self->_bad_request( "Types `$type` and `$rel_type` are one-to-one" )
+        unless $self->repository->has_one_to_many_relationship( $type, $rel_type );
 }
 
 

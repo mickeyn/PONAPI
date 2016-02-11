@@ -10,9 +10,9 @@ has rel_type => (
 );
 
 sub _validate_rel_type {
-    my $self = shift;
+    my ( $self, $args ) = @_;
 
-    return $self->_bad_request( "`relationship type` is missing" )
+    return $self->_bad_request( "`relationship type` is missing for this request" )
         unless $self->has_rel_type;
 
     my $type     = $self->type;

@@ -14,7 +14,9 @@ has filter => (
 );
 
 sub _validate_filter {
-    my $self = shift;
+    my ( $self, $args ) = @_;
+
+    return unless defined $args->{filter};
 
     $self->has_filter
         or $self->_bad_request( "`filter` is missing values" );
