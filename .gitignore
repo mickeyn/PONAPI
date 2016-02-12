@@ -8,3 +8,4 @@ Makefile.old
 cover_db
 .build
 MockDB*.db
+TAGS
