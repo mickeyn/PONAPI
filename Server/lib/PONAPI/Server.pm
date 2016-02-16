@@ -4,7 +4,7 @@ package PONAPI::Server;
 use strict;
 use warnings;
 
-our $VERSION = '0.002014';
+our $VERSION = '0.002015';
 
 use Plack::Request;
 use Plack::Response;

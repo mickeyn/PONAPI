@@ -1,5 +1,9 @@
 Revision history for PONAPI-Server
 
+0.002015     2016-Feb-16
+             * dist.ini: fixed skip of Plack::Middleware*
+             * Demo query: fixed headers
+
 0.002014     2016-Feb-11
              * Corrected content-negotiation logic
              * Corrected header setting logic
