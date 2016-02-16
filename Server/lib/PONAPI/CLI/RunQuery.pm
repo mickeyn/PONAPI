@@ -14,7 +14,7 @@ sub run {
 
     my $res = HTTP::Tiny->new->get( $url, {
         headers => {
-            'Content-Type' => 'application/vnd.api+json',
+            'Accept' => 'application/vnd.api+json',
         },
     });
 
