@@ -1,5 +1,8 @@
 Revision history for PONAPI-Server
 
+0.002016     2016-Mar-01
+             * dist.ini: added MetaProvides::Package
+
 0.002015     2016-Feb-16
              * dist.ini: fixed skip of Plack::Middleware*
              * Demo query: fixed headers
