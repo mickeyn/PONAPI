@@ -11,6 +11,8 @@ use Data::Dumper;
 use PONAPI::Server;
 use IPC::Cmd qw/can_run/;
 
+delete @ENV{qw/ HTTP_PROXY http_proxy /};
+
 # Rather than just testing PONAPI::Client, let's make sure we're
 # working on other backends too.  We always test PONAPI::Client,
 # but if available, we'll also test HTTP::Tiny and curl on the
