@@ -283,7 +283,7 @@ With those out of the way, we can get to the meat of the repository:
 
 All of these will receive B<at least> these two arguments:
 C<type>, the type of the request, and C<document>, an instance
-of L<PONAPI::Builder::Document>.
+of L<PONAPI::Document>.
 
 Note that by the time the arguments reach the API methods,
 some amount of validation will have already happened, like
