@@ -1271,7 +1271,7 @@ L<The spec specifies certain restriction to member names|http://jsonapi.org/form
 C<PONAPI::Server> only implements these for the data coming from
 the clients; for full spec compliance, repositories should
 also validate that whatever they add to the document passes
-those constraints.  The module L<PONAPI::Utils::Names> provides
+those constraints.  The module L<PONAPI::Names> provides
 a function to validate if a given string is a valid member name.
 
 =item Type validation in (create|update|delete)_relationships

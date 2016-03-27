@@ -1,5 +1,5 @@
 # ABSTRACT: Member names validation utility
-package PONAPI::Utils::Names;
+package PONAPI::Names;
 
 use strict;
 use warnings;
@@ -28,7 +28,7 @@ __END__
 
 =head1 SYNOPSIS
 
-    use PONAPI::Utils::Names 'check_name';
+    use PONAPI::Names 'check_name';
 
     check_name('a');    # Valid
     check_name('a-');   # Invalid

@@ -14,7 +14,7 @@ use JSON::XS           ();
 use URI::Escape        qw( uri_unescape );
 
 use PONAPI::Server::ConfigReader;
-use PONAPI::Utils::Names qw( check_name );
+use PONAPI::Names qw( check_name );
 
 use parent 'Plack::Component';
 
