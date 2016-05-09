@@ -9,7 +9,7 @@ __END__
 The origin of the name PONAPI (pronounced: Po-Na-Pi) is JSONAPI.
 We jokingly decided to replace the JavaScript reference (JS) with a Perl one (P).
 
-Even though 'Perl Object Notaion' is a made-up thing, we liked how it sounds; so we kept it.
+Even though 'Perl Object Notation' is a made-up thing, we liked how it sounds; so we kept it.
 
 This document describes how to use and set up C<PONAPI::Server>.
 The latter parts describe how to set up a repository from scratch,
@@ -174,9 +174,17 @@ Where C<My::Repository::Yadda> is a class that consumes the
 C<PONAPI::Repository> role; args will be passed to the
 repo when it is instantiated.
 
-To use PONAPI, we'll need a repo to communicate between the server and the
-data we want to server, so let's create a minimal repo from scratch.  Our aim
-here is to have a repo that will handle something like a minimalistic blog,
+To use PONAPI, we'll need a repo to communicate between the server and
+the data we want to serve, so let's create a minimal repo from
+scratch.  A repository in PONAPI is an abstracted set of collections of
+resources, in the "Uniform Resource Locator" sense, which may or may
+not directly reflect your data source model. Your repository class
+merely needs to define sensible behaviours for the required methods
+defined in C<PONAPI::Repository> and that may be as simple as a
+direct reflection of your data source model or it may allow for more
+useful abtractions.
+
+Our aim here is to have a repo that will handle something like a minimalistic blog,
 so we need to figure out what data types we'll handle, and what their
 relationships are.
 
