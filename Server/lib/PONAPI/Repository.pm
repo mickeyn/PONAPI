@@ -37,9 +37,15 @@ __END__
 
 =head1 DESCRIPTION
 
-Clases implementing repositories for L<PONAPI::DAO> must consume
-the C<PONAPI::Repository> role; this ensures that the methods
-required by the DAO to fullfil the implementation are all present.
+A repository is an abstracted set of collections of resources, in the
+"Uniform Resource Locator" sense, which may or may not directly
+reflect your data source model. Your repository class merely needs to
+define sensible behaviours for the required methods defined here in
+C<PONAPI::Repository> and that may be as simple as a direct reflection
+of your data source model or it may allow for more useful abtractions.
+Classes implementing repositories for L<PONAPI::DAO> must consume the
+C<PONAPI::Repository> role; this ensures that the methods required by
+the DAO to fullfil the implementation are all present.
 
 The arguments that each method can receive are expanded on in
 L<PONAPI::DAO>; some differences are explained below. Keep in mind that,
