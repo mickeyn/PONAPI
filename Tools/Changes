@@ -1,4 +1,7 @@
 Revision history for PONAPI-Tools
 
+0.001001     2016-Jun-16
+             * Added PONAPI::Tools for PAUSE.
+
 0.001000     2016-Jun-16
              * Tools get a distribution.

@@ -15,8 +15,8 @@ __END__
 
 Various tools for building {json:api} compatiable documents.
 
-Used by C<PONAPI::Server>
+Used by L<PONAPI::Server>
 
-For information about creating documents, see: C<PONAPI::Document>
+For information about creating documents, see: L<PONAPI::Document>
 
 =cut
