@@ -17,12 +17,27 @@ __END__
 
     use PONAPI::Document;
 
-    PONAPI::Document->new(
+    my $document = PONAPI::Document->new(
         version  => $version,
         req_path => $req_path,
         req_base => $req_base,
     );
 
+    my $resource = $document->add_resource( type => 'foo', id => 1 )
+                            ->add_attributes({ ... })
+                            ->add_self_link;
+    $resource->add_relationship(%$_) for ...;
+
+    # If we want multiple resources in one response:
+    $document->convert_to_collection;
+    $document->add_resource() # go crazy!
+
+    # If we have an error at some point:
+    $document->raise_error( 418, 'TEA TIME' );
+
+    # And once we are done, return a valid {json:api} document
+    # as a perl hash, which you can later turn into JSON.
+    my $result = $document->build;
 
 =head1 DESCRIPTION
 
@@ -75,7 +90,7 @@ Adds an entry to the meta section of the document, under $meta_key.
 Creates a new L<PONAPI::Document::Builder::Resource> object, with
 type $type and id $id, and adds it to the document.
 
-You can then call C<add_relationships> and C<add_attributes> on
+You can then call C<add_relationship> and C<add_attributes> on
 this object, amongst other things;  See L<PONAPI::Document::Builder::Resource>
 for all the ways to add information to this object.
 

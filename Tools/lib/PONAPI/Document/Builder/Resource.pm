@@ -148,7 +148,7 @@ __END__
 C<PONAPI::Document::Builder::Resource> is used internally by
 C<PONAPI::Document> to build C<{json:api}> documents.  Generally,
 these will be created by C<< PONAPI::Document->add_resources >>, which
-will return an object that you can call C<add_relationships>,
+will return an object that you can call C<add_relationship>,
 C<add_attributes>, and others on.
 
 =head1 METHODS
