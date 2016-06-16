@@ -6,8 +6,6 @@ use warnings;
 
 use parent 'PONAPI::Document::Builder::Document';
 
-our $VERSION = '0.001000';
-
 1;
 
 __END__
@@ -106,7 +104,7 @@ section will instead hold an arrayref of resources.
 
     # Originally:
     { data: { type => 'foo', id => 1, attributes => ... } }
-    
+
     # After convert_to_collection
     { data: [ { type => 'foo', id => 1, attributes => ... }, ] }
 
