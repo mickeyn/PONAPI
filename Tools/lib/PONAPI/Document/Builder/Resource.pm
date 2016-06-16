@@ -131,3 +131,81 @@ __PACKAGE__->meta->make_immutable;
 no Moose; 1;
 
 __END__
+=encoding UTF-8
+
+=head1 SYNOPSIS
+
+    use PONAPI::Document::Builder::Resource;
+
+    PONAPI::Document::Builder::Resource->new(
+        id   => $id,
+        type => $type,
+    );
+
+
+=head1 DESCRIPTION
+
+C<PONAPI::Document::Builder::Resource> is used internally by
+C<PONAPI::Document> to build C<{json:api}> documents.  Generally,
+these will be created by C<< PONAPI::Document->add_resources >>, which
+will return an object that you can call C<add_relationships>,
+C<add_attributes>, and others on.
+
+=head1 METHODS
+
+=over
+
+=item * new( id => $id, type => $type, parent => $parent )
+
+Create a new object. C<id> and C<type> are mandatory.
+
+Parent is assigned by C<< PONAPI::Document->add_resources >>,
+so you don't need to specify it.
+
+=item * id
+
+Returns the id of this object.
+
+=item * type
+
+Returns the type of this object.
+
+=item * add_attributes( $attr_name => $value, ... )
+
+Adds the specified attributes to the object.
+
+=item * add_relationship( $relationship_name => $resource, $is_a_collection)
+
+Adds C<$resource> to the C<$relationship_name> relationship for this
+object.  Will create the relationship if it doesn't already exist.
+
+Note that trying to add multiple resources when C<$is_a_collection> is false
+will result in an error.
+
+=item * add_links( $link_name => $url, ... )
+
+See L<PONAPI::Document/add_links>.
+
+=item * add_self_link
+
+See L<PONAPI::Document/add_self_link>.
+
+=item * add_meta
+
+See L<PONAPI::Document/add_meta>.
+
+=item * parent
+
+See L<PONAPI::Document/parent>.
+
+=item * find_root
+
+See L<PONAPI::Document/find_root>.
+
+=item * is_root
+
+See L<PONAPI::Document/is_root>.
+
+=back
+
+=cut
