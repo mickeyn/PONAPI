@@ -51,7 +51,7 @@ The arguments that each method can receive are expanded on in
 L<PONAPI::DAO>; some differences are explained below. Keep in mind that,
 with the exceptions of the C<has_*> methods, B<all> methods
 will receive a C<document> argument, which is always an instance of
-C<PONAPI::Builder::Document>, but not necessarily a B<new> instance.
+C<PONAPI::Document>, but not necessarily a B<new> instance.
 
 =head1 REQUIRES
 

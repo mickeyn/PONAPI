@@ -5,7 +5,7 @@ use warnings;
 use Test::More;
 
 BEGIN {
-    use_ok('PONAPI::Utils::Names', 'check_name');
+    use_ok('PONAPI::Names', 'check_name');
 }
 
 ### ...

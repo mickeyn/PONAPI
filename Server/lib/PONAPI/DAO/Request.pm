@@ -4,7 +4,7 @@ package PONAPI::DAO::Request;
 use Moose;
 use JSON::XS;
 
-use PONAPI::Builder::Document;
+use PONAPI::Document;
 
 has repository => (
     is       => 'ro',
@@ -14,7 +14,7 @@ has repository => (
 
 has document => (
     is       => 'ro',
-    isa      => 'PONAPI::Builder::Document',
+    isa      => 'PONAPI::Document',
     required => 1,
 );
 
@@ -50,7 +50,7 @@ sub BUILDARGS {
     die "[__PACKAGE__] missing arg `version`"
         unless defined $args{version};
 
-    $args{document} = PONAPI::Builder::Document->new(
+    $args{document} = PONAPI::Document->new(
         version  => $args{version},
         req_path => $args{req_path} // '/',
         req_base => $args{req_base} // '/',
