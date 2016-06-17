@@ -8,14 +8,14 @@ PONAPI::Server - PONAPI - Perl implementation of {JSON:API} (http://jsonapi.org/
 
 =head1 VERSION
 
-version 0.002016
+version 0.003000
 
 =head1 SYNOPSIS
 
     # Run the server
     $ plackup -MPONAPI::Server -e 'PONAPI::Server->new("repository.class" => "Test::PONAPI::Repository::MockDB")->to_app'
 
-    $ perl -MPONAPI::Client -MData::Dumper -E 'say Dumper(PONAPI::Client->new->retrieve(type => "people", id => 88))'
+    $ perl -MPONAPI::Client -E 'say Dumper(PONAPI::Client->new->retrieve(type => "people", id => 88))'
 
     # Or with cURL:
     $ curl -X GET -H "Content-Type: application/vnd.api+json" 'http://0:5000/people/88'

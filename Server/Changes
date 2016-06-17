@@ -1,5 +1,8 @@
 Revision history for PONAPI-Server
 
+0.003000     2016-Jun-17
+             * Document building split, now using PONAPI::Tools
+
 0.002016     2016-Mar-01
              * dist.ini: added MetaProvides::Package
 
