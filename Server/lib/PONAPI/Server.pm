@@ -242,6 +242,9 @@ sub _ponapi_query_params {
     for my $k ( keys %{ $query_params } ) {
         my ( $p, $f ) = $k =~ /^ (\w+?) (?:\[(\w+)\])? $/x;
 
+        # key not matched
+        die(ERR_BAD_REQ_PARAMS) unless defined $p;
+
         # valid parameter names
         die(ERR_BAD_REQ_PARAMS)
             unless grep { $p eq $_ } qw< fields filter page include sort >;
