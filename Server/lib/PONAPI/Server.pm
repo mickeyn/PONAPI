@@ -260,8 +260,7 @@ sub _ponapi_query_params {
 
         # check we have values for a given key
         # (for 'fields' an empty list is valid)
-        die(ERR_BAD_REQ)
-            if $p ne 'fields' and exists $query_params->{$k} and !@values;
+        die(ERR_BAD_REQ) if $p ne 'fields' and !@values;
 
         # values passed on in array-ref
         grep { $p eq $_ } qw< fields filter >
