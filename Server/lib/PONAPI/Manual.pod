@@ -9,8 +9,6 @@ __END__
 The origin of the name PONAPI (pronounced: Po-Na-Pi) is JSONAPI.
 We jokingly decided to replace the JavaScript reference (JS) with a Perl one (P).
 
-Even though 'Perl Object Notation' is a made-up thing, we liked how it sounds; so we kept it.
-
 This document describes how to use and set up C<PONAPI::Server>.
 The latter parts describe how to set up a repository from scratch,
 including a set-by-step of the implementation.
