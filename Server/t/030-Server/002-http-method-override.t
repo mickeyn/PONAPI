@@ -8,7 +8,7 @@ use Plack::Test;
 use HTTP::Request::Common;
 use Plack::Middleware::MethodOverride;
 
-use JSON::XS;
+use JSON::MaybeXS;
 use Data::Dumper;
 
 BEGIN {

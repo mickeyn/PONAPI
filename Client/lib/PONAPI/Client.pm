@@ -6,7 +6,7 @@ our $VERSION = '0.002007';
 use Moose;
 
 use Hijk;
-use JSON::XS qw( decode_json );
+use JSON::MaybeXS qw( decode_json );
 
 use PONAPI::Client::Request::Create;
 use PONAPI::Client::Request::CreateRelationships;

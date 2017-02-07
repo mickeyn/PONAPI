@@ -3,7 +3,7 @@ package PONAPI::Client::Request;
 
 use Moose::Role;
 
-use JSON::XS qw< encode_json >;
+use JSON::MaybeXS qw< encode_json >;
 
 use PONAPI::Utils::URI qw< to_uri >;
 

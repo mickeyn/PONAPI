@@ -8,7 +8,7 @@ use Plack::Test;
 use HTTP::Request::Common qw/GET/;
 
 use JSON::Schema;
-use JSON::XS 'decode_json';
+use JSON::MaybeXS 'decode_json';
 
 BEGIN {
     use_ok('PONAPI::Server');

@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 use Test::More;
-use JSON::XS;
+use JSON::MaybeXS;
 
 use PONAPI::Exception;
 

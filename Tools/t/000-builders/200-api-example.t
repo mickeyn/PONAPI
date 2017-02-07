@@ -9,9 +9,9 @@ BEGIN {
     use_ok('PONAPI::Document::Builder::Document')
 }
 
-use JSON::XS;
+use JSON::MaybeXS;
 
-my $JSON = JSON::XS->new->utf8;
+my $JSON = JSON::MaybeXS->new->utf8;
 
 my $EXPECTED = $JSON->decode(q[
 {

@@ -2,7 +2,7 @@
 package PONAPI::DAO::Request;
 
 use Moose;
-use JSON::XS;
+use JSON::MaybeXS;
 
 use PONAPI::Document;
 
@@ -39,8 +39,8 @@ has is_valid => (
 
 has json => (
     is      => 'ro',
-    isa     => 'JSON::XS',
-    default => sub { JSON::XS->new->allow_nonref->utf8->canonical },
+    isa     => JSON::MaybeXS::JSON(),
+    default => sub { JSON::MaybeXS->new->allow_nonref->utf8->canonical },
 );
 
 sub BUILDARGS {

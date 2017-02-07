@@ -9,9 +9,9 @@ our $VERSION = '0.003000';
 use Plack::Request;
 use Plack::Response;
 use HTTP::Headers::ActionPack;
-use Module::Runtime    ();
-use JSON::XS           ();
-use URI::Escape        qw( uri_unescape );
+use Module::Runtime ();
+use JSON::MaybeXS;
+use URI::Escape qw( uri_unescape );
 
 use PONAPI::Server::ConfigReader;
 use PONAPI::Names qw( check_name );
@@ -292,7 +292,7 @@ sub _ponapi_data {
     die(ERR_BAD_REQ) if _is_get_like($req);
 
     my $body;
-    eval { $body = JSON::XS::decode_json( $req->content ); 1 };
+    eval { $body = JSON::MaybeXS::decode_json( $req->content ); 1 };
 
     die(ERR_BAD_REQ) unless $body and ref $body eq 'HASH' and exists $body->{data};
 
@@ -361,7 +361,7 @@ sub _response {
         if $self->{'ponapi.send_version_header'};
 
     if ( ref $content ) {
-        my $enc_content = JSON::XS::encode_json $content;
+        my $enc_content = JSON::MaybeXS::encode_json $content;
         $res->content_length( length($enc_content) );
         $res->content_type( $self->{'ponapi.mediatype'} );
         $res->content($enc_content) unless $is_head;

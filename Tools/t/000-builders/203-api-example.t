@@ -7,7 +7,7 @@ use Test::Fatal;
 use Test::Moose;
 
 use Plack::Request;
-use JSON::XS;
+use JSON::MaybeXS;
 
 BEGIN {
     use_ok('PONAPI::Document::Builder::Document');
@@ -19,7 +19,7 @@ URL: http://jsonapi.org/examples/#sparse-fieldsets
 
 =cut
 
-my $JSON = JSON::XS->new->utf8;
+my $JSON = JSON::MaybeXS->new->utf8;
 
 # the expected result
 my $EXPECTED = $JSON->decode(q[

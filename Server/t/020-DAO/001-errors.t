@@ -4,7 +4,7 @@ use warnings;
 
 use Data::Dumper;
 use Test::More;
-use JSON::XS;
+use JSON::MaybeXS;
 
 use PONAPI::DAO;
 use Test::PONAPI::Repository::MockDB;

@@ -4,7 +4,7 @@ package PONAPI::Exception;
 use Moose;
 use Moose::Util qw/find_meta/;
 
-use JSON::XS;
+use JSON::MaybeXS;
 
 sub throw {
   my $class_or_obj = shift;
@@ -111,7 +111,7 @@ sub _handle_exception_obj {
     ) {
         my $class      = find_meta( $e->class_name );
         my $attribute  = $class->get_attribute( $e->attribute_name );
-        my $value_nice = JSON::XS->new->allow_nonref->utf8->canonical->encode( $e->value );
+        my $value_nice = JSON::MaybeXS->new->allow_nonref->utf8->canonical->encode( $e->value );
 
         if ( !$attribute ) {
             my $attr = $e->attribute_name;

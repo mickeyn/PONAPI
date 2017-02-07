@@ -8,7 +8,7 @@ use Plack::Test;
 use HTTP::Request::Common qw/GET POST DELETE/;
 
 use Data::Dumper;
-use JSON::XS;
+use JSON::MaybeXS;
 
 BEGIN {
     use_ok('PONAPI::Server');
@@ -105,8 +105,8 @@ subtest '... basic server - successful requests' => sub {
         ok( $res->is_success, 'Successful request' );
         test_response_headers($res);
         is_deeply(
-            decode_json $res->content,
-            decode_json $expected,
+            decode_json( $res->content ),
+            decode_json( $expected ),
             "...content is as expected"
         );
     }

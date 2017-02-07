@@ -4,7 +4,7 @@ package PONAPI::CLI::RunQuery;
 use strict;
 use warnings;
 
-use JSON::XS;
+use JSON::MaybeXS;
 use HTTP::Tiny;
 
 sub run {
@@ -28,7 +28,7 @@ sub run {
         print "Content-Type: " . $res->{headers}{'content-type'} . "\n\n";
     }
 
-    my $json = JSON::XS->new;
+    my $json = JSON::MaybeXS->new;
     print $json->pretty(1)->encode( $json->decode($res->{content}) );
 }
 

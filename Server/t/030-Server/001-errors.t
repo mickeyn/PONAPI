@@ -6,7 +6,7 @@ use Test::More;
 use Plack::Test;
 
 use HTTP::Request::Common;
-use JSON::XS;
+use JSON::MaybeXS;
 
 BEGIN {
     use_ok('PONAPI::Server');

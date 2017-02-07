@@ -28,8 +28,8 @@ has version => (
 
 has json => (
     is      => 'ro',
-    isa     => 'JSON::XS',
-    default => sub { JSON::XS->new->allow_nonref->utf8->canonical },
+    isa     => JSON::MaybeXS::JSON(),
+    default => sub { JSON::MaybeXS->new->allow_nonref->utf8->canonical },
 );
 
 sub retrieve_all             { shift->_action( 'PONAPI::DAO::Request::RetrieveAll'            , @_ ) }

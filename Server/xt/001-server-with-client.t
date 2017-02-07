@@ -442,7 +442,7 @@ foreach my $implementation (
                 "... created the resource"
             ) or diag(Dumper($create_res));
 
-            my $json = JSON::XS->new->allow_nonref->utf8->canonical;
+            my $json = JSON::MaybeXS->new->allow_nonref->utf8->canonical;
             foreach my $rels (
                 { comments => \@comments, authors => $author },
                 { comments => [], authors => $author },
@@ -487,7 +487,7 @@ BEGIN {
 
         has json => (
             is => 'ro',
-            default => sub { JSON::XS->new->allow_nonref->utf8->canonical },
+            default => sub { JSON::MaybeXS->new->allow_nonref->utf8->canonical },
         );
 
         my %action_to_http_method = (
@@ -549,7 +549,7 @@ BEGIN {
         use Moose;
 
         use Data::Dumper;
-        use JSON::XS qw/decode_json/;
+        use JSON::MaybeXS qw/decode_json/;
 
         extends 'PONAPI::Client::Mock';
 
@@ -603,7 +603,7 @@ BEGIN {
 
         use Moose;
 
-        use JSON::XS qw/decode_json/;
+        use JSON::MaybeXS qw/decode_json/;
         use IPC::Cmd qw/can_run run/;
 
         extends 'PONAPI::Client::Mock';

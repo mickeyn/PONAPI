@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-use JSON::XS qw[ decode_json ];
+use JSON::MaybeXS qw[ decode_json ];
 
 use Test::More;
 
@@ -862,7 +862,7 @@ subtest '... create + create_relationship' => sub {
         );
         is_deeply(\@author_update, [202, [], {
             meta => {
-                detail => 'successfully modified /articles/4 => {"attributes":null,"id":"4","relationships":{"authors":null,"comments":[]},"type":"articles"}'
+                detail => 'successfully modified /articles/4 => {"attributes":null,"id":4,"relationships":{"authors":null,"comments":[]},"type":"articles"}'
             },
             jsonapi => { 'version' => '1.0' },
         }], "... clearing out a one-to-one works (using update)");

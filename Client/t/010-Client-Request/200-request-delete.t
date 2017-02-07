@@ -6,7 +6,7 @@ use warnings;
 use Test::More;
 use Test::Moose;
 
-use JSON::XS qw( encode_json );
+use JSON::MaybeXS qw( encode_json );
 
 BEGIN {
     use_ok('PONAPI::Client::Request::Delete');
