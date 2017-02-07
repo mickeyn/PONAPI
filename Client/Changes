@@ -1,5 +1,8 @@
 Revision history for PONAPI-Client
 
+0.002008     2017-Feb-7
+             * JSON::XS --> JSON::MaybeXS.
+
 0.002007     2016-Feb-09
              * Removed dependency (URI::Template)
              * Client to send Accept instead of Content-Type
