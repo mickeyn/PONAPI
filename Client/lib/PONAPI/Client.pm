@@ -5,7 +5,6 @@ our $VERSION = '0.002008';
 
 use Moose;
 
-use Hijk;
 use JSON::MaybeXS qw( decode_json );
 
 use PONAPI::Client::Request::Create;
@@ -29,6 +28,11 @@ has port => (
     is      => 'ro',
     isa     => 'Num',
     default => sub { 5000 },
+);
+
+has ua => (
+    is  => 'rw',
+    isa => 'Object',
 );
 
 has send_version_header => (
@@ -112,10 +116,21 @@ sub delete_relationships {
     return $self->_send_ponapi_request( $request->request_params );
 }
 
+around BUILDARGS => sub {
+    my $orig  = shift;
+    my $class = shift;
+    my %args  = @_;
+
+    unless ($args{ua}) {
+        require PONAPI::Client::UA::Hijk;
+        $args{ua} = PONAPI::Client::UA::Hijk->new;
+    }
+
+    return $class->$orig(%args);
+};
+
 
 ### private methods
-
-use constant OLD_HIJK => $Hijk::VERSION lt '0.16';
 
 sub _args {
     my $self = shift;
@@ -125,8 +140,18 @@ sub _args {
 }
 
 sub _http_request {
-    $_[1]->{parse_chunked} = 1;
-    return Hijk::request($_[1]);
+    my ($self) = @_;
+    return $self->ua->send_http_request($_[1]);
+}
+
+my %DEFAULT_HEADER_OVERRIDE;
+
+# $self->add_to_default_headers([ header1 => value1 ], [header2 => value2], ...)
+
+sub add_to_default_headers {
+    my ($self, @headers) = @_;
+
+    $DEFAULT_HEADER_OVERRIDE{$_->[0]} = $_->[1] for @headers;
 }
 
 sub _send_ponapi_request {
@@ -142,7 +167,8 @@ sub _send_ponapi_request {
     ($status, $content) = do {
         local $@;
         eval {
-            my $res = $self->_http_request({
+
+            my $request = {
                 %args,
                 host => $self->host,
                 port => $self->port,
@@ -156,15 +182,17 @@ sub _send_ponapi_request {
                         ? ( 'X-PONAPI-Escaped-Values' => '1' )
                         : ()
                     ),
+                    %DEFAULT_HEADER_OVERRIDE,
                 ],
-            });
+            };
+
+            $self->ua->before_request($request);
+
+            my $res = $self->_http_request($request);
             $status  = $res->{status};
 
-            if ( OLD_HIJK ) {
-                if ( ($res->{head}{'Transfer-Encoding'}||'') eq 'chunked' ) {
-                    die "Got a chunked response from the server, but this version of Hijk can't handle those; please upgrade to at least Hijk 0.16";
-                }
-            }
+            $self->ua->after_request($res);
+
             $content = $res->{body} ? decode_json( $res->{body} ) : '';
             1;
         }
