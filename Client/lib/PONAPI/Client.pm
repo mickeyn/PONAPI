@@ -17,6 +17,7 @@ use PONAPI::Client::Request::Update;
 use PONAPI::Client::Request::UpdateRelationships;
 use PONAPI::Client::Request::Delete;
 use PONAPI::Client::Request::DeleteRelationships;
+use PONAPI::Client::UA::Hijk;
 
 has host => (
     is      => 'ro',
@@ -28,11 +29,6 @@ has port => (
     is      => 'ro',
     isa     => 'Num',
     default => sub { 5000 },
-);
-
-has ua => (
-    is  => 'rw',
-    isa => 'Object',
 );
 
 has send_version_header => (
@@ -51,6 +47,13 @@ has 'uri_base' => (
     is      => 'ro',
     isa     => 'Maybe[Str]',
     default => sub { '' },
+);
+
+has ua => (
+    is      => 'ro',
+    does    => 'PONAPI::Client::Role::UA',
+    lazy    => 1,
+    builder => '_build_ua',
 );
 
 
@@ -116,21 +119,11 @@ sub delete_relationships {
     return $self->_send_ponapi_request( $request->request_params );
 }
 
-around BUILDARGS => sub {
-    my $orig  = shift;
-    my $class = shift;
-    my %args  = @_;
-
-    unless ($args{ua}) {
-        require PONAPI::Client::UA::Hijk;
-        $args{ua} = PONAPI::Client::UA::Hijk->new;
-    }
-
-    return $class->$orig(%args);
-};
-
-
 ### private methods
+
+sub _build_ua {
+    return PONAPI::Client::UA::Hijk->new();
+}
 
 sub _args {
     my $self = shift;
