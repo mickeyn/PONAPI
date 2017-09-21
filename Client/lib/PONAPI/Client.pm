@@ -17,7 +17,6 @@ use PONAPI::Client::Request::Update;
 use PONAPI::Client::Request::UpdateRelationships;
 use PONAPI::Client::Request::Delete;
 use PONAPI::Client::Request::DeleteRelationships;
-use PONAPI::Client::UA::Hijk;
 
 has host => (
     is      => 'ro',
@@ -53,9 +52,8 @@ has ua => (
     is      => 'ro',
     does    => 'PONAPI::Client::Role::UA',
     lazy    => 1,
-    builder => '_build_ua',
+    builder => '_build_hijk_ua',
 );
-
 
 ### public methods
 
@@ -121,7 +119,8 @@ sub delete_relationships {
 
 ### private methods
 
-sub _build_ua {
+sub build_hijk_ua {
+    require PONAPI::Client::UA::Hijk;
     return PONAPI::Client::UA::Hijk->new();
 }
 
