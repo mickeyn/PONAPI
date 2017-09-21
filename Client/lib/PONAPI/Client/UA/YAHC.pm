@@ -47,10 +47,16 @@ sub _build_yahc {
 sub send_http_request {
     my ($self, $request) = @_;
 
-    my ($response, $status_code, $error_string);
+    my $ponapi_response;
 
     my $callback = sub {
-        ($response, $status_code, $error_string) = @_;
+        my ($conn) = @_;
+        my $response = $conn->{response};
+        $ponapi_response = {
+            status => $response->{status},
+            head   => $response->{head},
+            body   => $response->{body},
+        };
     };
 
     local $request->{callback} = $callback;
@@ -60,12 +66,6 @@ sub send_http_request {
 
     $yahc->request($request);
     $yahc->run();
-
-    my $ponapi_response = {
-        status => $status_code,
-        head   => $response->{head},
-        body   => $response->{body},
-    };
 
     return $ponapi_response;
 }
