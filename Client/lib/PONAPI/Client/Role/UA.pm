@@ -1,4 +1,5 @@
 package PONAPI::Client::Role::UA;
+# ABSTRACT: An interface role for supporting UAs
 
 use Moose::Role;
 
