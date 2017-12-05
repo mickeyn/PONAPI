@@ -1,7 +1,7 @@
 # ABSTRACT: Client to a {JSON:API} service (http://jsonapi.org/) v1.0
 package PONAPI::Client;
 
-our $VERSION = '0.002009';
+our $VERSION = '0.002010';
 
 use Moose;
 
