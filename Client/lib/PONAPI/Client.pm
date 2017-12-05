@@ -119,7 +119,7 @@ sub delete_relationships {
 
 ### private methods
 
-sub build_hijk_ua {
+sub _build_hijk_ua {
     require PONAPI::Client::UA::Hijk;
     return PONAPI::Client::UA::Hijk->new();
 }
