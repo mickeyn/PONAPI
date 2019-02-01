@@ -143,7 +143,6 @@ subtest '... bad requests (GET)' => sub {
             'fields',
             'fields=',
             'include',
-            'include=&',
             'include=',
             'include[articles]',
             'page=page',
@@ -159,6 +158,20 @@ subtest '... bad requests (GET)' => sub {
             "... bad request $req caught",
         );
     }
+
+    {
+        my $req = 'include=&';
+        my $res = $app->request( GET "/articles/1?$req", %Accept );
+        error_test(
+            $res,
+            {
+                detail => "$BAD_REQUEST_MSG (unsupported parameters)",
+                status => 400,
+            },
+            "... bad request $req caught",
+        );
+    }
+
 };
 
 subtest '... bad requests (POST)' => sub {
