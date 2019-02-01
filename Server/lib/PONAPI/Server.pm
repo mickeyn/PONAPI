@@ -239,7 +239,7 @@ sub _ponapi_query_params {
     my $unesacpe_values = !!$req->headers->header('X-PONAPI-Escaped-Values');
 
     # loop over query parameters (unique keys)
-    for my $k ( keys %{ $query_params } ) {
+    for my $k ( sort keys %{ $query_params } ) {
         my ( $p, $f ) = $k =~ /^ (\w+?) (?:\[(\w+)\])? $/x;
 
         # key not matched
