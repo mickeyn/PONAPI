@@ -31,7 +31,7 @@ __END__
     $document->add_resource() # go crazy!
 
     # If we have an error at some point:
-    $document->raise_error( 418, 'TEA TIME' );
+    $document->raise_error( 418, { detail => 'TEA TIME' } );
 
     # And once we are done, return a valid {json:api} document
     # as a perl hash, which you can later turn into JSON.
@@ -156,7 +156,7 @@ Returns true if we are the root of the document tree.
 
 Returns the root document.
 
-=item * raise_error( $http_status, $reason )
+=item * raise_error( $http_status, { detail => $reason, ... } )
 
 Creates an error document.
 
