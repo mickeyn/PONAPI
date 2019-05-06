@@ -16,24 +16,27 @@ with 'PONAPI::Client::Role::UA';
 ################################################################################
 
 has yahc => (
-    is  => 'rw',
-    isa => 'Ref',
-    lazy_build => 1,
+    is      => 'ro',
+    isa     => 'YAHC',
+    lazy    => 1,
+    builder => '_build_yahc',
 );
 
 has yahc_storage => (
-    is  => 'rw',
-    isa => 'Ref',
+    is      => 'ro',
+    isa     => 'Ref',
 );
 
 has scheme => (
-    is  => 'rw',
-    isa => 'Str',
+    is      => 'ro',
+    isa     => 'Str',
+    default => 'http',
 );
 
 has ssl_options => (
-    is  => 'rw',
-    isa => 'Ref',
+    is      => 'ro',
+    isa     => 'HashRef',
+    deafult => sub { +{} },
 );
 
 ################################################################################
