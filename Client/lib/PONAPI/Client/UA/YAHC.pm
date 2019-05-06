@@ -31,6 +31,11 @@ has scheme => (
     isa => 'Str',
 );
 
+has ssl_options => (
+    is  => 'rw',
+    isa => 'Ref',
+);
+
 ################################################################################
 ################################################################################
 
@@ -62,6 +67,7 @@ sub send_http_request {
 
     local $request->{callback} = $callback;
     local $request->{scheme} = $self->scheme;
+    local $request->{ssl_options} = $self->ssl_options;
 
     my $yahc = $self->yahc;
 
