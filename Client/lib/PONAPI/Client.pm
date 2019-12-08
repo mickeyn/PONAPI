@@ -151,8 +151,8 @@ sub _send_ponapi_request {
     my %args = @_;
 
     my @mt_header = (
-        ( $args{body} ? 'Content-Type' : 'Accept' ),
-        'application/vnd.api+json'
+        ( $args{body} ? ( 'Content-Type', 'application/vnd.api+json' ) : () ),
+        'Accept', 'application/vnd.api+json'
     );
 
     my ($status, $content, $failed, $e);
